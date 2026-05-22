@@ -1,0 +1,62 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Radar } from "lucide-react";
+import { LiveProvider, useLive } from "@/components/live-provider";
+import { widgets } from "@/plugins/registry";
+
+export function Dashboard() {
+  return (
+    <LiveProvider>
+      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6">
+        <Header />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
+          {widgets.map((w) => (
+            <div key={w.id} className={`${w.span} ${w.height}`}>
+              <w.component />
+            </div>
+          ))}
+        </div>
+        <footer className="pt-2 text-center text-[11px] text-muted/60">
+          read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie
+        </footer>
+      </div>
+    </LiveProvider>
+  );
+}
+
+function Header() {
+  const { connected, events } = useLive();
+  const [clock, setClock] = useState("");
+
+  useEffect(() => {
+    const update = () => setClock(new Date().toLocaleTimeString("de-DE"));
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <header className="flex items-center justify-between rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent">
+          <Radar className="h-5 w-5" />
+        </span>
+        <div>
+          <h1 className="text-base font-semibold tracking-tight">Claude Mission Control</h1>
+          <p className="text-[11px] text-muted">Live-Observability für Claude Code</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 text-xs text-muted">
+        <span className="hidden font-mono sm:inline">{clock}</span>
+        <span className="hidden sm:inline">{events.length} Events</span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
+          />
+          {connected ? "verbunden" : "getrennt"}
+        </span>
+      </div>
+    </header>
+  );
+}

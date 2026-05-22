@@ -1,0 +1,164 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Coins } from "lucide-react";
+import { Panel } from "@/components/panel";
+import type { UsageReport } from "@/lib/ccusage";
+import { formatCompact, formatMoney } from "@/lib/format";
+
+type Mode = "tokens" | "cost";
+
+export function TokenChart() {
+  const [usage, setUsage] = useState<UsageReport | null>(null);
+  const [mode, setMode] = useState<Mode>("tokens");
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () =>
+      fetch("/api/usage")
+        .then((r) => r.json())
+        .then((d: UsageReport) => {
+          if (!cancelled) setUsage(d);
+        })
+        .catch(() => {});
+    load();
+    const poll = setInterval(load, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+    };
+  }, []);
+
+  const data = (usage?.days ?? []).map((d) => ({
+    date: d.date.slice(5), // MM-DD
+    input: d.inputTokens,
+    output: d.outputTokens,
+    cache: d.cacheTokens,
+    cost: Number(d.costEur.toFixed(2)),
+  }));
+
+  return (
+    <Panel
+      title="Tokens & Kosten"
+      icon={<Coins className="h-4 w-4 text-accent" />}
+      right={
+        <div className="flex items-center gap-2">
+          {usage?.totals && (
+            <span className="text-xs text-muted">
+              {formatMoney(usage.totals.costEur, "EUR")} · {formatCompact(usage.totals.totalTokens)} tok
+            </span>
+          )}
+          <div className="flex rounded-md border border-panel-border text-xs">
+            {(["tokens", "cost"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+              >
+                {m === "tokens" ? "Tokens" : "Kosten"}
+              </button>
+            ))}
+          </div>
+        </div>
+      }
+    >
+      {!usage || !usage.available || data.length === 0 ? (
+        <Empty available={usage?.available ?? true} />
+      ) : (
+        <div className="h-full w-full p-2">
+          <ResponsiveContainer width="100%" height="100%">
+            {mode === "tokens" ? (
+              <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+                <defs>
+                  <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gOut" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#34d399" stopOpacity={0.7} />
+                    <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gCache" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="#1c2230" vertical={false} />
+                <XAxis dataKey="date" stroke="#8b94a7" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#8b94a7"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={(v) => formatCompact(v as number)}
+                  width={42}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value, name) => [formatCompact(Number(value)), labelFor(String(name))]}
+                />
+                <Area type="monotone" dataKey="cache" stackId="1" stroke="#a78bfa" fill="url(#gCache)" />
+                <Area type="monotone" dataKey="input" stackId="1" stroke="#38bdf8" fill="url(#gIn)" />
+                <Area type="monotone" dataKey="output" stackId="1" stroke="#34d399" fill="url(#gOut)" />
+              </AreaChart>
+            ) : (
+              <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+                <CartesianGrid stroke="#1c2230" vertical={false} />
+                <XAxis dataKey="date" stroke="#8b94a7" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#8b94a7"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={(v) => "€" + v}
+                  width={42}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value) => [formatMoney(Number(value), "EUR"), "Kosten"]}
+                />
+                <Bar dataKey="cost" fill="#4f8cff" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+const tooltipStyle = {
+  background: "#0e1219",
+  border: "1px solid #1c2230",
+  borderRadius: 8,
+  fontSize: 12,
+} as const;
+
+function labelFor(key: string): string {
+  if (key === "input") return "Input";
+  if (key === "output") return "Output";
+  if (key === "cache") return "Cache";
+  return key;
+}
+
+function Empty({ available }: { available: boolean }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
+      <Coins className="h-6 w-6 opacity-50" />
+      {available ? (
+        <p>Noch keine Nutzungsdaten von ccusage.</p>
+      ) : (
+        <p>ccusage nicht verfügbar (offline oder keine Claude-Daten gefunden).</p>
+      )}
+    </div>
+  );
+}
