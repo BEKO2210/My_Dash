@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Radar } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
+import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { widgets } from "@/plugins/registry";
 
 export function Dashboard() {
@@ -13,7 +14,9 @@ export function Dashboard() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
           {widgets.map((w) => (
             <div key={w.id} className={`${w.span} ${w.height}`}>
-              <w.component />
+              <WidgetErrorBoundary label={w.title}>
+                <w.component />
+              </WidgetErrorBoundary>
             </div>
           ))}
         </div>

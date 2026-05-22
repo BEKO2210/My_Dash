@@ -21,39 +21,70 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let closed = false;
+    let es: EventSource | null = null;
+    let retry: ReturnType<typeof setTimeout> | null = null;
+    let backoff = 1000; // grows to a 15s ceiling so a down server is retried gently
 
-    // Backlog so the stream isn't empty on first load.
-    fetch("/api/events?limit=100")
-      .then((r) => r.json())
-      .then((d: { events: EventRow[] }) => {
-        if (closed) return;
-        for (const e of d.events) seen.current.add(e.id);
-        setEvents(d.events);
-      })
-      .catch(() => {});
-
-    const es = new EventSource("/api/stream");
-    es.onopen = () => setConnected(true);
-    es.onerror = () => setConnected(false);
-    es.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data) as StreamMessage;
-        if (seen.current.has(msg.event.id)) return;
-        seen.current.add(msg.event.id);
-        // Keep the dedup set bounded over long-running sessions.
-        if (seen.current.size > MAX_EVENTS * 4) {
-          seen.current = new Set([...seen.current].slice(-MAX_EVENTS));
-        }
-        setEvents((prev) => [msg.event, ...prev].slice(0, MAX_EVENTS));
-        setTick((t) => t + 1);
-      } catch {
-        /* ignore malformed frame */
+    const ingestEvent = (e: EventRow) => {
+      if (seen.current.has(e.id)) return;
+      seen.current.add(e.id);
+      if (seen.current.size > MAX_EVENTS * 4) {
+        seen.current = new Set([...seen.current].slice(-MAX_EVENTS));
       }
+      setEvents((prev) => [e, ...prev].slice(0, MAX_EVENTS));
+      setTick((t) => t + 1);
     };
+
+    // Pull recent events — on first load and again after every (re)connect so any
+    // events that happened during a gap (server restart, sleep) aren't lost.
+    const loadBacklog = () =>
+      fetch("/api/events?limit=100")
+        .then((r) => r.json())
+        .then((d: { events: EventRow[] }) => {
+          if (closed) return;
+          // Merge oldest→newest so ordering + dedup stay correct.
+          for (const e of [...d.events].reverse()) ingestEvent(e);
+        })
+        .catch(() => {});
+
+    const connect = () => {
+      if (closed) return;
+      es = new EventSource("/api/stream");
+      es.onopen = () => {
+        if (closed) return;
+        setConnected(true);
+        backoff = 1000;
+        loadBacklog();
+      };
+      es.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data) as StreamMessage;
+          ingestEvent(msg.event);
+        } catch {
+          /* ignore malformed frame */
+        }
+      };
+      es.onerror = () => {
+        if (closed) return;
+        setConnected(false);
+        // Browser auto-reconnects while the handle is open; if it hard-closed
+        // (e.g. server returned non-2xx), recreate it ourselves with backoff.
+        if (es && es.readyState === EventSource.CLOSED) {
+          es.close();
+          es = null;
+          retry = setTimeout(connect, backoff);
+          backoff = Math.min(backoff * 2, 15_000);
+        }
+      };
+    };
+
+    loadBacklog();
+    connect();
 
     return () => {
       closed = true;
-      es.close();
+      if (retry) clearTimeout(retry);
+      es?.close();
     };
   }, []);
 

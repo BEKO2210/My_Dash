@@ -12,6 +12,15 @@ interface GraphNode {
   label: string;
   type: NodeType;
   val: number;
+  // Extra context surfaced when a node is clicked in the 3D graph.
+  meta?: {
+    sessionId?: string;
+    project?: string | null;
+    status?: string;
+    lastSeen?: string;
+    path?: string;
+    calls?: number;
+  };
 }
 interface GraphLink {
   source: string;
@@ -32,10 +41,14 @@ export async function GET(req: Request) {
   const links: GraphLink[] = [];
   const linkSeen = new Set<string>();
 
-  const addNode = (id: string, label: string, type: NodeType) => {
+  const addNode = (id: string, label: string, type: NodeType, meta?: GraphNode["meta"]) => {
     const n = nodes.get(id);
-    if (n) n.val += 1;
-    else nodes.set(id, { id, label, type, val: 1 });
+    if (n) {
+      n.val += 1;
+      if (n.meta) n.meta.calls = (n.meta.calls ?? 1) + 1;
+    } else {
+      nodes.set(id, { id, label, type, val: 1, meta: { ...meta, calls: 1 } });
+    }
   };
   const addLink = (source: string, target: string) => {
     const key = `${source}->${target}`;
@@ -55,6 +68,12 @@ export async function GET(req: Request) {
       label: s.title || s.project_name || s.id.slice(0, 8),
       type: "session",
       val: 3,
+      meta: {
+        sessionId: s.id,
+        project: s.project_name,
+        status: s.status,
+        lastSeen: s.last_seen,
+      },
     });
 
     const calls = callsForSession.all(s.id) as ToolCallRow[];
@@ -66,7 +85,7 @@ export async function GET(req: Request) {
       if (c.target) {
         const fid = `f:${c.target}`;
         const label = c.target.includes("/") ? path.basename(c.target) : c.target.slice(0, 24);
-        addNode(fid, label, "file");
+        addNode(fid, label, "file", { path: c.target });
         addLink(tid, fid);
       }
     }
