@@ -24,6 +24,21 @@ body {
   height: 100%;
 }
 
+/* Large-display scaling. HD and below (≤1920px) keep the default 16px base so the
+   tuned 1080p look is untouched. On QHD/4K the root font-size grows, so every
+   rem-based size (text, icons, spacing) scales up together — paired with wider
+   containers and taller panels in the layout. */
+@media (min-width: 2560px) {
+  html {
+    font-size: 18px;
+  }
+}
+@media (min-width: 3840px) {
+  html {
+    font-size: 22px;
+  }
+}
+
 body {
   background:
     radial-gradient(1200px 600px at 80% -10%, rgba(79, 140, 255, 0.08), transparent 60%),
