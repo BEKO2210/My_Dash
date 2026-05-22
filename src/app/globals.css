@@ -73,3 +73,55 @@ body {
 .mc-live-dot {
   animation: mc-pulse 1.6s ease-in-out infinite;
 }
+
+/* ── Entrance + micro-interaction animations ─────────────────────────────── */
+@keyframes mc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes mc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes mc-stream-in {
+  from {
+    opacity: 0;
+    transform: translateX(-7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mc-fade-up {
+  animation: mc-fade-up 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.mc-fade-in {
+  animation: mc-fade-in 0.4s ease both;
+}
+.mc-stream-in {
+  animation: mc-stream-in 0.35s ease both;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .mc-live-dot,
+  .mc-fade-up,
+  .mc-fade-in,
+  .mc-stream-in {
+    animation: none !important;
+    transition: none !important;
+  }
+}

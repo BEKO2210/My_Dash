@@ -75,7 +75,9 @@ export function Kanban() {
                   <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
                   {meta.label}
                 </span>
-                <span className="text-xs text-muted">{items.length}</span>
+                <span className="rounded-full bg-background/60 px-1.5 py-0.5 text-[11px] tabular-nums text-muted">
+                  {items.length}
+                </span>
               </div>
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-2 pb-2">
                 {items.map((s) => (
@@ -95,7 +97,7 @@ export function Kanban() {
 
 function Card({ s }: { s: SessionCard }) {
   return (
-    <div className="rounded-lg border border-panel-border bg-background/60 p-2.5 transition-colors hover:border-accent/50">
+    <div className="mc-fade-in rounded-lg border border-panel-border bg-background/60 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md hover:shadow-black/20">
       <p className="line-clamp-2 text-sm text-foreground">
         {s.title || `Session ${s.id.slice(0, 8)}`}
       </p>

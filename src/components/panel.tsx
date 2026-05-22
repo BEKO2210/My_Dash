@@ -20,7 +20,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-panel-border bg-panel/80 shadow-lg shadow-black/30 backdrop-blur",
+        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-panel-border bg-panel/80 shadow-lg shadow-black/30 backdrop-blur transition-colors duration-300 hover:border-accent/20",
         className,
       )}
     >

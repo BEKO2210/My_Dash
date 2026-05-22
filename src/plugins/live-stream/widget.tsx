@@ -63,7 +63,10 @@ export function LiveStream() {
             const kind = eventKind(e.event_type);
             const Icon = ICONS[kind];
             return (
-              <li key={e.id} className="flex items-start gap-2.5 px-4 py-2 hover:bg-white/[0.02]">
+              <li
+                key={e.id}
+                className="mc-stream-in flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
+              >
                 <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>

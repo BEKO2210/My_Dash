@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Radar } from "lucide-react";
+import { Radar, Activity } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
@@ -13,8 +13,12 @@ export function Dashboard() {
       <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
         <Header />
         <div className="grid grid-cols-1 gap-4 min-[2560px]:gap-6 min-[3840px]:gap-8 lg:grid-cols-6">
-          {widgets.map((w) => (
-            <div key={w.id} className={`${w.span} ${w.height}`}>
+          {widgets.map((w, i) => (
+            <div
+              key={w.id}
+              className={`mc-fade-up ${w.span} ${w.height}`}
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
               <WidgetErrorBoundary label={w.title}>
                 <w.component />
               </WidgetErrorBoundary>
@@ -41,9 +45,9 @@ function Header() {
   }, []);
 
   return (
-    <header className="flex items-center justify-between rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
+    <header className="mc-fade-in flex items-center justify-between rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent ring-1 ring-accent/20">
           <Radar className="h-5 w-5" />
         </span>
         <div>
@@ -57,10 +61,19 @@ function Header() {
           <p className="text-[11px] text-muted">Live-Observability für Claude Code</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 text-xs text-muted">
-        <span className="hidden font-mono sm:inline">{clock}</span>
-        <span className="hidden sm:inline">{events.length} Events</span>
-        <span className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 text-xs text-muted sm:gap-2.5">
+        <span className="hidden font-mono tabular-nums sm:inline">{clock}</span>
+        <span className="hidden items-center gap-1 rounded-full border border-panel-border bg-background/40 px-2.5 py-1 tabular-nums sm:flex">
+          <Activity className="h-3 w-3 text-accent" />
+          {events.length}
+        </span>
+        <span
+          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
+            connected
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
+          }`}
+        >
           <span
             className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
           />
