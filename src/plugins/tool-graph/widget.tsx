@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forceCollide } from "d3-force-3d";
 import { Boxes, Maximize2, Minimize2, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
@@ -46,13 +47,13 @@ interface GraphData {
 // spread evenly around the wheel for clear, harmonious distinction on the dark
 // background. Claude reads meta.kind/role; humans read these.
 const KIND_COLOR: Record<string, string> = {
-  session: "#4f8cff", // blue   — the run itself
-  prompt: "#fb7185", // rose   — prompts (you & Claude)
-  tool: "#fbbf24", // amber  — tools
-  file: "#34d399", // emerald— files
-  command: "#a78bfa", // violet — shell commands
-  url: "#22d3ee", // cyan   — URLs
-  pattern: "#94a3b8", // slate  — patterns/queries
+  session: "#5b9dff", // blue   — the run itself
+  prompt: "#ff6b9d", // rose   — prompts (you & Claude)
+  tool: "#ffc53d", // amber  — tools
+  file: "#3ee9a6", // emerald— files
+  command: "#b98aff", // violet — shell commands
+  url: "#34e0f5", // cyan   — URLs
+  pattern: "#aab6cc", // slate  — patterns/queries
 };
 const KIND_NOUN: Record<string, string> = {
   session: "Session",
@@ -92,6 +93,26 @@ export function ToolGraph() {
   const bloomRef = useRef<any>(null);
   const bloomAdded = useRef(false);
   const fitted = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const threeRef = useRef<any>(null);
+  const [threeReady, setThreeReady] = useState(false);
+  const sig = useRef("");
+
+  // Load three on the client for the metallic node material.
+  useEffect(() => {
+    let cancelled = false;
+    import("three")
+      .then((m) => {
+        if (!cancelled) {
+          threeRef.current = m;
+          setThreeReady(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     // Debounce: at most one graph rebuild every 3s even under event bursts.
@@ -102,6 +123,10 @@ export function ToolGraph() {
       fetch("/api/graph")
         .then((r) => r.json())
         .then((d: GraphData) => {
+          // Only rebuild meshes when the graph structure actually changed.
+          const next = d.nodes.map((n) => n.id).join(",") + "|" + d.links.length;
+          if (next === sig.current) return;
+          sig.current = next;
           setData(d);
           setSelected((cur) => (cur ? d.nodes.find((n) => n.id === cur.id) ?? null : null));
         })
@@ -144,6 +169,76 @@ export function ToolGraph() {
   }, [data]);
   const hasActive = activeIds.size > 0;
 
+  const SIZE = maximized ? 4.6 : 3.6;
+  const nodeRadius = useCallback((n: GraphNode) => Math.cbrt(Math.max(n.val, 0.6)) * SIZE, [SIZE]);
+
+  // Colour + whether a node glows. Only the active subgraph (or the selection)
+  // glows; everything else stays metallic-lit but unglowing.
+  const styleFor = useCallback(
+    (n: GraphNode): { color: string; glow: boolean } => {
+      if (selected?.id === n.id) return { color: SELECTED, glow: true };
+      const base = baseColor(n);
+      if (activeIds.has(n.id)) return { color: base, glow: true };
+      return { color: hasActive ? dim(base, 0.5) : base, glow: false };
+    },
+    [selected, activeIds, hasActive],
+  );
+  const styleRef = useRef(styleFor);
+  const nodesRef = useRef<GraphNode[]>([]);
+  useEffect(() => {
+    styleRef.current = styleFor;
+    nodesRef.current = data.nodes;
+  });
+
+  // Metallic, glossy spheres (Phong specular). Emissive only when glowing, so the
+  // bloom lights up exactly the active elements — not everything.
+  const nodeThreeObject = useCallback(
+    (node: object) => {
+      const THREE = threeRef.current;
+      if (!THREE) return undefined;
+      const n = node as GraphNode;
+      const { color, glow } = styleRef.current(n);
+      const mat = new THREE.MeshPhongMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: glow ? 0.7 : 0,
+        shininess: 120,
+        specular: 0x9aa6c0,
+      });
+      return new THREE.Mesh(new THREE.SphereGeometry(nodeRadius(n), 28, 20), mat);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [threeReady, nodeRadius],
+  );
+
+  // Recolour existing meshes on selection/active change without rebuilding them.
+  // Meshes are reached via a ref (not React state) so it's a pure side effect.
+  useEffect(() => {
+    if (!threeReady) return;
+    for (const n of nodesRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mat = (n as any).__threeObj?.material;
+      if (!mat?.color) continue;
+      const { color, glow } = styleFor(n);
+      mat.color.set(color);
+      mat.emissive?.set?.(color);
+      // eslint-disable-next-line react-hooks/immutability -- three.js material, not React state
+      mat.emissiveIntensity = glow ? 0.7 : 0;
+    }
+  }, [selected, activeIds, threeReady, styleFor]);
+
+  // Spacing + no overlap: repulsion, link distance, and a collision force whose
+  // radius matches the sphere radius (+ padding) so spheres never overlap.
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!threeReady || !fg?.d3Force) return;
+    fg.d3Force("charge")?.strength?.(-90);
+    fg.d3Force("link")?.distance?.(48);
+    fg.d3Force("collide", forceCollide((n: object) => nodeRadius(n as GraphNode) + 4));
+    fg.d3ReheatSimulation?.();
+    fitted.current = false;
+  }, [threeReady, maximized, nodeRadius, data.nodes.length]);
+
   const nodeById = useMemo(() => {
     const m = new Map<string, GraphNode>();
     for (const n of data.nodes) m.set(n.id, n);
@@ -185,21 +280,23 @@ export function ToolGraph() {
           import("three"),
         ]);
         if (cancelled) return;
-        const bloom = new UnrealBloomPass(new THREE.Vector2(dims.w, dims.h), 0.32, 0.6, 0.4);
+        // Selective bloom: high threshold so only the bright, emissive (active)
+        // elements glow — not the whole graph.
+        const bloom = new UnrealBloomPass(new THREE.Vector2(dims.w, dims.h), 0.85, 0.7, 0.34);
         composer.addPass(bloom);
         bloomRef.current = bloom;
         bloomAdded.current = true;
 
-        // No artificial lighting: flatten to bright, even ambient so nodes show
-        // their true colours (self-lit look) instead of side-shaded fake light.
+        // Real lighting → metallic highlight + visible 3D curvature. Ambient fills
+        // shadows so unglowing nodes still read as solid (not pitch black).
         const scene = fgRef.current?.scene?.();
         scene?.traverse((o: { isLight?: boolean; type?: string; intensity?: number; color?: { set?: (c: number) => void } }) => {
           if (!o.isLight) return;
           if (o.type === "AmbientLight") {
-            o.intensity = 2;
+            o.intensity = 0.65;
             o.color?.set?.(0xffffff);
           } else {
-            o.intensity = 0; // kill directional/point "artificial" shading
+            o.intensity = 1.6; // restore directional → glossy highlight + depth
           }
         });
       } catch {
@@ -218,8 +315,8 @@ export function ToolGraph() {
     const start = performance.now();
     const loop = (now: number) => {
       const b = bloomRef.current;
-      // Subtle "breathing" — keep it understated/professional (range ~0.22–0.40).
-      if (b) b.strength = 0.31 + 0.09 * Math.sin(((now - start) / 1000) * 1.3);
+      // Lively but smooth "breathing" of the glow (range ~0.48–0.72).
+      if (b) b.strength = 0.6 + 0.12 * Math.sin(((now - start) / 1000) * 1.3);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -316,6 +413,7 @@ export function ToolGraph() {
                 nodeOpacity={1}
                 nodeRelSize={maximized ? 6 : 5}
                 nodeResolution={maximized ? 32 : 24}
+                nodeThreeObject={nodeThreeObject}
                 onNodeClick={onNodeClick}
                 onBackgroundClick={() => setSelected(null)}
                 onEngineStop={() => {
@@ -329,10 +427,11 @@ export function ToolGraph() {
                 }}
                 linkColor={(l: object) => {
                   const hot = isHot(l);
-                  if (hot === "selected") return "#9ec5ff";
-                  if (hot === "active") return "#4f8cff";
-                  // Inactive links stay clearly visible, just subordinate to hot ones.
-                  return hasActive ? "#3a465e" : "#46566f";
+                  // Bright (above bloom threshold) → glows. Only active/selected links.
+                  if (hot === "selected") return "#cfe0ff";
+                  if (hot === "active") return "#5b9dff";
+                  // Inactive links: visible grey but below the bloom threshold → no glow.
+                  return hasActive ? "#2b3444" : "#3b4860";
                 }}
                 linkWidth={(l: object) => {
                   const hot = isHot(l);
