@@ -20,7 +20,10 @@ export function Dashboard() {
           {widgets.map((w, i) => (
             <div
               key={w.id}
-              className={`mc-fade-up ${w.span} ${w.height}`}
+              // The 3D graph goes fullscreen via position:fixed, which breaks if an
+              // ancestor has a transform. So its cell uses an opacity-only entrance
+              // (no transform) while the others keep the subtle rise.
+              className={`${w.id === "tool-graph" ? "mc-fade-in" : "mc-fade-up"} ${w.span} ${w.height}`}
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <WidgetErrorBoundary
