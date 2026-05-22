@@ -258,6 +258,7 @@ export function ToolGraph() {
       <Panel
         title="Tool-Graph (3D)"
         icon={<Boxes className="h-4 w-4 text-accent" />}
+        info="Beziehungen Session → Tool → Ziel (Datei, Befehl, URL, Muster). Gleiche Ziele über Sessions hinweg teilen sich einen Knoten. Aktive Sessions leuchten. Knoten anklicken für Details, Vollbild oben rechts."
         right={
           <div className="flex items-center gap-3 text-[11px] text-muted">
             <div className="hidden items-center gap-3 sm:flex">

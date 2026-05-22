@@ -50,6 +50,7 @@ export function Kanban() {
     <Panel
       title="Sessions"
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
+      info="Alle Claude-Code-Sessions nach Status: Aktiv (arbeitet gerade), Wartet (auf deine Eingabe), Beendet. Inaktive Sessions werden nach 30 min automatisch als beendet geführt. Filter rechts nach Projekt."
       right={
         <select
           value={project}

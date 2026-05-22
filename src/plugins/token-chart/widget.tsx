@@ -54,6 +54,7 @@ export function TokenChart() {
     <Panel
       title="Tokens & Kosten"
       icon={<Coins className="h-4 w-4 text-accent" />}
+      info="Tägliche Token-Nutzung und Kosten aus ccusage. Rechts umschaltbar zwischen Tokens (Input/Output/Cache) und Kosten in € (aus USD über EUR_PER_USD umgerechnet)."
       right={
         <div className="flex items-center gap-2">
           {usage?.totals && (

@@ -5,6 +5,7 @@ import { Radar } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
 import { LockProvider } from "@/components/lock-provider";
 import { LockButton } from "@/components/lock-controls";
+import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { widgets } from "@/plugins/registry";
 
@@ -50,7 +51,13 @@ function Header() {
           <Radar className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-base font-semibold tracking-tight">Claude Mission Control</h1>
+          <h1 className="flex items-center gap-1.5 text-base font-semibold tracking-tight">
+            Claude Mission Control
+            <InfoHint
+              align="left"
+              text="Read-only Live-Dashboard für Claude Code: Aktivität aus Hooks → SQLite → UI. Die KI rendert dieses Dashboard nie. Rechts oben sperrst/entsperrst du die Bedienelemente per PIN."
+            />
+          </h1>
           <p className="text-[11px] text-muted">Live-Observability für Claude Code</p>
         </div>
       </div>

@@ -1,14 +1,18 @@
 import { cn } from "@/lib/cn";
+import { InfoHint } from "@/components/info-hint";
 
 export function Panel({
   title,
   icon,
+  info,
   right,
   className,
   children,
 }: {
   title: string;
   icon?: React.ReactNode;
+  /** Optional short explanation shown via a small ℹ️ next to the title. */
+  info?: string;
   right?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
@@ -24,6 +28,7 @@ export function Panel({
         <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-foreground">
           {icon}
           <span>{title}</span>
+          {info && <InfoHint text={info} />}
         </div>
         {right}
       </header>

@@ -74,6 +74,12 @@ function PinDialog({
           </button>
         </div>
 
+        <p className="mb-3 text-[11px] leading-relaxed text-muted">
+          Entsperrt die <span className="text-foreground">Bedienelemente</span>: Projekt-Filter,
+          Tokens/Kosten-Umschalter, 3D-Vollbild und Knoten-Auswahl. Ansehen und Live-Updates bleiben
+          immer aktiv. Erneutes Sperren über denselben Button.
+        </p>
+
         <input
           ref={inputRef}
           type="password"
@@ -98,8 +104,9 @@ function PinDialog({
         >
           Entsperren
         </button>
-        <p className="mt-3 text-center text-[10px] text-muted/60">
-          Lokaler Schutz vor versehentlichem Ändern — keine echte Sicherheit.
+        <p className="mt-3 text-center text-[10px] leading-relaxed text-muted/60">
+          Standard-PIN <span className="font-mono text-muted">0000</span> · änderbar via NEXT_PUBLIC_MC_PIN ·
+          lokaler Schutz vor versehentlichem Ändern, keine echte Sicherheit.
         </p>
       </div>
     </div>
