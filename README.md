@@ -1,11 +1,44 @@
-# Claude Mission Control
+<p align="center">
+  <img src="assets/logo.svg" alt="Claude Mission Control" width="520">
+</p>
 
-A local, **read-only** observability dashboard for Claude Code. Live event stream,
-session Kanban, token/cost charts and a 3D tool-call graph.
+<p align="center">
+  A local, <strong>read-only</strong> observability dashboard for Claude Code —
+  live event stream, session Kanban, token/cost charts and a 3D tool-call graph.
+</p>
+
+<p align="center">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?logo=next.js">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-better--sqlite3-003b57?logo=sqlite&logoColor=white">
+  <img alt="local-first" src="https://img.shields.io/badge/local--first-127.0.0.1-34d399">
+  <img alt="read-only" src="https://img.shields.io/badge/dashboard-read--only-4f8cff">
+</p>
+
+<p align="center">
+  <img src="assets/demo.svg" alt="Claude Mission Control dashboard" width="100%">
+</p>
+
+---
+
+## Why
+
+Most attempts at a "Claude dashboard" fail because they ask the LLM to *render* the
+UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
+**read-only projections of an event log**.
 
 > **The golden rule:** data flows one way — `Hooks → /api/ingest → SQLite → UI`.
 > The LLM never renders this dashboard; it only *triggers* events. The single write
 > path is `/api/ingest`, fed exclusively by Claude Code hooks (machine events).
+
+## Features
+
+- **Live stream** — every tool call, prompt and lifecycle event in real time (SSE).
+- **Session Kanban** — sessions flow through `Aktiv → Wartet → Beendet`, filterable by project.
+- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage), in USD **and** EUR.
+- **3D tool-call graph** — Session → Tool → File, revealing structure across sessions.
+- **Plugin-ready** — new panels drop in via a registry; the seam for future plugins.
+- **Never in the way** — the hook forwarder is fire-and-forget and never blocks Claude.
 
 ## Architecture
 
@@ -30,7 +63,7 @@ One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
 ```bash
 cp .env.example .env          # optional: tweak port / EUR rate
 npm install
-npm run dev                   # http://127.0.0.1:3000   (or ./start.sh for prod build)
+npm run dev                   # http://127.0.0.1:3000   (or ./start.sh for a prod build)
 npm run seed                  # inject demo events to see the full UI immediately
 npm run install-hooks         # wire hooks into ~/.claude/settings.json (backs it up first)
 npm run import-history        # optional: backfill past sessions from transcripts
@@ -50,7 +83,7 @@ The dashboard is a plugin grid. To add a panel:
 That's it — the grid renders it automatically. This is the seam reserved for the
 future Obsidian knowledge-graph / semantic-search plugins.
 
-## Config (`.env`)
+## Configuration (`.env`)
 
 | Var | Default | Meaning |
 |-----|---------|---------|
@@ -58,3 +91,38 @@ future Obsidian knowledge-graph / semantic-search plugins.
 | `EUR_PER_USD` | `0.92` | USD→EUR factor for cost display (ccusage reports USD) |
 | `MC_HOOK_TOKEN` | _(empty)_ | Optional shared secret; if set, ingest requires it |
 | `CLAUDE_DIR` | `~/.claude` | Where Claude Code stores transcripts/usage |
+
+## Project layout
+
+```
+src/
+├─ app/                 # Next.js routes + API (the read paths + the single /api/ingest write path)
+│  ├─ api/{ingest,stream,sessions,events,graph,usage}/route.ts
+│  └─ icon.svg          # favicon (auto-picked up by Next)
+├─ lib/                 # db, event bus, ingest projection, ccusage, formatting
+├─ plugins/             # ◀ widgets: live-stream, kanban, token-chart, tool-graph + registry.ts
+└─ components/          # dashboard shell, live SSE provider, panel
+scripts/                # claude-hook.sh, install-hooks, import-history, seed-demo
+assets/                 # logo + animated demo
+```
+
+## Recording real GIFs (optional)
+
+The visuals above are animated SVGs (sharp, tiny, no recording needed). To capture
+real screen GIFs of the live dashboard on Linux, the simplest options:
+
+```bash
+# GUI: Peek — draw a box around the browser window, hit record, save .gif
+sudo apt install peek    # Pop!_OS / Ubuntu
+
+# CLI: ffmpeg X11 screen grab → high-quality gif via palette
+ffmpeg -y -video_size 1280x720 -framerate 20 -f x11grab -i :0.0+100,100 -t 12 /tmp/cap.mp4
+ffmpeg -y -i /tmp/cap.mp4 -vf "fps=18,scale=1000:-1:flags=lanczos,palettegen" /tmp/pal.png
+ffmpeg -y -i /tmp/cap.mp4 -i /tmp/pal.png -lavfi "fps=18,scale=1000:-1:flags=lanczos[x];[x][1:v]paletteuse" assets/demo-real.gif
+```
+
+Then reference `assets/demo-real.gif` in this README.
+
+---
+
+<p align="center"><sub>read-only · Hooks → SQLite → UI · the AI never renders this dashboard</sub></p>
