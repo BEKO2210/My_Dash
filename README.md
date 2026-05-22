@@ -23,6 +23,13 @@
 
 ## Demo
 
+**▶ Live demo (runs entirely in your browser):** https://beko2210.github.io/My_Dash/
+
+A static, client-only build (`src/lib/demo.ts`) simulates endless random Claude
+tasks, so the full dashboard — live stream, kanban, token/cost charts and the 3D
+graph — animates with no server. Deployed from `.github/workflows/pages.yml`
+(enable repo → Settings → Pages → Source: **GitHub Actions**).
+
 <!--
   DEMO VIDEOS — placeholders. Drop your two recordings into the `assets/` folder
   with exactly these names:

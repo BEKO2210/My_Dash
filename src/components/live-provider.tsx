@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { EventRow, StreamMessage } from "@/lib/types";
+import { DEMO, demoEvents, demoSubscribe } from "@/lib/demo";
 
 interface LiveContextValue {
   events: EventRow[]; // newest first, capped
@@ -15,7 +16,8 @@ const MAX_EVENTS = 300;
 
 export function LiveProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<EventRow[]>([]);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(DEMO); // demo: "connected" from the start
+
   const [tick, setTick] = useState(0);
   const seen = useRef<Set<number>>(new Set());
 
@@ -34,6 +36,16 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       setEvents((prev) => [e, ...prev].slice(0, MAX_EVENTS));
       setTick((t) => t + 1);
     };
+
+    // Demo mode: drive the stream from the in-browser engine (no SSE/server).
+    if (DEMO) {
+      for (const e of demoEvents(100).reverse()) ingestEvent(e);
+      const unsub = demoSubscribe((msg) => ingestEvent(msg.event));
+      return () => {
+        closed = true;
+        unsub();
+      };
+    }
 
     // Pull recent events — on first load and again after every (re)connect so any
     // events that happened during a gap (server restart, sleep) aren't lost.

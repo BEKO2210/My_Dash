@@ -45,6 +45,24 @@ const DE: Record<string, string> = {
     "Events im Live-Puffer dieses Browsers (zuletzt empfangene, max. 300) — kein Gesamtzähler. Die Zahl wächst mit neuen Events und startet beim Neuladen frisch aus den letzten ~100.",
   "footer.text": "read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie",
 
+  "landing.badge": "Live-Demo",
+  "landing.tagline": "Live-Observability für Claude Code",
+  "landing.lead":
+    "Ein lokales, read-only Dashboard, das jede Aktion von Claude Code in Echtzeit sichtbar macht: Live-Event-Stream, Session-Kanban, Token-/Kosten-Charts und ein animierter 3D-Tool-Graph.",
+  "landing.f1t": "Live-Event-Stream",
+  "landing.f1d": "Jeder Hook-Event in Echtzeit — Prompts, Tool-Aufrufe, Stops.",
+  "landing.f2t": "Session-Kanban",
+  "landing.f2d": "Alle Sessions nach Status: aktiv, wartet, beendet.",
+  "landing.f3t": "Tokens & Kosten",
+  "landing.f3d": "Tägliche und 24h-Nutzung mit Kosten — aus ccusage.",
+  "landing.f4t": "3D-Tool-Graph",
+  "landing.f4d": "Session → Tool → Datei/Befehl/URL, aktive Pfade leuchten.",
+  "landing.how": "Daten fließen in eine Richtung: Hooks → SQLite → UI. Die KI rendert dieses Dashboard nie.",
+  "landing.demoNote":
+    "Unten läuft eine Live-Demo mit zufälligen, simulierten Claude-Tasks — komplett im Browser, ohne Server.",
+  "landing.github": "Auf GitHub ansehen",
+  "landing.scroll": "Live-Demo ↓",
+
   "common.allProjects": "Alle Projekte",
   "common.close": "Schließen",
   "common.retry": "Erneut versuchen",
@@ -131,6 +149,24 @@ const EN: Record<string, string> = {
   "header.eventsInfo":
     "Events in this browser's live buffer (most recent, max 300) — not a total counter. It grows with new events and re-seeds from the latest ~100 on reload.",
   "footer.text": "read-only · data from hooks → SQLite → UI · the AI never renders this dashboard",
+
+  "landing.badge": "Live demo",
+  "landing.tagline": "Live observability for Claude Code",
+  "landing.lead":
+    "A local, read-only dashboard that shows every Claude Code action in real time: live event stream, session kanban, token/cost charts and an animated 3D tool-call graph.",
+  "landing.f1t": "Live event stream",
+  "landing.f1d": "Every hook event in real time — prompts, tool calls, stops.",
+  "landing.f2t": "Session kanban",
+  "landing.f2d": "All sessions by status: active, waiting, ended.",
+  "landing.f3t": "Tokens & cost",
+  "landing.f3d": "Daily and 24h usage with cost — from ccusage.",
+  "landing.f4t": "3D tool graph",
+  "landing.f4d": "Session → tool → file/command/URL, active paths glow.",
+  "landing.how": "Data flows one way: hooks → SQLite → UI. The AI never renders this dashboard.",
+  "landing.demoNote":
+    "A live demo with random, simulated Claude tasks is running below — entirely in your browser, no server.",
+  "landing.github": "View on GitHub",
+  "landing.scroll": "Live demo ↓",
 
   "common.allProjects": "All projects",
   "common.close": "Close",

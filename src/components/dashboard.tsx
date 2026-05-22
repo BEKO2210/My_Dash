@@ -7,13 +7,20 @@ import { RadarLogo } from "@/components/radar-logo";
 import { LangToggle } from "@/components/lang-toggle";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
+import { Landing } from "@/components/landing";
 import { useT } from "@/lib/i18n";
+import { DEMO, installDemoBackend } from "@/lib/demo";
 import { widgets } from "@/plugins/registry";
+
+// In the static demo build, start the in-browser engine + patch fetch before any
+// widget mounts. No-op in the real (server-backed) app.
+if (DEMO) installDemoBackend();
 
 export function Dashboard() {
   const { t } = useT();
   return (
     <LiveProvider>
+      {DEMO && <Landing />}
       <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
         <Header />
         <div className="grid grid-cols-1 gap-4 min-[2560px]:gap-6 min-[3840px]:gap-8 lg:grid-cols-6">
