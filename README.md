@@ -153,8 +153,9 @@ scripts/                # claude-hook.sh, install-hooks, import-history, seed-de
 assets/                 # logo + animated demo
 ```
 
-Then reference `assets/demo-real.gif` in this README.
 
 ---
 
 <p align="center"><sub>read-only · Hooks → SQLite → UI · the AI never renders this dashboard</sub></p>
+
+## Belkis Aslani
