@@ -111,7 +111,7 @@ export function TokenChart() {
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
             {mode === "tokens" ? (
-              <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+              <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
                 <defs>
                   <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.7} />
@@ -133,7 +133,7 @@ export function TokenChart() {
                   fontSize={11}
                   tickLine={false}
                   tickFormatter={(v) => formatCompact(v as number)}
-                  width={42}
+                  width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
@@ -144,7 +144,7 @@ export function TokenChart() {
                 <Area type="monotone" dataKey="output" stackId="1" stroke="#34d399" fill="url(#gOut)" />
               </AreaChart>
             ) : (
-              <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+              <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
                 <CartesianGrid stroke="#1c2230" vertical={false} />
                 <XAxis dataKey="date" stroke="#8b94a7" fontSize={11} tickLine={false} />
                 <YAxis
@@ -152,7 +152,7 @@ export function TokenChart() {
                   fontSize={11}
                   tickLine={false}
                   tickFormatter={(v) => "€" + v}
-                  width={42}
+                  width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
