@@ -8,6 +8,7 @@
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "seed": "node scripts/seed-demo.mjs",
+    "backup": "node scripts/backup.mjs",
     "import-history": "node scripts/import-history.mjs",
     "install-hooks": "node scripts/install-hooks.mjs"
   },

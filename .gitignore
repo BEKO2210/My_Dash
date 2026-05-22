@@ -23,6 +23,9 @@
 # production
 /build
 
+# database backups (local snapshots — see npm run backup)
+/backups
+
 # misc
 .DS_Store
 *.pem
