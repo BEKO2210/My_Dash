@@ -31,6 +31,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });
   }
 
+  // Real Claude Code hooks always carry a session_id. Anything without one
+  // (health checks, stray/empty POSTs) is ignored so it never creates a junk
+  // "unknown" session card.
+  if (typeof payload.session_id !== "string" || payload.session_id.trim() === "") {
+    return NextResponse.json({ ok: true, skipped: "no session_id" });
+  }
+
   try {
     const { event } = ingest(headerEvent, payload);
     return NextResponse.json({ ok: true, id: event.id });
