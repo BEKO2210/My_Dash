@@ -14,6 +14,25 @@ Format pro Eintrag: **Was** · **Warum** · **Dateien**. Neueste oben.
 
 ## 2026-05-22
 
+### Graph: Prompts, echte Farben, isolierte Knoten weg, gedeckelte Detailkarte
+- **Was:** Prompt-Knoten (deine UserPromptSubmit + Claude→Agent-Task-Prompts) mit eigener
+  Farbe/Legende; echtes 3D ohne künstliches Licht (flaches Ambient + Bloom, höhere Auflösung,
+  durchdachte Palette); isolierte Knoten werden entfernt + Zoom-to-fit; Detailkarte mit
+  Maximalhöhe + scrollbaren Lang-Feldern; Befehle nach echtem Programm gruppiert (cd-Präfix
+  übersprungen); Legende aus dem Header nach unten-links verschoben.
+- **Warum:** Nutzer wollte Prompts im Graph (seine + Claudes), schönere/echte 3D-Optik, und
+  der einzelne fremde Session-Knoten („Schreibtisch", 0 Tools/Prompts) trieb die Kamera weit
+  weg. Lange Befehle bliesen die Detailkarte auf. 7 Legenden-Einträge überfüllten den Header.
+- **Dateien:** `src/app/api/graph/route.ts`, `plugins/tool-graph/widget.tsx`.
+- **Ehrliche Grenze:** Claudes *freie* Antworten erfassen die Hooks nicht (kein Hook dafür) —
+  nur Prompts + Aktionen. Visueller Pixel-Test nicht möglich (kein Headless-Browser hier).
+
+### Export-Log + Entscheidungs-Journal
+- **Was:** `npm run export-log` (Prompts/Tools → lesbares Markdown), `DECISIONS.md` (dieses Journal).
+- **Warum:** Nutzer wollte „alle Gedanken/Prompts speichern". Prompts/Tools liegen ohnehin in
+  SQLite; das *Warum* fehlte → Journal. Reasoning kann nicht 1:1 auto-persistiert werden.
+- **Dateien:** `scripts/export-log.mjs`, `DECISIONS.md`, `package.json`.
+
 ### System-Schutz gegen versehentliches Kaputtmachen (Guard-Hook)
 - **Was:** PreToolUse-Hook (`.claude/settings.json` → `scripts/protect-guard.mjs`), der
   Edit/Write/NotebookEdit/Bash-Schreibzugriffe auf Aussehen/Config-Dateien blockt, wenn
