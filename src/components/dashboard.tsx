@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Radar, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
+import { RadarLogo } from "@/components/radar-logo";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { widgets } from "@/plugins/registry";
@@ -47,8 +48,8 @@ function Header() {
   return (
     <header className="mc-fade-in flex items-center justify-between rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent ring-1 ring-accent/20">
-          <Radar className="h-5 w-5" />
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-background/80 ring-1 ring-accent/25">
+          <RadarLogo className="h-7 w-7" />
         </span>
         <div>
           <h1 className="flex items-center gap-1.5 text-base font-semibold tracking-tight">
