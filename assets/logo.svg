@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" width="560" height="150" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1219"/>
+      <stop offset="1" stop-color="#07090d"/>
+    </linearGradient>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f8cff" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#4f8cff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.8" cy="-0.1" r="1">
+      <stop offset="0" stop-color="#4f8cff" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#4f8cff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="1" y="1" width="558" height="148" rx="22" fill="url(#card)" stroke="#1c2230" stroke-width="2"/>
+  <rect x="1" y="1" width="558" height="148" rx="22" fill="url(#glow)"/>
+
+  <!-- radar mark -->
+  <g>
+    <g fill="none" stroke="#4f8cff">
+      <circle cx="78" cy="75" r="48" stroke-opacity="0.20"/>
+      <circle cx="78" cy="75" r="32" stroke-opacity="0.30"/>
+      <circle cx="78" cy="75" r="16" stroke-opacity="0.42"/>
+      <line x1="78" y1="27" x2="78" y2="123" stroke-opacity="0.12"/>
+      <line x1="30" y1="75" x2="126" y2="75" stroke-opacity="0.12"/>
+    </g>
+    <g>
+      <path d="M78 75 L78 27 A48 48 0 0 1 123.1 58.6 Z" fill="url(#sweep)"/>
+      <line x1="78" y1="75" x2="78" y2="27" stroke="#9bbcff" stroke-width="1.5" stroke-opacity="0.9"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 78 75" to="360 78 75" dur="4s" repeatCount="indefinite"/>
+    </g>
+    <circle cx="104" cy="46" r="3.2" fill="#9bbcff">
+      <animate attributeName="opacity" values="0;1;1;0" dur="4s" keyTimes="0;0.15;0.4;0.55" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="56" cy="98" r="2.6" fill="#9bbcff">
+      <animate attributeName="opacity" values="0;0;1;1;0" dur="4s" keyTimes="0;0.5;0.65;0.85;1" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- wordmark -->
+  <text x="166" y="60" fill="#8b94a7" font-size="15" letter-spacing="6" font-weight="600">CLAUDE</text>
+  <text x="166" y="96" fill="#e6e9ef" font-size="34" letter-spacing="1.5" font-weight="800">MISSION CONTROL</text>
+  <g>
+    <circle cx="172" cy="118" r="3.5" fill="#34d399"/>
+    <text x="184" y="122" fill="#8b94a7" font-size="13" letter-spacing="0.5">live observability · read-only · plugin-ready</text>
+  </g>
+</svg>
