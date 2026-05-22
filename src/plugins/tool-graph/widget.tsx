@@ -10,7 +10,7 @@ import { relativeTime, STATUS_META } from "@/lib/format";
 // Wrapper preserves the imperative ref through next/dynamic (camera + bloom composer).
 const ForceGraph3D = dynamic(() => import("./force-graph"), { ssr: false });
 
-type NodeType = "session" | "tool" | "file";
+type NodeType = "session" | "tool" | "file" | "prompt";
 type TargetKind = "file" | "command" | "url" | "pattern";
 interface NodeMeta {
   sessionId?: string;
@@ -20,6 +20,8 @@ interface NodeMeta {
   path?: string;
   kind?: TargetKind;
   calls?: number;
+  role?: "user" | "agent";
+  text?: string;
 }
 interface GraphNode {
   id: string;
@@ -40,26 +42,29 @@ interface GraphData {
   links: GraphLink[];
 }
 
-// One palette + one noun map, keyed by the node's effective kind (resource nodes
-// refine "file" into command/url/pattern). Claude reads meta.kind; humans read these.
+// One cohesive palette + noun map, keyed by the node's effective kind. Hues are
+// spread evenly around the wheel for clear, harmonious distinction on the dark
+// background. Claude reads meta.kind/role; humans read these.
 const KIND_COLOR: Record<string, string> = {
-  session: "#4f8cff",
-  tool: "#fbbf24",
-  file: "#34d399",
-  command: "#c084fc",
-  url: "#38bdf8",
-  pattern: "#94a3b8",
+  session: "#4f8cff", // blue   — the run itself
+  prompt: "#fb7185", // rose   — prompts (you & Claude)
+  tool: "#fbbf24", // amber  — tools
+  file: "#34d399", // emerald— files
+  command: "#a78bfa", // violet — shell commands
+  url: "#22d3ee", // cyan   — URLs
+  pattern: "#94a3b8", // slate  — patterns/queries
 };
 const KIND_NOUN: Record<string, string> = {
   session: "Session",
+  prompt: "Prompt",
   tool: "Tool",
   file: "Datei",
   command: "Befehl",
   url: "URL",
   pattern: "Muster",
 };
-const KIND_ORDER = ["session", "tool", "file", "command", "url", "pattern"] as const;
-const SELECTED = "#dbe8ff";
+const KIND_ORDER = ["session", "prompt", "tool", "file", "command", "url", "pattern"] as const;
+const SELECTED = "#f1f5f9";
 
 const nodeKey = (n: GraphNode): string => (n.type === "file" ? n.meta?.kind ?? "file" : n.type);
 const baseColor = (n: GraphNode): string => KIND_COLOR[nodeKey(n)] ?? KIND_COLOR.file;
@@ -86,6 +91,7 @@ export function ToolGraph() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bloomRef = useRef<any>(null);
   const bloomAdded = useRef(false);
+  const fitted = useRef(false);
 
   useEffect(() => {
     // Debounce: at most one graph rebuild every 3s even under event bursts.
@@ -145,7 +151,8 @@ export function ToolGraph() {
   }, [data.nodes]);
 
   const neighbours = useMemo(() => {
-    if (!selected) return { session: 0, tool: 0, file: 0 };
+    const counts = { session: 0, prompt: 0, tool: 0, file: 0 };
+    if (!selected) return counts;
     const ids = new Set<string>();
     for (const l of data.links) {
       const s = endId(l.source);
@@ -153,7 +160,6 @@ export function ToolGraph() {
       if (s === selected.id) ids.add(t);
       else if (t === selected.id) ids.add(s);
     }
-    const counts = { session: 0, tool: 0, file: 0 };
     for (const id of ids) {
       const n = nodeById.get(id);
       if (n) counts[n.type] += 1;
@@ -183,6 +189,19 @@ export function ToolGraph() {
         composer.addPass(bloom);
         bloomRef.current = bloom;
         bloomAdded.current = true;
+
+        // No artificial lighting: flatten to bright, even ambient so nodes show
+        // their true colours (self-lit look) instead of side-shaded fake light.
+        const scene = fgRef.current?.scene?.();
+        scene?.traverse((o: { isLight?: boolean; type?: string; intensity?: number; color?: { set?: (c: number) => void } }) => {
+          if (!o.isLight) return;
+          if (o.type === "AmbientLight") {
+            o.intensity = 2;
+            o.color?.set?.(0xffffff);
+          } else {
+            o.intensity = 0; // kill directional/point "artificial" shading
+          }
+        });
       } catch {
         /* bloom is a nicety — graph works without it */
       }
@@ -257,24 +276,14 @@ export function ToolGraph() {
         icon={<Boxes className="h-4 w-4 text-accent" />}
         info="Beziehungen Session → Tool → Ziel (Datei, Befehl, URL, Muster). Gleiche Ziele über Sessions hinweg teilen sich einen Knoten. Aktive Sessions leuchten. Knoten anklicken für Details, Vollbild oben rechts."
         right={
-          <div className="flex items-center gap-3 text-[11px] text-muted">
-            <div className="hidden items-center gap-3 sm:flex">
-              {legend.map((l) => (
-                <span key={l.t} className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full" style={{ background: l.c }} />
-                  {l.t}
-                </span>
-              ))}
-            </div>
-            <button
-              onClick={() => setMaximized((m) => !m)}
-              title={maximized ? "Verkleinern (Esc)" : "Vollbild"}
-              className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
-            >
-              {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">{maximized ? "Verkleinern" : "Vollbild"}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setMaximized((m) => !m)}
+            title={maximized ? "Verkleinern (Esc)" : "Vollbild"}
+            className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-[11px] text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+          >
+            {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{maximized ? "Verkleinern" : "Vollbild"}</span>
+          </button>
         }
       >
         <div ref={wrapRef} className="relative h-full w-full">
@@ -304,11 +313,20 @@ export function ToolGraph() {
                   if (activeIds.has(g.id)) return base;
                   return hasActive ? dim(base, 0.62) : base;
                 }}
-                nodeOpacity={0.95}
+                nodeOpacity={1}
                 nodeRelSize={maximized ? 6 : 5}
-                nodeResolution={18}
+                nodeResolution={maximized ? 32 : 24}
                 onNodeClick={onNodeClick}
                 onBackgroundClick={() => setSelected(null)}
+                onEngineStop={() => {
+                  if (fitted.current) return;
+                  try {
+                    fgRef.current?.zoomToFit?.(600, 40);
+                    fitted.current = true;
+                  } catch {
+                    /* ref API unavailable */
+                  }
+                }}
                 linkColor={(l: object) => {
                   const hot = isHot(l);
                   if (hot === "selected") return "#9ec5ff";
@@ -329,9 +347,14 @@ export function ToolGraph() {
                 cooldownTicks={120}
               />
               {selected && <DetailCard node={selected} neighbours={neighbours} onClose={() => setSelected(null)} />}
-              <p className="pointer-events-none absolute bottom-2 left-3 text-[10px] text-muted/60">
-                Knoten anklicken für Details · ziehen zum Drehen · scrollen zum Zoomen
-              </p>
+              <div className="pointer-events-none absolute bottom-2 left-3 flex max-w-[78%] flex-wrap gap-x-2.5 gap-y-1 text-[10px] text-muted/80">
+                {legend.map((l) => (
+                  <span key={l.t} className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full" style={{ background: l.c }} />
+                    {l.t}
+                  </span>
+                ))}
+              </div>
             </>
           ) : null}
         </div>
@@ -346,12 +369,12 @@ function DetailCard({
   onClose,
 }: {
   node: GraphNode;
-  neighbours: { session: number; tool: number; file: number };
+  neighbours: { session: number; prompt: number; tool: number; file: number };
   onClose: () => void;
 }) {
   const meta = node.meta ?? {};
   return (
-    <div className="absolute right-3 top-3 w-64 max-w-[80%] rounded-lg border border-panel-border bg-panel/95 p-3 text-xs shadow-xl shadow-black/40 backdrop-blur">
+    <div className="absolute right-3 top-3 flex max-h-[calc(100%-1.5rem)] w-64 max-w-[80%] flex-col overflow-hidden rounded-lg border border-panel-border bg-panel/95 p-3 text-xs shadow-xl shadow-black/40 backdrop-blur">
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: baseColor(node) }} />
@@ -362,9 +385,10 @@ function DetailCard({
         </button>
       </div>
 
-      <p className="mb-2 break-words text-sm text-foreground">{node.label}</p>
+      <div className="min-h-0 flex-1 overflow-auto pr-0.5">
+        <p className="mb-2 break-words text-sm text-foreground">{node.label}</p>
 
-      <dl className="space-y-1 text-muted">
+        <dl className="space-y-1 text-muted">
         {node.type === "session" && (
           <>
             <Row k="Projekt" v={meta.project ?? "—"} />
@@ -378,6 +402,7 @@ function DetailCard({
             />
             <Row k="Letzte Aktivität" v={relativeTime(meta.lastSeen)} />
             <Row k="ID" v={<span className="font-mono">{(meta.sessionId ?? node.id).slice(0, 12)}</span>} />
+            <Row k="Prompts" v={String(neighbours.prompt)} />
             <Row k="Tools verbunden" v={String(neighbours.tool)} />
           </>
         )}
@@ -390,38 +415,60 @@ function DetailCard({
         {node.type === "file" &&
           (() => {
             const kind = meta.kind ?? "file";
-            const mono = (s: string) => <span className="break-all font-mono text-[11px]">{s}</span>;
             if (kind === "command")
               return (
                 <>
                   <Row k="Programm" v={node.label} />
                   <Row k="Aufrufe" v={String(meta.calls ?? node.val)} />
-                  {meta.path && <Row k="Beispiel" v={mono(meta.path)} />}
                   <Row k="Von Tools" v={String(neighbours.tool)} />
+                  {meta.path && <LongField label="Beispiel" text={meta.path} />}
                 </>
               );
             if (kind === "url")
               return (
                 <>
-                  <Row k="Adresse" v={mono(meta.path ?? node.label)} />
                   <Row k="Von Tools" v={String(neighbours.tool)} />
+                  <LongField label="Adresse" text={meta.path ?? node.label} />
                 </>
               );
             if (kind === "pattern")
               return (
                 <>
-                  <Row k="Muster" v={mono(meta.path ?? node.label)} />
                   <Row k="Von Tools" v={String(neighbours.tool)} />
+                  <LongField label="Muster" text={meta.path ?? node.label} />
                 </>
               );
             return (
               <>
-                <Row k="Pfad" v={mono(meta.path ?? node.label)} />
                 <Row k="Von Tools berührt" v={String(neighbours.tool)} />
+                <LongField label="Pfad" text={meta.path ?? node.label} />
               </>
             );
           })()}
-      </dl>
+        {node.type === "prompt" && (
+          <>
+            <Row k="Von" v={meta.role === "agent" ? "Claude → Agent" : "Du"} />
+            <Row k="Zeit" v={relativeTime(meta.lastSeen)} />
+            {meta.text && (
+              <div className="mt-1 max-h-32 overflow-auto rounded bg-background/60 p-2 text-[11px] leading-relaxed text-foreground">
+                {meta.text}
+              </div>
+            )}
+          </>
+        )}
+        </dl>
+      </div>
+    </div>
+  );
+}
+
+function LongField({ label, text }: { label: string; text: string }) {
+  return (
+    <div className="pt-0.5">
+      <dt className="mb-0.5 text-muted">{label}</dt>
+      <dd className="max-h-28 overflow-auto rounded bg-background/60 p-2 font-mono text-[11px] leading-relaxed break-all text-foreground">
+        {text}
+      </dd>
     </div>
   );
 }
