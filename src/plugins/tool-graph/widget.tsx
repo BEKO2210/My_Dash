@@ -6,6 +6,7 @@ import { forceCollide } from "d3-force-3d";
 import { Boxes, Maximize2, Minimize2, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useT } from "@/lib/i18n";
 import { relativeTime, STATUS_META } from "@/lib/format";
 
 // Wrapper preserves the imperative ref through next/dynamic (camera + bloom composer).
@@ -55,21 +56,12 @@ const KIND_COLOR: Record<string, string> = {
   url: "#34e0f5", // cyan   — URLs
   pattern: "#aab6cc", // slate  — patterns/queries
 };
-const KIND_NOUN: Record<string, string> = {
-  session: "Session",
-  prompt: "Prompt",
-  tool: "Tool",
-  file: "Datei",
-  command: "Befehl",
-  url: "URL",
-  pattern: "Muster",
-};
 const KIND_ORDER = ["session", "prompt", "tool", "file", "command", "url", "pattern"] as const;
 const SELECTED = "#f1f5f9";
 
 const nodeKey = (n: GraphNode): string => (n.type === "file" ? n.meta?.kind ?? "file" : n.type);
 const baseColor = (n: GraphNode): string => KIND_COLOR[nodeKey(n)] ?? KIND_COLOR.file;
-const noun = (n: GraphNode): string => KIND_NOUN[nodeKey(n)] ?? "Datei";
+const noun = (n: GraphNode, t: (k: string) => string): string => t(`graph.kind.${nodeKey(n)}`);
 
 const endId = (e: string | GraphNode): string => (typeof e === "object" ? e.id : e);
 
@@ -81,6 +73,7 @@ function dim(hex: string, f: number): string {
 
 export function ToolGraph() {
   const { tick } = useLive();
+  const { t } = useT();
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [maximized, setMaximized] = useState(false);
@@ -363,23 +356,23 @@ export function ToolGraph() {
   // Only show legend entries for kinds actually present in the current graph.
   const legend = useMemo(() => {
     const present = new Set(data.nodes.map((n) => nodeKey(n)));
-    return KIND_ORDER.filter((k) => present.has(k)).map((k) => ({ c: KIND_COLOR[k], t: KIND_NOUN[k] }));
-  }, [data.nodes]);
+    return KIND_ORDER.filter((k) => present.has(k)).map((k) => ({ c: KIND_COLOR[k], label: t(`graph.kind.${k}`) }));
+  }, [data.nodes, t]);
 
   return (
     <div className={maximized ? "fixed inset-0 z-50 bg-background p-3 sm:p-4" : "h-full"}>
       <Panel
-        title="Tool-Graph (3D)"
+        title={t("graph.title")}
         icon={<Boxes className="h-4 w-4 text-accent" />}
-        info="Beziehungen Session → Tool → Ziel (Datei, Befehl, URL, Muster). Gleiche Ziele über Sessions hinweg teilen sich einen Knoten. Aktive Sessions leuchten. Knoten anklicken für Details, Vollbild oben rechts."
+        info={t("graph.info")}
         right={
           <button
             onClick={() => setMaximized((m) => !m)}
-            title={maximized ? "Verkleinern (Esc)" : "Vollbild"}
+            title={maximized ? t("graph.shrinkTitle") : t("graph.fullscreen")}
             className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-[11px] text-muted transition-colors hover:border-accent/50 hover:text-foreground"
           >
             {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{maximized ? "Verkleinern" : "Vollbild"}</span>
+            <span className="hidden sm:inline">{maximized ? t("graph.shrink") : t("graph.fullscreen")}</span>
           </button>
         }
       >
@@ -387,7 +380,7 @@ export function ToolGraph() {
           {data.nodes.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
               <Boxes className="h-6 w-6 opacity-50" />
-              <p>Noch keine Tool-Aufrufe.</p>
+              <p>{t("graph.empty")}</p>
             </div>
           ) : dims.w > 0 ? (
             <>
@@ -400,7 +393,7 @@ export function ToolGraph() {
                 showNavInfo={false}
                 nodeLabel={(n: object) => {
                   const g = n as GraphNode;
-                  return `<div style="font:12px sans-serif;color:#e5e7eb">${noun(g)}: ${g.label}</div>`;
+                  return `<div style="font:12px sans-serif;color:#e5e7eb">${noun(g, t)}: ${g.label}</div>`;
                 }}
                 nodeVal={(n: object) => (n as GraphNode).val}
                 nodeColor={(n: object) => {
@@ -448,9 +441,9 @@ export function ToolGraph() {
               {selected && <DetailCard node={selected} neighbours={neighbours} onClose={() => setSelected(null)} />}
               <div className="pointer-events-none absolute bottom-2 left-3 flex max-w-[78%] flex-wrap gap-x-2.5 gap-y-1 text-[10px] text-muted/80">
                 {legend.map((l) => (
-                  <span key={l.t} className="flex items-center gap-1">
+                  <span key={l.label} className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full" style={{ background: l.c }} />
-                    {l.t}
+                    {l.label}
                   </span>
                 ))}
               </div>
@@ -471,15 +464,16 @@ function DetailCard({
   neighbours: { session: number; prompt: number; tool: number; file: number };
   onClose: () => void;
 }) {
+  const { t, lang } = useT();
   const meta = node.meta ?? {};
   return (
     <div className="absolute right-3 top-3 flex max-h-[calc(100%-1.5rem)] w-64 max-w-[80%] flex-col overflow-hidden rounded-lg border border-panel-border bg-panel/95 p-3 text-xs shadow-xl shadow-black/40 backdrop-blur">
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: baseColor(node) }} />
-          <span className="font-semibold text-foreground">{noun(node)}</span>
+          <span className="font-semibold text-foreground">{noun(node, t)}</span>
         </div>
-        <button onClick={onClose} className="text-muted hover:text-foreground" title="Schließen">
+        <button onClick={onClose} className="text-muted hover:text-foreground" title={t("common.close")}>
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -490,25 +484,25 @@ function DetailCard({
         <dl className="space-y-1 text-muted">
         {node.type === "session" && (
           <>
-            <Row k="Projekt" v={meta.project ?? "—"} />
+            <Row k={t("graph.project")} v={meta.project ?? "—"} />
             <Row
-              k="Status"
+              k={t("graph.status")}
               v={
                 <span className={STATUS_META[meta.status ?? ""]?.text ?? ""}>
-                  {STATUS_META[meta.status ?? ""]?.label ?? meta.status ?? "—"}
+                  {meta.status ? t(`status.${meta.status}`) : "—"}
                 </span>
               }
             />
-            <Row k="Letzte Aktivität" v={relativeTime(meta.lastSeen)} />
-            <Row k="ID" v={<span className="font-mono">{(meta.sessionId ?? node.id).slice(0, 12)}</span>} />
-            <Row k="Prompts" v={String(neighbours.prompt)} />
-            <Row k="Tools verbunden" v={String(neighbours.tool)} />
+            <Row k={t("graph.lastActivity")} v={relativeTime(meta.lastSeen, lang)} />
+            <Row k={t("graph.id")} v={<span className="font-mono">{(meta.sessionId ?? node.id).slice(0, 12)}</span>} />
+            <Row k={t("graph.prompts")} v={String(neighbours.prompt)} />
+            <Row k={t("graph.toolsConnected")} v={String(neighbours.tool)} />
           </>
         )}
         {node.type === "tool" && (
           <>
-            <Row k="Aufrufe" v={String(node.val)} />
-            <Row k="Ziele berührt" v={String(neighbours.file)} />
+            <Row k={t("graph.calls")} v={String(node.val)} />
+            <Row k={t("graph.targetsTouched")} v={String(neighbours.file)} />
           </>
         )}
         {node.type === "file" &&
@@ -517,37 +511,37 @@ function DetailCard({
             if (kind === "command")
               return (
                 <>
-                  <Row k="Programm" v={node.label} />
-                  <Row k="Aufrufe" v={String(meta.calls ?? node.val)} />
-                  <Row k="Von Tools" v={String(neighbours.tool)} />
-                  {meta.path && <LongField label="Beispiel" text={meta.path} />}
+                  <Row k={t("graph.program")} v={node.label} />
+                  <Row k={t("graph.calls")} v={String(meta.calls ?? node.val)} />
+                  <Row k={t("graph.fromTools")} v={String(neighbours.tool)} />
+                  {meta.path && <LongField label={t("graph.example")} text={meta.path} />}
                 </>
               );
             if (kind === "url")
               return (
                 <>
-                  <Row k="Von Tools" v={String(neighbours.tool)} />
-                  <LongField label="Adresse" text={meta.path ?? node.label} />
+                  <Row k={t("graph.fromTools")} v={String(neighbours.tool)} />
+                  <LongField label={t("graph.address")} text={meta.path ?? node.label} />
                 </>
               );
             if (kind === "pattern")
               return (
                 <>
-                  <Row k="Von Tools" v={String(neighbours.tool)} />
-                  <LongField label="Muster" text={meta.path ?? node.label} />
+                  <Row k={t("graph.fromTools")} v={String(neighbours.tool)} />
+                  <LongField label={t("graph.pattern")} text={meta.path ?? node.label} />
                 </>
               );
             return (
               <>
-                <Row k="Von Tools berührt" v={String(neighbours.tool)} />
-                <LongField label="Pfad" text={meta.path ?? node.label} />
+                <Row k={t("graph.fromToolsTouched")} v={String(neighbours.tool)} />
+                <LongField label={t("graph.path")} text={meta.path ?? node.label} />
               </>
             );
           })()}
         {node.type === "prompt" && (
           <>
-            <Row k="Von" v={meta.role === "agent" ? "Claude → Agent" : "Du"} />
-            <Row k="Zeit" v={relativeTime(meta.lastSeen)} />
+            <Row k={t("graph.from")} v={meta.role === "agent" ? t("graph.fromAgent") : t("graph.fromYou")} />
+            <Row k={t("graph.time")} v={relativeTime(meta.lastSeen, lang)} />
             {meta.text && (
               <div className="mt-1 max-h-32 overflow-auto rounded bg-background/60 p-2 text-[11px] leading-relaxed text-foreground">
                 {meta.text}

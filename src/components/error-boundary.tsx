@@ -7,6 +7,10 @@ interface Props {
   children: ReactNode;
   /** Shown in the fallback so the user knows which panel failed. */
   label?: string;
+  /** Translated strings (this is a class component → can't use the i18n hook). */
+  couldNotLoad?: string;
+  genericText?: string;
+  retryLabel?: string;
 }
 interface State {
   error: Error | null;
@@ -34,14 +38,16 @@ export class WidgetErrorBoundary extends Component<Props, State> {
         <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-panel-border bg-panel/80 p-6 text-center text-sm text-muted">
           <AlertTriangle className="h-6 w-6 text-amber-400/80" />
           <p className="text-foreground">
-            {this.props.label ? `„${this.props.label}" konnte nicht geladen werden.` : "Widget-Fehler."}
+            {this.props.label
+              ? `${this.props.label} — ${this.props.couldNotLoad ?? "konnte nicht geladen werden."}`
+              : (this.props.genericText ?? "Widget-Fehler.")}
           </p>
           <p className="max-w-[90%] break-words text-[11px] text-muted/70">{this.state.error.message}</p>
           <button
             onClick={this.reset}
             className="mt-1 rounded-md border border-panel-border px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/50"
           >
-            Erneut versuchen
+            {this.props.retryLabel ?? "Erneut versuchen"}
           </button>
         </div>
       );

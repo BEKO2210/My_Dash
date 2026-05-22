@@ -21,6 +21,31 @@
 
 ---
 
+## Demo
+
+<!--
+  DEMO VIDEOS — placeholders. Drop your two recordings into the `assets/` folder
+  with exactly these names:
+    • assets/dashboard.mp4   ← screen recording of the dashboard
+    • assets/graph-3d.mp4    ← screen recording of the 3D tool graph
+  Format: MP4 (H.264) or WebM, ideally ≤ ~20 MB each. GitHub renders <video>
+  inline once the file exists; the link underneath is the fallback.
+-->
+
+### Dashboard
+
+<video src="assets/dashboard.mp4" controls muted playsinline width="100%"></video>
+
+▶️ [assets/dashboard.mp4](assets/dashboard.mp4) <!-- placeholder — replace with your recording -->
+
+### 3D tool graph
+
+<video src="assets/graph-3d.mp4" controls muted playsinline width="100%"></video>
+
+▶️ [assets/graph-3d.mp4](assets/graph-3d.mp4) <!-- placeholder — replace with your recording -->
+
+---
+
 ## Why
 
 Most attempts at a "Claude dashboard" fail because they ask the LLM to *render* the

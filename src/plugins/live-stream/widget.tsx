@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useT } from "@/lib/i18n";
 import { eventKind, KIND_COLOR, relativeTime, type EventKind } from "@/lib/format";
 
 const ICONS: Record<EventKind, LucideIcon> = {
@@ -33,6 +34,7 @@ const ICONS: Record<EventKind, LucideIcon> = {
 
 export function LiveStream() {
   const { events, connected } = useLive();
+  const { t, lang } = useT();
   const [, setNow] = useState(0);
 
   // Re-render periodically so relative timestamps stay fresh.
@@ -43,15 +45,15 @@ export function LiveStream() {
 
   return (
     <Panel
-      title="Live Stream"
+      title={t("stream.title")}
       icon={<Activity className="h-4 w-4 text-accent" />}
-      info="Live-Strom aller Hook-Events in Echtzeit (neueste oben): Session-Start/-Ende, Prompts, Tool-Aufrufe und Stops. Speist sich per SSE aus den Claude-Code-Hooks."
+      info={t("stream.info")}
       right={
         <span className="flex items-center gap-1.5 text-xs text-muted">
           <span
             className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
           />
-          {connected ? "live" : "getrennt"}
+          {connected ? t("stream.live") : t("header.disconnected")}
         </span>
       }
     >
@@ -75,7 +77,7 @@ export function LiveStream() {
                   </p>
                 </div>
                 <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
-                  {relativeTime(e.created_at)}
+                  {relativeTime(e.created_at, lang)}
                 </span>
               </li>
             );
@@ -87,12 +89,15 @@ export function LiveStream() {
 }
 
 function Empty() {
+  const { t } = useT();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
       <Activity className="h-6 w-6 opacity-50" />
-      <p>Noch keine Events.</p>
+      <p>{t("stream.emptyTitle")}</p>
       <p className="text-xs">
-        Starte eine Claude-Code-Session oder führe <code className="text-accent">npm run seed</code> aus.
+        {t("stream.emptyPre")}
+        <code className="text-accent">npm run seed</code>
+        {t("stream.emptyPost")}
       </p>
     </div>
   );

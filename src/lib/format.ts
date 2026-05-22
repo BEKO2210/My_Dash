@@ -8,18 +8,18 @@ export function parseDbTime(s: string | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export function relativeTime(s: string | null | undefined): string {
+export function relativeTime(s: string | null | undefined, lang: "de" | "en" = "de"): string {
   const d = parseDbTime(s);
   if (!d) return "—";
   const secs = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
-  if (secs < 5) return "gerade eben";
-  if (secs < 60) return `vor ${secs}s`;
+  if (secs < 5) return lang === "en" ? "just now" : "gerade eben";
+  const ago = (n: number, u: string) => (lang === "en" ? `${n}${u} ago` : `vor ${n}${u}`);
+  if (secs < 60) return ago(secs, "s");
   const mins = Math.round(secs / 60);
-  if (mins < 60) return `vor ${mins}m`;
+  if (mins < 60) return ago(mins, "m");
   const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `vor ${hrs}h`;
-  const days = Math.round(hrs / 24);
-  return `vor ${days}d`;
+  if (hrs < 24) return ago(hrs, "h");
+  return ago(Math.round(hrs / 24), "d");
 }
 
 export function formatCompact(n: number): string {

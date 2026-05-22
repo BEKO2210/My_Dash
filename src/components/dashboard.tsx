@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { Activity } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
 import { RadarLogo } from "@/components/radar-logo";
+import { LangToggle } from "@/components/lang-toggle";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
+import { useT } from "@/lib/i18n";
 import { widgets } from "@/plugins/registry";
 
 export function Dashboard() {
+  const { t } = useT();
   return (
     <LiveProvider>
       <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
@@ -20,15 +23,19 @@ export function Dashboard() {
               className={`mc-fade-up ${w.span} ${w.height}`}
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <WidgetErrorBoundary label={w.title}>
+              <WidgetErrorBoundary
+                label={w.title}
+                couldNotLoad={t("error.couldNotLoad")}
+                genericText={t("error.generic")}
+                retryLabel={t("common.retry")}
+              >
                 <w.component />
               </WidgetErrorBoundary>
             </div>
           ))}
         </div>
         <footer className="pt-2 text-center text-[11px] text-muted/60">
-          read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie ·{" "}
-          <span className="text-muted">by Belkis Aslani</span>
+          {t("footer.text")} · <span className="text-muted">by Belkis Aslani</span>
         </footer>
       </div>
     </LiveProvider>
@@ -37,14 +44,15 @@ export function Dashboard() {
 
 function Header() {
   const { connected, events } = useLive();
+  const { t, lang } = useT();
   const [clock, setClock] = useState("");
 
   useEffect(() => {
-    const update = () => setClock(new Date().toLocaleTimeString("de-DE"));
+    const update = () => setClock(new Date().toLocaleTimeString(lang === "en" ? "en-GB" : "de-DE"));
     update();
-    const t = setInterval(update, 1000);
-    return () => clearInterval(t);
-  }, []);
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [lang]);
 
   return (
     <header className="mc-fade-in flex items-center justify-between rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
@@ -55,19 +63,18 @@ function Header() {
         <div>
           <h1 className="flex items-center gap-1.5 text-base font-semibold tracking-tight">
             Claude Mission Control
-            <InfoHint
-              align="left"
-              text="Read-only Live-Dashboard für Claude Code: Aktivität aus Hooks → SQLite → UI. Die KI rendert dieses Dashboard nie — die Ansicht kann nichts am System ändern."
-            />
+            <InfoHint align="left" text={t("header.info")} />
           </h1>
-          <p className="text-[11px] text-muted">Live-Observability für Claude Code</p>
+          <p className="text-[11px] text-muted">{t("header.subtitle")}</p>
         </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-muted sm:gap-2.5">
+        <LangToggle />
         <span className="hidden font-mono tabular-nums sm:inline">{clock}</span>
         <span className="hidden items-center gap-1 rounded-full border border-panel-border bg-background/40 px-2.5 py-1 tabular-nums sm:flex">
           <Activity className="h-3 w-3 text-accent" />
           {events.length}
+          <InfoHint text={t("header.eventsInfo")} align="right" />
         </span>
         <span
           className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
@@ -79,7 +86,7 @@ function Header() {
           <span
             className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
           />
-          {connected ? "verbunden" : "getrennt"}
+          {connected ? t("header.connected") : t("header.disconnected")}
         </span>
       </div>
     </header>
