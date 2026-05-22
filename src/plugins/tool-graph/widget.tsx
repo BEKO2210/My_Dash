@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Boxes, Maximize2, Minimize2, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useLock } from "@/components/lock-provider";
 import { relativeTime, STATUS_META } from "@/lib/format";
 
 // Wrapper preserves the imperative ref through next/dynamic (camera + bloom composer).
@@ -75,6 +76,7 @@ function dim(hex: string, f: number): string {
 
 export function ToolGraph() {
   const { tick } = useLive();
+  const { locked } = useLock();
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [maximized, setMaximized] = useState(false);
@@ -226,11 +228,12 @@ export function ToolGraph() {
 
   const onNodeClick = useCallback(
     (node: object) => {
+      if (locked) return; // viewing/orbit stays free; selecting is a gated control
       const n = node as GraphNode;
       setSelected(n);
       focusNode(n);
     },
-    [focusNode],
+    [focusNode, locked],
   );
 
   const isHot = useCallback(
@@ -267,8 +270,15 @@ export function ToolGraph() {
             </div>
             <button
               onClick={() => setMaximized((m) => !m)}
-              title={maximized ? "Verkleinern (Esc)" : "Vollbild"}
-              className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+              disabled={locked && !maximized}
+              title={
+                locked && !maximized
+                  ? "Gesperrt — zum Ändern oben entsperren"
+                  : maximized
+                    ? "Verkleinern (Esc)"
+                    : "Vollbild"
+              }
+              className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-muted transition-colors hover:border-accent/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
               {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
               <span className="hidden sm:inline">{maximized ? "Verkleinern" : "Vollbild"}</span>

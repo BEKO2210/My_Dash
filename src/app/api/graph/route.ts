@@ -80,6 +80,15 @@ function describeTarget(
 // Builds Session -> Tool -> Resource. Resource ids are global so the same file/command/url
 // across sessions links them — that's what makes the 3D graph reveal structure.
 export async function GET(req: Request) {
+  try {
+    return buildGraph(req);
+  } catch (err) {
+    console.error("/api/graph failed:", err);
+    return NextResponse.json({ nodes: [], links: [] });
+  }
+}
+
+function buildGraph(req: Request) {
   const url = new URL(req.url);
   const sessionLimit = Math.min(Math.max(Math.trunc(Number(url.searchParams.get("sessions")) || 25), 1), 100);
 

@@ -17,27 +17,32 @@ type SessionCard = SessionRow & { event_count: number; tool_count: number };
 
 // Kanban data: every session plus a few derived counts, newest activity first.
 export async function GET() {
-  const rows = db
-    .prepare(
-      `SELECT s.*,
-              (SELECT COUNT(*) FROM events e WHERE e.session_id = s.id)      AS event_count,
-              (SELECT COUNT(*) FROM tool_calls t WHERE t.session_id = s.id)  AS tool_count
-       FROM sessions s
-       ORDER BY datetime(s.last_seen) DESC
-       LIMIT 200`,
-    )
-    .all() as SessionCard[];
+  try {
+    const rows = db
+      .prepare(
+        `SELECT s.*,
+                (SELECT COUNT(*) FROM events e WHERE e.session_id = s.id)      AS event_count,
+                (SELECT COUNT(*) FROM tool_calls t WHERE t.session_id = s.id)  AS tool_count
+         FROM sessions s
+         ORDER BY datetime(s.last_seen) DESC
+         LIMIT 200`,
+      )
+      .all() as SessionCard[];
 
-  const cutoffMs = Date.now() - staleMinutes() * 60_000;
-  const sessions = rows.map((s) => {
-    if (s.status !== "ended") {
-      const lastSeenMs = Date.parse(s.last_seen.replace(" ", "T") + "Z");
-      if (Number.isFinite(lastSeenMs) && lastSeenMs < cutoffMs) {
-        return { ...s, status: "ended" as const, stale: true };
+    const cutoffMs = Date.now() - staleMinutes() * 60_000;
+    const sessions = rows.map((s) => {
+      if (s.status !== "ended") {
+        const lastSeenMs = Date.parse(s.last_seen.replace(" ", "T") + "Z");
+        if (Number.isFinite(lastSeenMs) && lastSeenMs < cutoffMs) {
+          return { ...s, status: "ended" as const, stale: true };
+        }
       }
-    }
-    return s;
-  });
+      return s;
+    });
 
-  return NextResponse.json({ sessions });
+    return NextResponse.json({ sessions });
+  } catch (err) {
+    console.error("/api/sessions failed:", err);
+    return NextResponse.json({ sessions: [] });
+  }
 }

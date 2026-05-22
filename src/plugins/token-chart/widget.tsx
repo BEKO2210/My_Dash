@@ -14,12 +14,14 @@ import {
 } from "recharts";
 import { Coins } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { useLock } from "@/components/lock-provider";
 import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
 
 type Mode = "tokens" | "cost";
 
 export function TokenChart() {
+  const { locked } = useLock();
   const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("tokens");
 
@@ -64,7 +66,9 @@ export function TokenChart() {
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+                disabled={locked && mode !== m}
+                title={locked ? "Gesperrt — zum Ändern oben entsperren" : undefined}
+                className={`px-2 py-1 disabled:cursor-not-allowed disabled:opacity-40 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
               >
                 {m === "tokens" ? "Tokens" : "Kosten"}
               </button>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { KanbanSquare, Folder, Hammer, Radio } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useLock } from "@/components/lock-provider";
 import { relativeTime, STATUS_META } from "@/lib/format";
 import type { SessionRow, SessionStatus } from "@/lib/types";
 
@@ -13,6 +14,7 @@ const COLUMNS: SessionStatus[] = ["active", "waiting", "ended"];
 
 export function Kanban() {
   const { tick } = useLive();
+  const { locked } = useLock();
   const [sessions, setSessions] = useState<SessionCard[]>([]);
   const [project, setProject] = useState<string>("all");
 
@@ -52,7 +54,9 @@ export function Kanban() {
         <select
           value={project}
           onChange={(e) => setProject(e.target.value)}
-          className="rounded-md border border-panel-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
+          disabled={locked}
+          title={locked ? "Gesperrt — zum Ändern oben entsperren" : undefined}
+          className="rounded-md border border-panel-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           <option value="all">Alle Projekte</option>
           {projects.map((p) => (
