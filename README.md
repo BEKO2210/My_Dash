@@ -156,21 +156,6 @@ scripts/                # claude-hook.sh, install-hooks, import-history, seed-de
 assets/                 # logo + animated demo
 ```
 
-## Recording real GIFs (optional)
-
-The visuals above are animated SVGs (sharp, tiny, no recording needed). To capture
-real screen GIFs of the live dashboard on Linux, the simplest options:
-
-```bash
-# GUI: Peek — draw a box around the browser window, hit record, save .gif
-sudo apt install peek    # Pop!_OS / Ubuntu
-
-# CLI: ffmpeg X11 screen grab → high-quality gif via palette
-ffmpeg -y -video_size 1280x720 -framerate 20 -f x11grab -i :0.0+100,100 -t 12 /tmp/cap.mp4
-ffmpeg -y -i /tmp/cap.mp4 -vf "fps=18,scale=1000:-1:flags=lanczos,palettegen" /tmp/pal.png
-ffmpeg -y -i /tmp/cap.mp4 -i /tmp/pal.png -lavfi "fps=18,scale=1000:-1:flags=lanczos[x];[x][1:v]paletteuse" assets/demo-real.gif
-```
-
 Then reference `assets/demo-real.gif` in this README.
 
 ---
