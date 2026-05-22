@@ -31,34 +31,30 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 (enable repo → Settings → Pages → Source: **GitHub Actions**).
 
 <!--
-  DEMO VIDEOS live in the `assets/` folder:
-    • assets/dashboard.mp4   ← screen recording of the dashboard
-    • assets/graph-3d.mp4    ← screen recording of the 3D tool graph
-  IMPORTANT: GitHub only renders an inline <video> player when src is an ABSOLUTE
-  raw URL (https://github.com/BEKO2210/My_Dash/raw/main/assets/<file>.mp4).
-  Relative paths like "assets/dashboard.mp4" do NOT play in the rendered README.
-  Format: MP4 (H.264) or WebM, ideally ≤ ~20 MB each. The link underneath is the fallback.
+  DEMO CLIPS live in the `assets/` folder. They are embedded as animated GIFs so
+  they autoplay and loop INLINE in the rendered README (no click, no download):
+    • assets/dashboard.gif / .mp4   ← screen recording of the dashboard
+    • assets/graph-3d.gif  / .mp4   ← screen recording of the 3D tool graph
+  The GIFs are generated from the MP4s with ffmpeg (see assets/README note below).
+  The MP4 links are the full-resolution fallback; GitHub does NOT autoplay <video>
+  in a README, which is why the inline previews are GIFs.
 -->
 
 ### Dashboard
 
 <p align="center">
-  <img src="assets/screenshot-dashboard.png" alt="Claude Mission Control dashboard" width="100%">
+  <img src="assets/dashboard.gif" alt="Claude Mission Control dashboard — live demo" width="100%">
 </p>
 
-<video src="https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4" controls muted playsinline width="100%"></video>
-
-▶️ [Watch dashboard.mp4](https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4)
+▶️ [Full-resolution recording (dashboard.mp4)](https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4)
 
 ### 3D tool graph
 
 <p align="center">
-  <img src="assets/screenshot-graph.png" alt="3D tool-call graph (fullscreen)" width="100%">
+  <img src="assets/graph-3d.gif" alt="3D tool-call graph (fullscreen) — live demo" width="100%">
 </p>
 
-<video src="https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4" controls muted playsinline width="100%"></video>
-
-▶️ [Watch graph-3d.mp4](https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4)
+▶️ [Full-resolution recording (graph-3d.mp4)](https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4)
 
 ---
 
