@@ -1,0 +1,75 @@
+// Shared types for the whole app — the one place that defines the event vocabulary.
+
+export const HOOK_EVENTS = [
+  "SessionStart",
+  "UserPromptSubmit",
+  "PreToolUse",
+  "PostToolUse",
+  "Notification",
+  "Stop",
+  "SubagentStop",
+  "PreCompact",
+  "SessionEnd",
+] as const;
+
+export type HookEvent = (typeof HOOK_EVENTS)[number];
+
+export type SessionStatus = "active" | "waiting" | "ended";
+
+// Raw payload as sent by a Claude Code hook (superset — fields vary per event).
+export interface HookPayload {
+  session_id?: string;
+  transcript_path?: string;
+  cwd?: string;
+  hook_event_name?: string;
+  tool_name?: string;
+  tool_input?: Record<string, unknown>;
+  tool_response?: unknown;
+  prompt?: string;
+  message?: string;
+  source?: string;
+  reason?: string;
+  trigger?: string;
+  [key: string]: unknown;
+}
+
+export interface SessionRow {
+  id: string;
+  project_path: string | null;
+  project_name: string | null;
+  title: string | null;
+  status: SessionStatus;
+  source: string | null;
+  first_seen: string;
+  last_seen: string;
+  ended_at: string | null;
+  token_input: number;
+  token_output: number;
+  cost_usd: number;
+}
+
+export interface EventRow {
+  id: number;
+  session_id: string;
+  event_type: string;
+  tool_name: string | null;
+  summary: string | null;
+  payload_json: string;
+  created_at: string;
+}
+
+export interface ToolCallRow {
+  id: number;
+  session_id: string;
+  tool_name: string;
+  target: string | null;
+  duration_ms: number | null;
+  success: number | null;
+  created_at: string;
+}
+
+// What the SSE stream pushes to the browser on every ingested event.
+export interface StreamMessage {
+  event: EventRow;
+  session: SessionRow;
+}
