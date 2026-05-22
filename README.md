@@ -31,12 +31,13 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 (enable repo → Settings → Pages → Source: **GitHub Actions**).
 
 <!--
-  DEMO VIDEOS — placeholders. Drop your two recordings into the `assets/` folder
-  with exactly these names:
+  DEMO VIDEOS live in the `assets/` folder:
     • assets/dashboard.mp4   ← screen recording of the dashboard
     • assets/graph-3d.mp4    ← screen recording of the 3D tool graph
-  Format: MP4 (H.264) or WebM, ideally ≤ ~20 MB each. GitHub renders <video>
-  inline once the file exists; the link underneath is the fallback.
+  IMPORTANT: GitHub only renders an inline <video> player when src is an ABSOLUTE
+  raw URL (https://github.com/BEKO2210/My_Dash/raw/main/assets/<file>.mp4).
+  Relative paths like "assets/dashboard.mp4" do NOT play in the rendered README.
+  Format: MP4 (H.264) or WebM, ideally ≤ ~20 MB each. The link underneath is the fallback.
 -->
 
 ### Dashboard
@@ -45,9 +46,9 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
   <img src="assets/screenshot-dashboard.png" alt="Claude Mission Control dashboard" width="100%">
 </p>
 
-<video src="assets/dashboard.mp4" controls muted playsinline width="100%"></video>
+<video src="https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4" controls muted playsinline width="100%"></video>
 
-▶️ [assets/dashboard.mp4](assets/dashboard.mp4) <!-- placeholder — replace with your recording -->
+▶️ [Watch dashboard.mp4](https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4)
 
 ### 3D tool graph
 
@@ -55,9 +56,9 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
   <img src="assets/screenshot-graph.png" alt="3D tool-call graph (fullscreen)" width="100%">
 </p>
 
-<video src="assets/graph-3d.mp4" controls muted playsinline width="100%"></video>
+<video src="https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4" controls muted playsinline width="100%"></video>
 
-▶️ [assets/graph-3d.mp4](assets/graph-3d.mp4) <!-- placeholder — replace with your recording -->
+▶️ [Watch graph-3d.mp4](https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4)
 
 ---
 
