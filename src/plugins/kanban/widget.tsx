@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { KanbanSquare, Folder, Hammer, Radio } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useT } from "@/lib/i18n";
 import { relativeTime, STATUS_META } from "@/lib/format";
 import type { SessionRow, SessionStatus } from "@/lib/types";
 
@@ -13,6 +14,7 @@ const COLUMNS: SessionStatus[] = ["active", "waiting", "ended"];
 
 export function Kanban() {
   const { tick } = useLive();
+  const { t } = useT();
   const [sessions, setSessions] = useState<SessionCard[]>([]);
   const [project, setProject] = useState<string>("all");
 
@@ -46,16 +48,16 @@ export function Kanban() {
 
   return (
     <Panel
-      title="Sessions"
+      title={t("kanban.title")}
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
-      info="Alle Claude-Code-Sessions nach Status: Aktiv (arbeitet gerade), Wartet (auf deine Eingabe), Beendet. Inaktive Sessions werden nach 30 min automatisch als beendet geführt. Filter rechts nach Projekt."
+      info={t("kanban.info")}
       right={
         <select
           value={project}
           onChange={(e) => setProject(e.target.value)}
           className="rounded-md border border-panel-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
         >
-          <option value="all">Alle Projekte</option>
+          <option value="all">{t("common.allProjects")}</option>
           {projects.map((p) => (
             <option key={p} value={p}>
               {p}
@@ -73,16 +75,18 @@ export function Kanban() {
               <div className="flex items-center justify-between px-3 py-2">
                 <span className={`flex items-center gap-1.5 text-xs font-semibold ${meta.text}`}>
                   <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                  {meta.label}
+                  {t(`status.${status}`)}
                 </span>
-                <span className="text-xs text-muted">{items.length}</span>
+                <span className="rounded-full bg-background/60 px-1.5 py-0.5 text-[11px] tabular-nums text-muted">
+                  {items.length}
+                </span>
               </div>
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-2 pb-2">
                 {items.map((s) => (
                   <Card key={s.id} s={s} />
                 ))}
                 {items.length === 0 && (
-                  <p className="px-1 py-3 text-center text-[11px] text-muted/60">leer</p>
+                  <p className="px-1 py-3 text-center text-[11px] text-muted/60">{t("kanban.empty")}</p>
                 )}
               </div>
             </div>
@@ -94,14 +98,15 @@ export function Kanban() {
 }
 
 function Card({ s }: { s: SessionCard }) {
+  const { t, lang } = useT();
   return (
-    <div className="rounded-lg border border-panel-border bg-background/60 p-2.5 transition-colors hover:border-accent/50">
+    <div className="mc-fade-in rounded-lg border border-panel-border bg-background/60 p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md hover:shadow-black/20">
       <p className="line-clamp-2 text-sm text-foreground">
-        {s.title || `Session ${s.id.slice(0, 8)}`}
+        {s.title || `${t("kanban.sessionFallback")} ${s.id.slice(0, 8)}`}
       </p>
       {s.stale && (
         <span className="mt-1 inline-block rounded bg-zinc-500/15 px-1.5 py-0.5 text-[10px] text-zinc-400">
-          inaktiv — automatisch beendet
+          {t("kanban.stale")}
         </span>
       )}
       <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted">
@@ -123,7 +128,7 @@ function Card({ s }: { s: SessionCard }) {
             {s.tool_count}
           </span>
         </span>
-        <span>{relativeTime(s.last_seen)}</span>
+        <span>{relativeTime(s.last_seen, lang)}</span>
       </div>
     </div>
   );

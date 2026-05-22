@@ -9,6 +9,9 @@
     "lint": "eslint",
     "seed": "node scripts/seed-demo.mjs",
     "backup": "node scripts/backup.mjs",
+    "export-log": "node scripts/export-log.mjs",
+    "protect": "node scripts/protect.mjs lock",
+    "unprotect": "node scripts/protect.mjs unlock",
     "import-history": "node scripts/import-history.mjs",
     "install-hooks": "node scripts/install-hooks.mjs"
   },
@@ -16,6 +19,7 @@
     "better-sqlite3": "^12.10.0",
     "ccusage": "^20.0.3",
     "clsx": "^2.1.1",
+    "d3-force-3d": "^3.0.6",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "react": "19.2.4",

@@ -14,12 +14,14 @@ import {
 } from "recharts";
 import { Coins } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { useT } from "@/lib/i18n";
 import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
 
 type Mode = "tokens" | "cost";
 
 export function TokenChart() {
+  const { t } = useT();
   const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("tokens");
 
@@ -50,14 +52,15 @@ export function TokenChart() {
 
   return (
     <Panel
-      title="Tokens & Kosten"
+      title={t("tokens.title")}
       icon={<Coins className="h-4 w-4 text-accent" />}
-      info="Tägliche Token-Nutzung und Kosten aus ccusage. Rechts umschaltbar zwischen Tokens (Input/Output/Cache) und Kosten in € (aus USD über EUR_PER_USD umgerechnet)."
+      info={t("tokens.info")}
       right={
         <div className="flex items-center gap-2">
           {usage?.totals && (
             <span className="text-xs text-muted">
-              {formatMoney(usage.totals.costEur, "EUR")} · {formatCompact(usage.totals.totalTokens)} tok
+              {formatMoney(usage.totals.costEur, "EUR")} · {formatCompact(usage.totals.totalTokens)}{" "}
+              {t("tokens.tok")}
             </span>
           )}
           <div className="flex rounded-md border border-panel-border text-xs">
@@ -67,7 +70,7 @@ export function TokenChart() {
                 onClick={() => setMode(m)}
                 className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
               >
-                {m === "tokens" ? "Tokens" : "Kosten"}
+                {m === "tokens" ? t("tokens.modeTokens") : t("tokens.modeCost")}
               </button>
             ))}
           </div>
@@ -106,7 +109,7 @@ export function TokenChart() {
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value, name) => [formatCompact(Number(value)), labelFor(String(name))]}
+                  formatter={(value, name) => [formatCompact(Number(value)), t(`tokens.${String(name)}`)]}
                 />
                 <Area type="monotone" dataKey="cache" stackId="1" stroke="#a78bfa" fill="url(#gCache)" />
                 <Area type="monotone" dataKey="input" stackId="1" stroke="#38bdf8" fill="url(#gIn)" />
@@ -125,7 +128,7 @@ export function TokenChart() {
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value) => [formatMoney(Number(value), "EUR"), "Kosten"]}
+                  formatter={(value) => [formatMoney(Number(value), "EUR"), t("tokens.cost")]}
                 />
                 <Bar dataKey="cost" fill="#4f8cff" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -144,22 +147,12 @@ const tooltipStyle = {
   fontSize: 12,
 } as const;
 
-function labelFor(key: string): string {
-  if (key === "input") return "Input";
-  if (key === "output") return "Output";
-  if (key === "cache") return "Cache";
-  return key;
-}
-
 function Empty({ available }: { available: boolean }) {
+  const { t } = useT();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
       <Coins className="h-6 w-6 opacity-50" />
-      {available ? (
-        <p>Noch keine Nutzungsdaten von ccusage.</p>
-      ) : (
-        <p>ccusage nicht verfügbar (offline oder keine Claude-Daten gefunden).</p>
-      )}
+      <p>{available ? t("tokens.emptyNone") : t("tokens.emptyUnavailable")}</p>
     </div>
   );
 }
