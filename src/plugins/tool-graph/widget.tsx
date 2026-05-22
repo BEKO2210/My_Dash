@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { forceCollide } from "d3-force-3d";
 import { Boxes, Maximize2, Minimize2, X } from "lucide-react";
 import { Panel } from "@/components/panel";
@@ -194,7 +195,7 @@ export function ToolGraph() {
       const mat = new THREE.MeshPhongMaterial({
         color,
         emissive: color,
-        emissiveIntensity: glow ? 0.7 : 0,
+        emissiveIntensity: glow ? 0.55 : 0,
         shininess: 120,
         specular: 0x9aa6c0,
       });
@@ -216,7 +217,7 @@ export function ToolGraph() {
       mat.color.set(color);
       mat.emissive?.set?.(color);
       // eslint-disable-next-line react-hooks/immutability -- three.js material, not React state
-      mat.emissiveIntensity = glow ? 0.7 : 0;
+      mat.emissiveIntensity = glow ? 0.55 : 0;
     }
   }, [selected, activeIds, threeReady, styleFor]);
 
@@ -275,7 +276,7 @@ export function ToolGraph() {
         if (cancelled) return;
         // Selective bloom: high threshold so only the bright, emissive (active)
         // elements glow — not the whole graph.
-        const bloom = new UnrealBloomPass(new THREE.Vector2(dims.w, dims.h), 0.85, 0.7, 0.34);
+        const bloom = new UnrealBloomPass(new THREE.Vector2(dims.w, dims.h), 0.85, 0.7, 0.38);
         composer.addPass(bloom);
         bloomRef.current = bloom;
         bloomAdded.current = true;
@@ -308,8 +309,8 @@ export function ToolGraph() {
     const start = performance.now();
     const loop = (now: number) => {
       const b = bloomRef.current;
-      // Lively but smooth "breathing" of the glow (range ~0.48–0.72).
-      if (b) b.strength = 0.6 + 0.12 * Math.sin(((now - start) / 1000) * 1.3);
+      // Subtle, smooth "breathing" of the glow (range ~0.36–0.56).
+      if (b) b.strength = 0.46 + 0.1 * Math.sin(((now - start) / 1000) * 1.3);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -359,8 +360,8 @@ export function ToolGraph() {
     return KIND_ORDER.filter((k) => present.has(k)).map((k) => ({ c: KIND_COLOR[k], label: t(`graph.kind.${k}`) }));
   }, [data.nodes, t]);
 
-  return (
-    <div className={maximized ? "fixed inset-0 z-50 bg-background p-3 sm:p-4" : "h-full"}>
+  const view = (
+    <div className={maximized ? "fixed inset-0 z-[60] bg-background p-3 sm:p-4" : "h-full"}>
       <Panel
         title={t("graph.title")}
         icon={<Boxes className="h-4 w-4 text-accent" />}
@@ -453,6 +454,10 @@ export function ToolGraph() {
       </Panel>
     </div>
   );
+
+  // In fullscreen, portal to <body> so no ancestor transform (entrance animation)
+  // can clip `position: fixed` to a grid cell.
+  return maximized && typeof document !== "undefined" ? createPortal(view, document.body) : view;
 }
 
 function DetailCard({
