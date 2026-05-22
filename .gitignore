@@ -26,6 +26,9 @@
 # database backups (local snapshots — see npm run backup)
 /backups
 
+# appearance/config protection lock (local toggle — see npm run protect)
+/.mc-protect
+
 # misc
 .DS_Store
 *.pem

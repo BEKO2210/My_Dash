@@ -9,6 +9,8 @@
     "lint": "eslint",
     "seed": "node scripts/seed-demo.mjs",
     "backup": "node scripts/backup.mjs",
+    "protect": "node scripts/protect.mjs lock",
+    "unprotect": "node scripts/protect.mjs unlock",
     "import-history": "node scripts/import-history.mjs",
     "install-hooks": "node scripts/install-hooks.mjs"
   },
