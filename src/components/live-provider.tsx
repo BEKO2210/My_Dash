@@ -40,6 +40,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         const msg = JSON.parse(ev.data) as StreamMessage;
         if (seen.current.has(msg.event.id)) return;
         seen.current.add(msg.event.id);
+        // Keep the dedup set bounded over long-running sessions.
+        if (seen.current.size > MAX_EVENTS * 4) {
+          seen.current = new Set([...seen.current].slice(-MAX_EVENTS));
+        }
         setEvents((prev) => [msg.event, ...prev].slice(0, MAX_EVENTS));
         setTick((t) => t + 1);
       } catch {
