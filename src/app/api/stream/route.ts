@@ -10,23 +10,29 @@ export async function GET(req: Request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      const send = (data: string) => controller.enqueue(encoder.encode(data));
+      let active = true;
+      // Safe enqueue: never throws if the client already disconnected.
+      const send = (data: string) => {
+        if (!active) return;
+        try {
+          controller.enqueue(encoder.encode(data));
+        } catch {
+          active = false;
+        }
+      };
 
       // Initial comment so the browser marks the connection open immediately.
       send(": connected\n\n");
 
       const unsubscribe = subscribe((msg: StreamMessage) => {
-        try {
-          send(`data: ${JSON.stringify(msg)}\n\n`);
-        } catch {
-          /* controller closed — cleaned up below */
-        }
+        send(`data: ${JSON.stringify(msg)}\n\n`);
       });
 
       // Keep-alive ping so proxies/browsers don't drop an idle connection.
       const ping = setInterval(() => send(": ping\n\n"), 25_000);
 
       const close = () => {
+        active = false;
         clearInterval(ping);
         unsubscribe();
         try {

@@ -22,7 +22,7 @@ interface GraphLink {
 // links them — that's what makes the 3D graph reveal structure.
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const sessionLimit = Math.min(Number(url.searchParams.get("sessions")) || 25, 100);
+  const sessionLimit = Math.min(Math.max(Math.trunc(Number(url.searchParams.get("sessions")) || 25), 1), 100);
 
   const sessions = db
     .prepare(`SELECT * FROM sessions ORDER BY datetime(last_seen) DESC LIMIT ?`)

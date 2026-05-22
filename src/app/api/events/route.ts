@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const sessionId = url.searchParams.get("session");
-  const limit = Math.min(Number(url.searchParams.get("limit")) || 100, 500);
+  const limit = Math.min(Math.max(Math.trunc(Number(url.searchParams.get("limit")) || 100), 1), 500);
 
   const events = sessionId
     ? db
