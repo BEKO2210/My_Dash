@@ -19,11 +19,18 @@ import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
 
 type Mode = "tokens" | "cost";
+type Range = "24h" | "daily";
+
+const hhmm = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
 
 export function TokenChart() {
   const { t } = useT();
   const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("tokens");
+  const [range, setRange] = useState<Range>("daily");
 
   useEffect(() => {
     let cancelled = false;
@@ -42,13 +49,26 @@ export function TokenChart() {
     };
   }, []);
 
-  const data = (usage?.days ?? []).map((d) => ({
-    date: d.date.slice(5), // MM-DD
-    input: d.inputTokens,
-    output: d.outputTokens,
-    cache: d.cacheTokens,
-    cost: Number(d.costEur.toFixed(2)),
-  }));
+  const data =
+    range === "24h"
+      ? (usage?.blocks ?? []).map((b) => ({
+          date: hhmm(b.start),
+          input: b.inputTokens,
+          output: b.outputTokens,
+          cache: b.cacheTokens,
+          cost: Number(b.costEur.toFixed(2)),
+        }))
+      : (usage?.days ?? []).map((d) => ({
+          date: d.date.slice(5), // MM-DD
+          input: d.inputTokens,
+          output: d.outputTokens,
+          cache: d.cacheTokens,
+          cost: Number(d.costEur.toFixed(2)),
+        }));
+
+  // Totals reflect the selected range.
+  const shownCost = data.reduce((a, d) => a + d.cost, 0);
+  const shownTokens = data.reduce((a, d) => a + d.input + d.output + d.cache, 0);
 
   return (
     <Panel
@@ -57,12 +77,20 @@ export function TokenChart() {
       info={t("tokens.info")}
       right={
         <div className="flex items-center gap-2">
-          {usage?.totals && (
-            <span className="text-xs text-muted">
-              {formatMoney(usage.totals.costEur, "EUR")} · {formatCompact(usage.totals.totalTokens)}{" "}
-              {t("tokens.tok")}
-            </span>
-          )}
+          <span className="hidden text-xs text-muted lg:inline">
+            {formatMoney(shownCost, "EUR")} · {formatCompact(shownTokens)} {t("tokens.tok")}
+          </span>
+          <div className="flex rounded-md border border-panel-border text-xs">
+            {(["24h", "daily"] as Range[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+              >
+                {r === "24h" ? t("tokens.range24h") : t("tokens.rangeDaily")}
+              </button>
+            ))}
+          </div>
           <div className="flex rounded-md border border-panel-border text-xs">
             {(["tokens", "cost"] as Mode[]).map((m) => (
               <button
@@ -78,12 +106,12 @@ export function TokenChart() {
       }
     >
       {!usage || !usage.available || data.length === 0 ? (
-        <Empty available={usage?.available ?? true} />
+        <Empty available={usage?.available ?? true} range={range} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
             {mode === "tokens" ? (
-              <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+              <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
                 <defs>
                   <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.7} />
@@ -105,7 +133,7 @@ export function TokenChart() {
                   fontSize={11}
                   tickLine={false}
                   tickFormatter={(v) => formatCompact(v as number)}
-                  width={42}
+                  width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
@@ -116,7 +144,7 @@ export function TokenChart() {
                 <Area type="monotone" dataKey="output" stackId="1" stroke="#34d399" fill="url(#gOut)" />
               </AreaChart>
             ) : (
-              <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -8 }}>
+              <BarChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
                 <CartesianGrid stroke="#1c2230" vertical={false} />
                 <XAxis dataKey="date" stroke="#8b94a7" fontSize={11} tickLine={false} />
                 <YAxis
@@ -124,7 +152,7 @@ export function TokenChart() {
                   fontSize={11}
                   tickLine={false}
                   tickFormatter={(v) => "€" + v}
-                  width={42}
+                  width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
@@ -147,12 +175,17 @@ const tooltipStyle = {
   fontSize: 12,
 } as const;
 
-function Empty({ available }: { available: boolean }) {
+function Empty({ available, range }: { available: boolean; range: Range }) {
   const { t } = useT();
+  const msg = !available
+    ? t("tokens.emptyUnavailable")
+    : range === "24h"
+      ? t("tokens.empty24h")
+      : t("tokens.emptyNone");
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
       <Coins className="h-6 w-6 opacity-50" />
-      <p>{available ? t("tokens.emptyNone") : t("tokens.emptyUnavailable")}</p>
+      <p>{msg}</p>
     </div>
   );
 }
