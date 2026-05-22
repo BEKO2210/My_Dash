@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed": "node scripts/seed-demo.mjs",
     "backup": "node scripts/backup.mjs",
+    "export-log": "node scripts/export-log.mjs",
     "protect": "node scripts/protect.mjs lock",
     "unprotect": "node scripts/protect.mjs unlock",
     "import-history": "node scripts/import-history.mjs",
