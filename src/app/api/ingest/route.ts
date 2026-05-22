@@ -12,10 +12,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
+  // Reject oversized payloads early (a hook should never send megabytes).
+  const MAX_BODY = 4 * 1024 * 1024;
+  const declared = Number(req.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_BODY) {
+    return NextResponse.json({ ok: false, error: "payload too large" }, { status: 413 });
+  }
+
   const headerEvent = req.headers.get("x-hook-event") ?? "";
   let payload: HookPayload;
   try {
     const text = await req.text();
+    if (text.length > MAX_BODY) {
+      return NextResponse.json({ ok: false, error: "payload too large" }, { status: 413 });
+    }
     payload = text ? (JSON.parse(text) as HookPayload) : {};
   } catch {
     return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });

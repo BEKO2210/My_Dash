@@ -45,6 +45,7 @@ export function LiveStream() {
     <Panel
       title="Live Stream"
       icon={<Activity className="h-4 w-4 text-accent" />}
+      info="Live-Strom aller Hook-Events in Echtzeit (neueste oben): Session-Start/-Ende, Prompts, Tool-Aufrufe und Stops. Speist sich per SSE aus den Claude-Code-Hooks."
       right={
         <span className="flex items-center gap-1.5 text-xs text-muted">
           <span

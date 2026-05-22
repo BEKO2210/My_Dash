@@ -7,7 +7,7 @@ import { useLive } from "@/components/live-provider";
 import { relativeTime, STATUS_META } from "@/lib/format";
 import type { SessionRow, SessionStatus } from "@/lib/types";
 
-type SessionCard = SessionRow & { event_count: number; tool_count: number };
+type SessionCard = SessionRow & { event_count: number; tool_count: number; stale?: boolean };
 
 const COLUMNS: SessionStatus[] = ["active", "waiting", "ended"];
 
@@ -48,6 +48,7 @@ export function Kanban() {
     <Panel
       title="Sessions"
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
+      info="Alle Claude-Code-Sessions nach Status: Aktiv (arbeitet gerade), Wartet (auf deine Eingabe), Beendet. Inaktive Sessions werden nach 30 min automatisch als beendet geführt. Filter rechts nach Projekt."
       right={
         <select
           value={project}
@@ -98,6 +99,11 @@ function Card({ s }: { s: SessionCard }) {
       <p className="line-clamp-2 text-sm text-foreground">
         {s.title || `Session ${s.id.slice(0, 8)}`}
       </p>
+      {s.stale && (
+        <span className="mt-1 inline-block rounded bg-zinc-500/15 px-1.5 py-0.5 text-[10px] text-zinc-400">
+          inaktiv — automatisch beendet
+        </span>
+      )}
       <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted">
         {s.project_name && (
           <span className="flex items-center gap-1 truncate">

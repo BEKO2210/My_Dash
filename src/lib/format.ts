@@ -31,7 +31,8 @@ export function formatCompact(n: number): string {
 
 export function formatMoney(n: number, currency: "USD" | "EUR"): string {
   const symbol = currency === "EUR" ? "€" : "$";
-  return symbol + n.toFixed(2);
+  const safe = Number.isFinite(n) ? n : 0;
+  return symbol + safe.toFixed(2);
 }
 
 // Logical category for an event → drives colour + icon in the UI.

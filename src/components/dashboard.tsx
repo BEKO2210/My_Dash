@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { Radar } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
+import { InfoHint } from "@/components/info-hint";
+import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { widgets } from "@/plugins/registry";
 
 export function Dashboard() {
   return (
     <LiveProvider>
-      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6">
+      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
         <Header />
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 min-[2560px]:gap-6 min-[3840px]:gap-8 lg:grid-cols-6">
           {widgets.map((w) => (
             <div key={w.id} className={`${w.span} ${w.height}`}>
-              <w.component />
+              <WidgetErrorBoundary label={w.title}>
+                <w.component />
+              </WidgetErrorBoundary>
             </div>
           ))}
         </div>
@@ -43,7 +47,13 @@ function Header() {
           <Radar className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-base font-semibold tracking-tight">Claude Mission Control</h1>
+          <h1 className="flex items-center gap-1.5 text-base font-semibold tracking-tight">
+            Claude Mission Control
+            <InfoHint
+              align="left"
+              text="Read-only Live-Dashboard für Claude Code: Aktivität aus Hooks → SQLite → UI. Die KI rendert dieses Dashboard nie — die Ansicht kann nichts am System ändern."
+            />
+          </h1>
           <p className="text-[11px] text-muted">Live-Observability für Claude Code</p>
         </div>
       </div>
