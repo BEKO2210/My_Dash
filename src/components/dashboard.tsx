@@ -27,7 +27,8 @@ export function Dashboard() {
           ))}
         </div>
         <footer className="pt-2 text-center text-[11px] text-muted/60">
-          read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie
+          read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie ·{" "}
+          <span className="text-muted">by Belkis Aslani</span>
         </footer>
       </div>
     </LiveProvider>
