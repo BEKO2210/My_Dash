@@ -9,7 +9,7 @@ import { widgets } from "@/plugins/registry";
 export function Dashboard() {
   return (
     <LiveProvider>
-      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-[2200px] min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:max-w-[3360px] min-[3840px]:gap-8 min-[3840px]:p-10">
+      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
         <Header />
         <div className="grid grid-cols-1 gap-4 min-[2560px]:gap-6 min-[3840px]:gap-8 lg:grid-cols-6">
           {widgets.map((w) => (

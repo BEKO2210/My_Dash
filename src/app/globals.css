@@ -30,12 +30,12 @@ body {
    containers and taller panels in the layout. */
 @media (min-width: 2560px) {
   html {
-    font-size: 18px;
+    font-size: 20px;
   }
 }
 @media (min-width: 3840px) {
   html {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 
