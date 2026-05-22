@@ -34,11 +34,19 @@
 
 ### Dashboard
 
+<p align="center">
+  <img src="assets/screenshot-dashboard.png" alt="Claude Mission Control dashboard" width="100%">
+</p>
+
 <video src="assets/dashboard.mp4" controls muted playsinline width="100%"></video>
 
 ▶️ [assets/dashboard.mp4](assets/dashboard.mp4) <!-- placeholder — replace with your recording -->
 
 ### 3D tool graph
+
+<p align="center">
+  <img src="assets/screenshot-graph.png" alt="3D tool-call graph (fullscreen)" width="100%">
+</p>
 
 <video src="assets/graph-3d.mp4" controls muted playsinline width="100%"></video>
 
@@ -84,6 +92,16 @@ Side sources (read-only):
 One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
 
 ## Quick start
+
+**One click (Linux):**
+
+```bash
+./install.sh                  # installs deps, wires hooks, builds, starts, opens the browser
+```
+
+It also drops a **“Claude Mission Control” launcher on your Desktop** — double-click it to start anytime.
+
+**Manual:**
 
 ```bash
 cp .env.example .env          # optional: tweak port / EUR rate
