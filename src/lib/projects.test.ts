@@ -20,6 +20,11 @@ function seed(): Database.Database {
   ins.run("a2", "A", 2, 100, 10, 0);
   ins.run("b1", "B", 8, 50, 5, 5);
   ins.run("u1", null, 0, 0, 0, 0);
+  const tc = db.prepare(`INSERT INTO tool_calls (session_id, tool_name) VALUES (?, ?)`);
+  tc.run("a1", "Read");
+  tc.run("a2", "Bash");
+  tc.run("a2", "Edit");
+  tc.run("b1", "Read");
   return db;
 }
 
@@ -33,6 +38,13 @@ describe("projectUsage", () => {
     expect(a.costUsd).toBe(5);
     expect(a.tokenInput).toBe(200);
     expect(a.totalTokens).toBe(220); // 200 + 20 + 0
+    expect(a.tools).toBe(3); // 1 in a1 + 2 in a2
+  });
+
+  it("counts tool calls per project, zero when none", () => {
+    const rows = projectUsage(seed());
+    expect(rows.find((r) => r.project === "B")!.tools).toBe(1);
+    expect(rows.find((r) => r.project === "(unknown)")!.tools).toBe(0);
   });
 
   it("groups null/empty project names under (unknown)", () => {
