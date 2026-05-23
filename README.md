@@ -179,5 +179,3 @@ before opening a pull request.
 ---
 
 <p align="center"><sub>read-only · Hooks → SQLite → UI · the AI never renders this dashboard</sub></p>
-
-## Belkis Aslani
