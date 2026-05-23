@@ -78,6 +78,12 @@ export const MIGRATIONS: string[] = [
   `
   ALTER TABLE sessions ADD COLUMN token_cache INTEGER DEFAULT 0;
   `,
+
+  // v5 — classify tool calls: builtin vs MCP, and the MCP server when applicable.
+  `
+  ALTER TABLE tool_calls ADD COLUMN source TEXT;
+  ALTER TABLE tool_calls ADD COLUMN mcp_server TEXT;
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

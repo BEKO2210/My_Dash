@@ -191,6 +191,30 @@ describe("ingest — tool calls", () => {
     expect(toolCalls("s1")[0].duration_ms).toBe(1500);
   });
 
+  it("tags an MCP tool call with source and server", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "mcp__github__create_pull_request",
+      tool_input: {},
+      tool_response: { ok: true },
+    });
+    const call = toolCalls("s1")[0];
+    expect(call.source).toBe("mcp");
+    expect(call.mcp_server).toBe("github");
+  });
+
+  it("tags a built-in tool call as builtin with no server", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: {},
+    });
+    const call = toolCalls("s1")[0];
+    expect(call.source).toBe("builtin");
+    expect(call.mcp_server).toBeNull();
+  });
+
   it("does not create a tool_call for a PostToolUse without a tool_name", () => {
     send("PostToolUse", { session_id: "s1" });
     expect(toolCalls("s1")).toHaveLength(0);

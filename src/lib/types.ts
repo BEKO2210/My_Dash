@@ -67,6 +67,8 @@ export interface ToolCallRow {
   target: string | null;
   duration_ms: number | null;
   success: number | null;
+  source: string | null; // "mcp" | "builtin"
+  mcp_server: string | null;
   created_at: string;
 }
 
