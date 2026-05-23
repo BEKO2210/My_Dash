@@ -12,6 +12,8 @@
 </p>
 
 <p align="center">
+  <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-f59e0b?style=flat-square">
+  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-4f8cff?style=flat-square">
   <a href="https://beko2210.github.io/My_Dash/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-online-34d399?style=flat-square&logo=githubpages&logoColor=white"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-4f8cff?style=flat-square"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-ff6b9d?style=flat-square"></a>
@@ -30,6 +32,11 @@
 </p>
 
 <p align="center">
+  <em>Alpha release (v0.1.0)</em> — local-first and usable today. The data contract
+  (<code>Hooks → /api/ingest → SQLite → UI</code>) is stable; more widgets land via the plugin registry.
+</p>
+
+<p align="center">
   <img src="assets/demo.svg" alt="Claude Mission Control dashboard" width="100%">
 </p>
 
@@ -45,13 +52,9 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 (enable repo → Settings → Pages → Source: **GitHub Actions**).
 
 <!--
-  DEMO CLIPS live in the `assets/` folder. They are embedded as animated GIFs so
-  they autoplay and loop INLINE in the rendered README (no click, no download):
-    • assets/dashboard.gif / .mp4   ← screen recording of the dashboard
-    • assets/graph-3d.gif  / .mp4   ← screen recording of the 3D tool graph
-  The GIFs are generated from the MP4s with ffmpeg (see assets/README note below).
-  The MP4 links are the full-resolution fallback; GitHub does NOT autoplay <video>
-  in a README, which is why the inline previews are GIFs.
+  Demo clips live in assets/ as looping GIFs (autoplay inline on GitHub) with the
+  source MP4s linked underneath for full resolution. Regenerate a GIF from its MP4
+  with ffmpeg if you re-record.
 -->
 
 ### Dashboard
@@ -187,9 +190,9 @@ src/
 │  └─ icon.svg          # favicon (auto-picked up by Next)
 ├─ lib/                 # db, event bus, ingest projection, ccusage, formatting
 ├─ plugins/             # ◀ widgets: live-stream, kanban, token-chart, tool-graph + registry.ts
-└─ components/          # dashboard shell, live SSE provider, panel
+└─ components/          # dashboard shell, live SSE provider, search, panel
 scripts/                # claude-hook.sh, install-hooks, import-history, seed-demo
-assets/                 # logo + animated demo
+assets/                 # logo, icon, demo clips (gif/mp4) + screenshots
 ```
 
 ## Tests

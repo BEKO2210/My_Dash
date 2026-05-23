@@ -2,6 +2,9 @@
   "name": "claude-mission-control",
   "version": "0.1.0",
   "private": true,
+  "description": "A local, read-only observability dashboard for Claude Code — live event stream, session kanban, token/cost charts and a 3D tool-call graph.",
+  "license": "MIT",
+  "author": "Belkis Aslani",
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",

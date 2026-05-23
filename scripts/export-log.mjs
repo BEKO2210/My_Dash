@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Exports the stored prompts + tool calls (the "what") into a readable Markdown
-// transcript, grouped by session, newest session first. The "why" lives in
-// DECISIONS.md; persistent Claude knowledge lives in ~/.claude/.../memory.
+// Exports the stored prompts + tool calls into a readable Markdown transcript,
+// grouped by session, newest session first.
 //
 //   npm run export-log
 //
@@ -67,7 +66,7 @@ for (const s of sessions) {
 const header =
   `# Claude Mission Control — Log-Export\n\n` +
   `Erzeugt: ${new Date().toLocaleString("de-DE")} · ${sessions.length} Sessions · ${totalEvents} Events\n\n` +
-  `Quelle: \`data/mission-control.db\` (Prompts + Tool-Aufrufe). Das *Warum* steht in \`DECISIONS.md\`.\n\n---\n`;
+  `Quelle: \`data/mission-control.db\` (Prompts + Tool-Aufrufe).\n\n---\n`;
 
 const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19);
 const outFile = path.join(outDir, `log-${stamp}.md`);

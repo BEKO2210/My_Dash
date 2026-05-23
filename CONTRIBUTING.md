@@ -58,9 +58,6 @@ The grid renders it automatically.
   (German and English). Add both when you introduce new copy.
 - **Accessibility**: give icon-only controls an `aria-label`, keep dialogs
   closable with `Esc`, and prefer semantic elements.
-- **Decision journal**: notable changes are recorded in `DECISIONS.md`
-  (what changed, why, which files). Add an entry for non-trivial work.
-- **QA**: see `QA-ROADMAP.md` for the structured test passes.
 
 ## Reporting bugs
 
