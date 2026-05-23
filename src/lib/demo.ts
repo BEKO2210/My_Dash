@@ -384,6 +384,23 @@ export function demoStats() {
   };
 }
 
+export function demoActivity() {
+  const buckets: { bucket: string; event_type: string; count: number }[] = [];
+  const now = Date.now();
+  for (let h = 0; h < 21 * 24; h++) {
+    const d = new Date(now - h * 3_600_000);
+    const hour = d.getUTCHours();
+    // Busier during the working day, quieter at night/weekends.
+    const work = hour >= 8 && hour <= 19 ? 1 : 0.25;
+    const weekend = d.getUTCDay() === 0 || d.getUTCDay() === 6 ? 0.4 : 1;
+    const count = Math.round(work * weekend * (4 + Math.abs(Math.sin(h)) * 16));
+    if (count > 0) {
+      buckets.push({ bucket: d.toISOString().replace("T", " ").slice(0, 13), event_type: "E", count });
+    }
+  }
+  return { buckets };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -412,6 +429,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/usage")) return json(demoUsage());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
+    if (path.endsWith("/api/activity")) return json(demoActivity());
     if (path.includes("/api/events")) {
       const u = new URL(raw, window.location.href);
       const limit = Number(u.searchParams.get("limit")) || 100;
