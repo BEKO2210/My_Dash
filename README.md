@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="assets/Icon.png" alt="Claude Mission Control" width="360">
+</p>
+
+<p align="center">
   <img src="assets/logo.svg" alt="Claude Mission Control" width="520">
 </p>
 
