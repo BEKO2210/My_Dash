@@ -35,7 +35,11 @@ test.beforeAll(async () => {
 });
 
 test("dashboard renders all four widgets and connects", async ({ page }) => {
-  await page.goto("/");
+  const response = await page.goto("/");
+
+  // Security headers are served by the local server.
+  expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(response?.headers()["x-frame-options"]).toBe("DENY");
 
   await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
 
