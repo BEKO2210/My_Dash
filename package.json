@@ -45,15 +45,16 @@
     "react-force-graph-3d": "^1.29.1",
     "recharts": "^3.8.1",
     "tailwind-merge": "^2.6.0",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.7.0",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@electron/rebuild": "^3.7.0",
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8",
     "eslint": "^9",
@@ -72,18 +73,52 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": ".next/standalone", "to": "standalone" },
-      { "from": "scripts", "to": "scripts" },
-      { "from": "assets/Icon.png", "to": "Icon.png" }
+      {
+        "from": ".next/standalone",
+        "to": "standalone"
+      },
+      {
+        "from": "scripts",
+        "to": "scripts"
+      },
+      {
+        "from": "assets/Icon.png",
+        "to": "Icon.png"
+      }
     ],
     "directories": {
       "output": "dist",
       "buildResources": "electron/build"
     },
     "npmRebuild": false,
-    "win": { "target": ["nsis"], "icon": "electron/build/icon.ico" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "artifactName": "Claude-Mission-Control-Setup.${ext}" },
-    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools", "identity": null, "icon": "electron/build/icon.icns", "artifactName": "Claude-Mission-Control.${ext}" },
-    "linux": { "target": ["AppImage", "deb"], "category": "Development", "icon": "electron/build/icon.png", "artifactName": "Claude-Mission-Control.${ext}" }
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "electron/build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Claude-Mission-Control-Setup.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "icon": "electron/build/icon.icns",
+      "artifactName": "Claude-Mission-Control.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development",
+      "icon": "electron/build/icon.png",
+      "artifactName": "Claude-Mission-Control.${ext}"
+    }
   }
 }
