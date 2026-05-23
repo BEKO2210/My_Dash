@@ -122,6 +122,9 @@ const DE: Record<string, string> = {
   "donut.empty": "Noch keine Modelldaten.",
   "donut.total": "gesamt",
   "donut.other": "Andere",
+  "sankey.title": "Fluss",
+  "sankey.info": "Fluss von Projekt → Tool → Ressourcentyp aus den Tool-Aufrufen.",
+  "sankey.empty": "Noch keine Tool-Ziele.",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -307,6 +310,9 @@ const EN: Record<string, string> = {
   "donut.empty": "No model data yet.",
   "donut.total": "total",
   "donut.other": "Other",
+  "sankey.title": "Flow",
+  "sankey.info": "Flow of project → tool → resource kind from tool calls.",
+  "sankey.empty": "No tool targets yet.",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

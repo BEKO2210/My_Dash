@@ -4,6 +4,7 @@
 // LiveProvider to read from here. Pure client-safe (no node imports).
 
 import { latencyStats } from "./latency";
+import { buildSankey, type SankeyTriple } from "./sankey";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -479,6 +480,20 @@ export function demoErrors() {
   };
 }
 
+export function demoSankey() {
+  const projects = ["my_dash", "shopify-bot"];
+  const tools = ["Read", "Edit", "Bash", "Grep", "WebFetch"];
+  const kinds = ["file", "command", "url", "pattern"];
+  const triples: SankeyTriple[] = [];
+  for (let i = 0; i < 400; i++) {
+    const tool = tools[Math.floor(Math.random() * tools.length)];
+    const kind =
+      tool === "Bash" ? "command" : tool === "WebFetch" ? "url" : tool === "Grep" ? "pattern" : "file";
+    triples.push({ project: projects[i % projects.length], tool, kind: kinds.includes(kind) ? kind : "file" });
+  }
+  return buildSankey(triples);
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -510,6 +525,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/activity")) return json(demoActivity());
     if (path.endsWith("/api/tools/latency")) return json(demoLatency());
     if (path.endsWith("/api/errors")) return json(demoErrors());
+    if (path.endsWith("/api/sankey")) return json(demoSankey());
     if (path.endsWith("/api/tools")) return json(demoTools());
     if (path.endsWith("/api/files")) return json(demoFiles());
     if (path.includes("/api/events")) {
