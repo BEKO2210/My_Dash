@@ -3,6 +3,7 @@
 import { Activity, KanbanSquare, Coins, Boxes } from "lucide-react";
 import { RadarLogo } from "@/components/radar-logo";
 import { LangToggle } from "@/components/lang-toggle";
+import { DownloadSection } from "@/components/download";
 import { useT } from "@/lib/i18n";
 
 const GITHUB = "https://github.com/BEKO2210/My_Dash";
@@ -58,7 +59,9 @@ export function Landing() {
           {t("landing.lead")}
         </p>
 
-        <div className="mt-9 grid grid-cols-1 gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
+        <DownloadSection />
+
+        <div className="mt-12 grid grid-cols-1 gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => (
             <div
               key={f.title}

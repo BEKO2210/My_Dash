@@ -146,9 +146,9 @@ workflow and attached to every [GitHub Release](https://github.com/BEKO2210/My_D
 
 | OS | File ([latest](https://github.com/BEKO2210/My_Dash/releases/latest)) |
 |----|------|
-| Windows | `Claude Mission Control Setup <version>.exe` (NSIS installer) |
-| macOS | `Claude Mission Control-<version>.dmg` |
-| Linux | `.AppImage` (portable) or `.deb` |
+| Windows | `Claude-Mission-Control-Setup.exe` (NSIS installer) |
+| macOS | `Claude-Mission-Control.dmg` (Apple Silicon) |
+| Linux | `Claude-Mission-Control.AppImage` (portable) or `Claude-Mission-Control.deb` |
 
 > **Alpha note:** the installers are **unsigned**. On Windows, SmartScreen shows
 > *More info → Run anyway*; on macOS, right-click the app → **Open** the first time.
