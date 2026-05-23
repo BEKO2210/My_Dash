@@ -129,6 +129,12 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS idx_file_edits_path ON file_edits(path);
   CREATE INDEX IF NOT EXISTS idx_file_edits_session ON file_edits(session_id);
   `,
+
+  // v9 — git context per session (captured read-only from the cwd at SessionStart).
+  `
+  ALTER TABLE sessions ADD COLUMN branch TEXT;
+  ALTER TABLE sessions ADD COLUMN git_commit TEXT;
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

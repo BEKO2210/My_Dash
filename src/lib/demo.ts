@@ -116,6 +116,8 @@ function toRow(s: DSession): SessionRow {
     token_output: 0,
     token_cache: 0,
     cost_usd: 0,
+    branch: null,
+    git_commit: null,
   };
 }
 
