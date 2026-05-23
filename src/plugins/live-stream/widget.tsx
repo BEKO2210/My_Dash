@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
@@ -64,9 +65,19 @@ export function LiveStream() {
       }
     >
       {events.length === 0 ? (
-        <Empty />
+        <WidgetState
+          icon={Activity}
+          title={t("stream.emptyTitle")}
+          description={
+            <>
+              {t("stream.emptyPre")}
+              <code className="text-accent">npm run seed</code>
+              {t("stream.emptyPost")}
+            </>
+          }
+        />
       ) : filtered.length === 0 ? (
-        <NoResults />
+        <WidgetState icon={Activity} title={t("common.noResults")} />
       ) : (
         <ul role="log" aria-live="polite" aria-label={t("stream.title")} className="divide-y divide-panel-border/60">
           {filtered.map((e) => {
@@ -93,30 +104,5 @@ export function LiveStream() {
         </ul>
       )}
     </Panel>
-  );
-}
-
-function Empty() {
-  const { t } = useT();
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
-      <Activity className="h-6 w-6 opacity-50" />
-      <p>{t("stream.emptyTitle")}</p>
-      <p className="text-xs">
-        {t("stream.emptyPre")}
-        <code className="text-accent">npm run seed</code>
-        {t("stream.emptyPost")}
-      </p>
-    </div>
-  );
-}
-
-function NoResults() {
-  const { t } = useT();
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
-      <Activity className="h-6 w-6 opacity-50" />
-      <p>{t("common.noResults")}</p>
-    </div>
   );
 }

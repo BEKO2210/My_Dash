@@ -80,6 +80,7 @@ const DE: Record<string, string> = {
   "common.close": "Schließen",
   "common.retry": "Erneut versuchen",
   "common.noResults": "Keine Treffer.",
+  "common.loading": "Lädt…",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -216,6 +217,7 @@ const EN: Record<string, string> = {
   "common.close": "Close",
   "common.retry": "Retry",
   "common.noResults": "No matches.",
+  "common.loading": "Loading…",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
