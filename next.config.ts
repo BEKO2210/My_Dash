@@ -17,6 +17,9 @@ const nextConfig: NextConfig = isDemo
       env: { NEXT_PUBLIC_MC_DEMO: "1" },
     }
   : {
+      // Standalone output bundles a minimal server (.next/standalone/server.js) so the
+      // Electron desktop build can ship it without the full node_modules tree.
+      output: "standalone",
       // better-sqlite3 is a native module — keep it out of the bundle so it loads via require() at runtime.
       serverExternalPackages: ["better-sqlite3"],
     };
