@@ -65,6 +65,20 @@ const noun = (n: GraphNode, t: (k: string) => string): string => t(`graph.kind.$
 
 const endId = (e: string | GraphNode): string => (typeof e === "object" ? e.id : e);
 
+// The 3D graph needs WebGL. On devices/browsers without it, we show a hint
+// instead of a broken canvas — the rest of the dashboard is unaffected.
+function webglAvailable(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Darken a #rrggbb so non-active nodes recede behind the glowing active subgraph.
 function dim(hex: string, f: number): string {
   const n = parseInt(hex.slice(1), 16);
@@ -89,7 +103,15 @@ export function ToolGraph() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const threeRef = useRef<any>(null);
   const [threeReady, setThreeReady] = useState(false);
+  const [webglOk, setWebglOk] = useState(true);
   const sig = useRef("");
+
+  // WebGL support is only knowable on the client; assume ok during SSR/first paint
+  // and re-check after the frame so hydration matches the server output.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setWebglOk(webglAvailable()));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   // Load three on the client for the metallic node material.
   useEffect(() => {
@@ -369,6 +391,7 @@ export function ToolGraph() {
           <button
             onClick={() => setMaximized((m) => !m)}
             title={maximized ? t("graph.shrinkTitle") : t("graph.fullscreen")}
+            aria-label={maximized ? t("graph.shrink") : t("graph.fullscreen")}
             className="flex items-center gap-1 rounded-md border border-panel-border px-2 py-1 text-[11px] text-muted transition-colors hover:border-accent/50 hover:text-foreground"
           >
             {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
@@ -377,7 +400,12 @@ export function ToolGraph() {
         }
       >
         <div ref={wrapRef} className="relative h-full w-full">
-          {data.nodes.length === 0 ? (
+          {!webglOk ? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
+              <Boxes className="h-6 w-6 opacity-50" />
+              <p className="max-w-xs">{t("graph.noWebgl")}</p>
+            </div>
+          ) : data.nodes.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
               <Boxes className="h-6 w-6 opacity-50" />
               <p>{t("graph.empty")}</p>
@@ -473,7 +501,7 @@ function DetailCard({
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: baseColor(node) }} />
           <span className="font-semibold text-foreground">{noun(node, t)}</span>
         </div>
-        <button onClick={onClose} className="text-muted hover:text-foreground" title={t("common.close")}>
+        <button onClick={onClose} className="text-muted hover:text-foreground" title={t("common.close")} aria-label={t("common.close")}>
           <X className="h-3.5 w-3.5" />
         </button>
       </div>

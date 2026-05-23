@@ -118,6 +118,7 @@ npm run dev                   # http://127.0.0.1:3000   (or ./start.sh for a pro
 npm run seed                  # inject demo events to see the full UI immediately
 npm run install-hooks         # wire hooks into ~/.claude/settings.json (backs it up first)
 npm run import-history        # optional: backfill past sessions from transcripts
+npm test                      # optional: run the unit tests (Vitest)
 ```
 
 Restart any running Claude Code session after `install-hooks`, then watch it appear live.
@@ -157,6 +158,23 @@ scripts/                # claude-hook.sh, install-hooks, import-history, seed-de
 assets/                 # logo + animated demo
 ```
 
+## Tests
+
+```bash
+npm test         # unit tests (Vitest)
+npm run lint     # ESLint (Next.js config)
+npm run build    # production build (also type-checks)
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). In short: keep the one-way data flow
+(`Hooks → /api/ingest → SQLite → UI`) intact, and run `npm test` + `npm run lint`
+before opening a pull request.
+
+## License
+
+[MIT](LICENSE) © Belkis Aslani
 
 ---
 

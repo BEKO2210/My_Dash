@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
+import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { eventKind, KIND_COLOR, relativeTime, type EventKind } from "@/lib/format";
 
@@ -34,6 +35,7 @@ const ICONS: Record<EventKind, LucideIcon> = {
 
 export function LiveStream() {
   const { events, connected } = useLive();
+  const { query } = useSearch();
   const { t, lang } = useT();
   const [, setNow] = useState(0);
 
@@ -42,6 +44,10 @@ export function LiveStream() {
     const t = setInterval(() => setNow((n) => n + 1), 5000);
     return () => clearInterval(t);
   }, []);
+
+  const filtered = events.filter((e) =>
+    matchesQuery(query, e.summary, e.event_type, e.tool_name, e.session_id),
+  );
 
   return (
     <Panel
@@ -59,9 +65,11 @@ export function LiveStream() {
     >
       {events.length === 0 ? (
         <Empty />
+      ) : filtered.length === 0 ? (
+        <NoResults />
       ) : (
-        <ul className="divide-y divide-panel-border/60">
-          {events.map((e) => {
+        <ul role="log" aria-live="polite" aria-label={t("stream.title")} className="divide-y divide-panel-border/60">
+          {filtered.map((e) => {
             const kind = eventKind(e.event_type);
             const Icon = ICONS[kind];
             return (
@@ -99,6 +107,16 @@ function Empty() {
         <code className="text-accent">npm run seed</code>
         {t("stream.emptyPost")}
       </p>
+    </div>
+  );
+}
+
+function NoResults() {
+  const { t } = useT();
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
+      <Activity className="h-6 w-6 opacity-50" />
+      <p>{t("common.noResults")}</p>
     </div>
   );
 }

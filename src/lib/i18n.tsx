@@ -66,6 +66,14 @@ const DE: Record<string, string> = {
   "common.allProjects": "Alle Projekte",
   "common.close": "Schließen",
   "common.retry": "Erneut versuchen",
+  "common.noResults": "Keine Treffer.",
+
+  "search.label": "Sessions und Events durchsuchen",
+  "search.placeholder": "Suchen…",
+  "search.clear": "Suche löschen",
+
+  "layout.drag": "Zum Umordnen ziehen",
+  "layout.reset": "Layout zurücksetzen",
 
   "status.active": "Aktiv",
   "status.waiting": "Wartet",
@@ -77,6 +85,14 @@ const DE: Record<string, string> = {
   "kanban.empty": "leer",
   "kanban.stale": "inaktiv — automatisch beendet",
   "kanban.sessionFallback": "Session",
+  "kanban.openDetail": "Details öffnen",
+  "kanban.detail": "Session-Details",
+  "kanban.firstSeen": "Zuerst gesehen",
+  "kanban.lastSeen": "Zuletzt aktiv",
+  "kanban.eventsLabel": "Events",
+  "kanban.toolsLabel": "Tools",
+  "kanban.recentEvents": "Letzte Events",
+  "kanban.noEvents": "Keine Events für diese Session.",
 
   "stream.title": "Live Stream",
   "stream.info":
@@ -109,6 +125,8 @@ const DE: Record<string, string> = {
   "graph.shrink": "Verkleinern",
   "graph.shrinkTitle": "Verkleinern (Esc)",
   "graph.empty": "Noch keine Tool-Aufrufe.",
+  "graph.noWebgl":
+    "3D-Ansicht nicht verfügbar: Dieser Browser bzw. dieses Gerät unterstützt kein WebGL. Die übrigen Panels funktionieren normal.",
   "graph.kind.session": "Session",
   "graph.kind.prompt": "Prompt",
   "graph.kind.tool": "Tool",
@@ -171,6 +189,14 @@ const EN: Record<string, string> = {
   "common.allProjects": "All projects",
   "common.close": "Close",
   "common.retry": "Retry",
+  "common.noResults": "No matches.",
+
+  "search.label": "Search sessions and events",
+  "search.placeholder": "Search…",
+  "search.clear": "Clear search",
+
+  "layout.drag": "Drag to reorder",
+  "layout.reset": "Reset layout",
 
   "status.active": "Active",
   "status.waiting": "Waiting",
@@ -182,6 +208,14 @@ const EN: Record<string, string> = {
   "kanban.empty": "empty",
   "kanban.stale": "inactive — auto-ended",
   "kanban.sessionFallback": "Session",
+  "kanban.openDetail": "Open details",
+  "kanban.detail": "Session details",
+  "kanban.firstSeen": "First seen",
+  "kanban.lastSeen": "Last active",
+  "kanban.eventsLabel": "Events",
+  "kanban.toolsLabel": "Tools",
+  "kanban.recentEvents": "Recent events",
+  "kanban.noEvents": "No events for this session.",
 
   "stream.title": "Live Stream",
   "stream.info":
@@ -214,6 +248,8 @@ const EN: Record<string, string> = {
   "graph.shrink": "Shrink",
   "graph.shrinkTitle": "Shrink (Esc)",
   "graph.empty": "No tool calls yet.",
+  "graph.noWebgl":
+    "3D view unavailable: this browser or device doesn't support WebGL. The other panels work normally.",
   "graph.kind.session": "Session",
   "graph.kind.prompt": "Prompt",
   "graph.kind.tool": "Tool",
