@@ -57,6 +57,10 @@ describe("mapDailyRows", () => {
   it("returns an empty array for no rows", () => {
     expect(mapDailyRows([], 0.92)).toEqual([]);
   });
+
+  it("uses the `month` field as the date for monthly rows", () => {
+    expect(mapDailyRows([{ month: "2026-05", totalCost: 2 }], 1)[0].date).toBe("2026-05");
+  });
 });
 
 describe("mapBlockRows", () => {
@@ -112,6 +116,7 @@ describe("buildReport", () => {
     expect(report.days).toHaveLength(2);
     expect(report.blocks).toHaveLength(1);
     expect(report.models).toEqual([]); // no modelBreakdowns in the fixture
+    expect(report.months).toEqual([]); // no monthly rows passed
     expect(report.totals).toMatchObject({
       inputTokens: 5,
       outputTokens: 10,
@@ -119,6 +124,12 @@ describe("buildReport", () => {
       costUsd: 4,
       costEur: 4,
     });
+  });
+
+  it("maps the optional monthly rows into months", () => {
+    const report = buildReport([], null, 1, NOW, [{ month: "2026-05", totalCost: 3, totalTokens: 9 }]);
+    expect(report.months).toHaveLength(1);
+    expect(report.months[0]).toMatchObject({ date: "2026-05", costUsd: 3, totalTokens: 9 });
   });
 
   it("treats null blocks (command unavailable) as an empty list but still reports daily", () => {

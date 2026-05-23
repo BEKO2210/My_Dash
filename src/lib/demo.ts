@@ -335,7 +335,13 @@ export function demoUsage() {
     costEur: +(totals.costEur * m.share).toFixed(2),
   }));
 
-  return { days, blocks, models, totals, available: true };
+  const months = [2, 1, 0].map((off) => {
+    const m = new Date(today.getFullYear(), today.getMonth() - off, 1);
+    const base = day("", 6 + off);
+    return { ...base, date: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}` };
+  });
+
+  return { days, months, blocks, models, totals, available: true };
 }
 
 export function demoSubscribe(fn: (m: StreamMessage) => void) {

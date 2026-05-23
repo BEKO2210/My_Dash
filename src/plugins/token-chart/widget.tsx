@@ -20,7 +20,13 @@ import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
 
 type Mode = "tokens" | "cost";
-type Range = "24h" | "daily";
+type Range = "24h" | "daily" | "monthly";
+
+const RANGE_LABELS: Record<Range, string> = {
+  "24h": "tokens.range24h",
+  daily: "tokens.rangeDaily",
+  monthly: "tokens.rangeMonthly",
+};
 
 const hhmm = (iso: string) => {
   const d = new Date(iso);
@@ -59,8 +65,8 @@ export function TokenChart() {
           cache: b.cacheTokens,
           cost: Number(b.costEur.toFixed(2)),
         }))
-      : (usage?.days ?? []).map((d) => ({
-          date: d.date.slice(5), // MM-DD
+      : (range === "monthly" ? (usage?.months ?? []) : (usage?.days ?? [])).map((d) => ({
+          date: range === "monthly" ? d.date : d.date.slice(5), // YYYY-MM vs MM-DD
           input: d.inputTokens,
           output: d.outputTokens,
           cache: d.cacheTokens,
@@ -82,13 +88,13 @@ export function TokenChart() {
             {formatMoney(shownCost, "EUR")} · {formatCompact(shownTokens)} {t("tokens.tok")}
           </span>
           <div className="flex rounded-md border border-panel-border text-xs">
-            {(["24h", "daily"] as Range[]).map((r) => (
+            {(["24h", "daily", "monthly"] as Range[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
               >
-                {r === "24h" ? t("tokens.range24h") : t("tokens.rangeDaily")}
+                {t(RANGE_LABELS[r])}
               </button>
             ))}
           </div>

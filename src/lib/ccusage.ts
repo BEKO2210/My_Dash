@@ -39,6 +39,7 @@ export interface UsageModel {
 
 export interface UsageReport {
   days: UsageDay[];
+  months: UsageDay[]; // monthly aggregates (same shape; date = "YYYY-MM")
   blocks: UsageBlock[]; // last 24h, 5h buckets
   models: UsageModel[]; // per-model totals (from --breakdown)
   totals: {
@@ -78,6 +79,7 @@ export interface CcusageModelBreakdown {
 
 export interface CcusageDaily {
   period?: string;
+  month?: string; // monthly report uses `month` instead of `period`
   inputTokens?: number;
   outputTokens?: number;
   cacheCreationTokens?: number;
@@ -128,6 +130,7 @@ export function eurRate(): number {
 export function empty(): UsageReport {
   return {
     days: [],
+    months: [],
     blocks: [],
     models: [],
     totals: { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
@@ -142,7 +145,7 @@ export function mapDailyRows(rows: CcusageDaily[], rate: number): UsageDay[] {
     const cacheTokens = (d.cacheCreationTokens ?? 0) + (d.cacheReadTokens ?? 0);
     const costUsd = d.totalCost ?? 0;
     return {
-      date: d.period ?? "",
+      date: d.period ?? d.month ?? "",
       inputTokens: d.inputTokens ?? 0,
       outputTokens: d.outputTokens ?? 0,
       cacheTokens,
@@ -236,6 +239,7 @@ export function buildReport(
   blocks: CcusageBlock[] | null,
   rate: number,
   now: number,
+  monthly: CcusageDaily[] = [],
 ): UsageReport {
   const days = mapDailyRows(daily, rate);
   const totals = days.reduce(
@@ -252,6 +256,7 @@ export function buildReport(
   );
   return {
     days,
+    months: mapDailyRows(monthly, rate),
     blocks: blocks ? mapBlockRows(blocks, rate, now) : [],
     models: mapModelBreakdown(daily, rate),
     totals,
@@ -268,9 +273,14 @@ export async function getUsage(): Promise<UsageReport> {
     execFileAsync(bin, [cmd, "--json", ...args], { timeout: 20_000, maxBuffer: 16 * 1024 * 1024 });
 
   try {
-    // Daily (multi-day chart, with per-model breakdown) + blocks (last-24h view)
-    // in parallel. Blocks are best-effort — a failure still yields the daily report.
-    const [dailyRes, blocksRes] = await Promise.allSettled([run("daily", "--breakdown"), run("blocks")]);
+    // Daily (multi-day chart, with per-model breakdown) + blocks (last-24h view) +
+    // monthly in parallel. Blocks/monthly are best-effort — a failure there still
+    // yields the daily report.
+    const [dailyRes, blocksRes, monthlyRes] = await Promise.allSettled([
+      run("daily", "--breakdown"),
+      run("blocks"),
+      run("monthly"),
+    ]);
 
     if (dailyRes.status !== "fulfilled") throw new Error("ccusage daily failed");
 
@@ -279,8 +289,12 @@ export async function getUsage(): Promise<UsageReport> {
       blocksRes.status === "fulfilled"
         ? (JSON.parse(blocksRes.value.stdout) as { blocks?: CcusageBlock[] }).blocks ?? []
         : null;
+    const monthly =
+      monthlyRes.status === "fulfilled"
+        ? (JSON.parse(monthlyRes.value.stdout) as { monthly?: CcusageDaily[] }).monthly ?? []
+        : [];
 
-    const report = buildReport(daily, blocks, rate, Date.now());
+    const report = buildReport(daily, blocks, rate, Date.now(), monthly);
     cache = { at: Date.now(), report };
     return report;
   } catch {
