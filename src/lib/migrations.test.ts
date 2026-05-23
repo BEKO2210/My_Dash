@@ -22,7 +22,14 @@ describe("migrate", () => {
     expect(migrate(db)).toBe(MIGRATIONS.length);
     expect(version(db)).toBe(MIGRATIONS.length);
     expect(tables(db)).toEqual(
-      expect.arrayContaining(["sessions", "events", "tool_calls", "tool_io", "session_links"]),
+      expect.arrayContaining([
+        "sessions",
+        "events",
+        "tool_calls",
+        "tool_io",
+        "session_links",
+        "prompts",
+      ]),
     );
   });
 

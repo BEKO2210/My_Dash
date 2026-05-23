@@ -5,6 +5,7 @@ import path from "node:path";
 import type {
   EventRow,
   HookPayload,
+  PromptRow,
   SessionLinkRow,
   SessionRow,
   ToolCallRow,
@@ -33,7 +34,7 @@ afterAll(() => {
 
 beforeEach(() => {
   db.exec(
-    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM sessions;",
+    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM prompts; DELETE FROM sessions;",
   );
   // The Pre/Post duration pairing keeps starts in a process-global map; reset it
   // so each test is deterministic.
@@ -60,6 +61,8 @@ const toolIo = (callId: number) =>
   db.prepare("SELECT * FROM tool_io WHERE tool_call_id = ?").get(callId) as ToolIoRow | undefined;
 const links = (parentId: string) =>
   db.prepare("SELECT * FROM session_links WHERE parent_session_id = ?").all(parentId) as SessionLinkRow[];
+const prompts = (id: string) =>
+  db.prepare("SELECT * FROM prompts WHERE session_id = ? ORDER BY id").all(id) as PromptRow[];
 
 describe("ingest — session creation", () => {
   it("creates an active session and derives project_name from cwd", () => {
@@ -254,6 +257,34 @@ describe("ingest — tool calls", () => {
   it("does not create a tool_call for a PostToolUse without a tool_name", () => {
     send("PostToolUse", { session_id: "s1" });
     expect(toolCalls("s1")).toHaveLength(0);
+  });
+});
+
+describe("ingest — prompt redaction & storage", () => {
+  it("redacts secrets everywhere and stores a prompt row with a token estimate", () => {
+    const secret = "ghp_abcdefghijklmnopqrstuvwxyz0123";
+    const { event } = send("UserPromptSubmit", {
+      session_id: "s1",
+      prompt: `deploy with ${secret} now`,
+    });
+
+    // Title, payload_json and the prompts row are all redacted.
+    expect(session("s1")!.title).toContain("[REDACTED]");
+    expect(session("s1")!.title).not.toContain(secret);
+    expect(event.payload_json).toContain("[REDACTED]");
+    expect(event.payload_json).not.toContain(secret);
+
+    const rows = prompts("s1");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].text).toContain("[REDACTED]");
+    expect(rows[0].text).not.toContain(secret);
+    expect(rows[0].event_id).toBe(event.id);
+    expect(rows[0].token_estimate).toBeGreaterThan(0);
+  });
+
+  it("does not create a prompt row for non-prompt events", () => {
+    send("SessionStart", { session_id: "s1" });
+    expect(prompts("s1")).toHaveLength(0);
   });
 });
 
