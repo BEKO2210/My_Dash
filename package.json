@@ -81,9 +81,9 @@
       "buildResources": "electron/build"
     },
     "npmRebuild": false,
-    "win": { "target": ["nsis"] },
+    "win": { "target": ["nsis"], "icon": "electron/build/icon.ico" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
-    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools", "identity": null },
-    "linux": { "target": ["AppImage", "deb"], "category": "Development" }
+    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools", "identity": null, "icon": "electron/build/icon.icns" },
+    "linux": { "target": ["AppImage", "deb"], "category": "Development", "icon": "electron/build/icon.png" }
   }
 }
