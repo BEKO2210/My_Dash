@@ -162,6 +162,12 @@ const DE: Record<string, string> = {
   "streak.perDay": "Sessions pro Tag (30 T.)",
   "streak.peakHours": "Stoßzeiten (Stunde)",
 
+  "subagents.title": "Subagent-Baum",
+  "subagents.info": "Welche Sessions Subagenten per Task gestartet haben – aufklappen zeigt die einzelnen Subagenten.",
+  "subagents.empty": "Noch keine Subagenten.",
+  "subagents.emptyHint": "Sobald Claude einen Task-Subagenten startet, erscheint er hier.",
+  "subagents.unnamed": "Unbenannter Subagent",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -385,6 +391,12 @@ const EN: Record<string, string> = {
   "streak.peak": "Peak hour",
   "streak.perDay": "Sessions per day (30d)",
   "streak.peakHours": "Peak hours (hour)",
+
+  "subagents.title": "Subagent tree",
+  "subagents.info": "Which sessions spawned subagents via Task — expand to see the individual subagents.",
+  "subagents.empty": "No subagents yet.",
+  "subagents.emptyHint": "As soon as Claude launches a Task subagent, it shows up here.",
+  "subagents.unnamed": "Unnamed subagent",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

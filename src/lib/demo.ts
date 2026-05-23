@@ -8,6 +8,7 @@ import { buildSankey, type SankeyTriple } from "./sankey";
 import type { ProjectUsage } from "./projects";
 import type { PromptHistoryItem } from "./prompts";
 import { streakStats, peakHour, type DayCount } from "./streak";
+import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -560,6 +561,45 @@ export function demoStreak() {
   return { streak: streakStats(days), days, hours, peakHour: peakHour(hours) };
 }
 
+export function demoSubagents() {
+  const groups: SubagentGroup[] = [];
+  let id = 1;
+  for (const s of sessions) {
+    const tasks = s.tools.filter((tc) => tc.tool === "Task");
+    if (tasks.length === 0) continue;
+    groups.push({
+      session_id: s.id,
+      project: s.project,
+      title: s.title,
+      count: tasks.length,
+      last_at: s.last_seen,
+      tasks: tasks.map((tk) => ({
+        id: id++,
+        label: tk.full,
+        child_session_id: null,
+        tool_call_id: null,
+        created_at: s.last_seen,
+      })),
+    });
+  }
+  // Guarantee the demo shows the widget even if no Task calls fired yet.
+  if (groups.length === 0 && sessions.length > 0) {
+    const s = sessions[sessions.length - 1];
+    groups.push({
+      session_id: s.id,
+      project: s.project,
+      title: s.title,
+      count: 2,
+      last_at: s.last_seen,
+      tasks: [
+        { id: id++, label: "Explore: locate the ingest pipeline", child_session_id: null, tool_call_id: null, created_at: s.last_seen },
+        { id: id++, label: "Plan: design the retention sweep", child_session_id: null, tool_call_id: null, created_at: s.last_seen },
+      ],
+    });
+  }
+  return { groups: groups.reverse() };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -589,6 +629,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/usage")) return json(demoUsage());
     if (path.endsWith("/api/prompts")) return json(demoPrompts());
     if (path.endsWith("/api/streak")) return json(demoStreak());
+    if (path.endsWith("/api/subagents")) return json(demoSubagents());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
