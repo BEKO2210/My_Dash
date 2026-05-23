@@ -12,11 +12,21 @@
 </p>
 
 <p align="center">
-  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?logo=next.js">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white">
-  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-better--sqlite3-003b57?logo=sqlite&logoColor=white">
-  <img alt="local-first" src="https://img.shields.io/badge/local--first-127.0.0.1-34d399">
-  <img alt="read-only" src="https://img.shields.io/badge/dashboard-read--only-4f8cff">
+  <a href="https://beko2210.github.io/My_Dash/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-online-34d399?style=flat-square&logo=githubpages&logoColor=white"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-4f8cff?style=flat-square"></a>
+  <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-ff6b9d?style=flat-square"></a>
+  <img alt="local-first" src="https://img.shields.io/badge/local--first-127.0.0.1-34d399?style=flat-square">
+  <img alt="read-only" src="https://img.shields.io/badge/dashboard-read--only-4f8cff?style=flat-square">
+</p>
+
+<p align="center">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=nextdotjs&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white">
+  <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="Tailwind CSS 4" src="https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white">
+  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-r184-000?style=flat-square&logo=threedotjs&logoColor=white">
+  <img alt="SQLite better-sqlite3" src="https://img.shields.io/badge/SQLite-better--sqlite3-003b57?style=flat-square&logo=sqlite&logoColor=white">
+  <img alt="Tested with Vitest" src="https://img.shields.io/badge/tested_with-Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white">
 </p>
 
 <p align="center">
@@ -59,6 +69,30 @@ graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 </p>
 
 ▶️ [Full-resolution recording (graph-3d.mp4)](https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4)
+
+---
+
+## Features in action
+
+The full dashboard — kanban, live stream, token/cost chart and the 3D tool-call graph
+in one read-only view:
+
+<p align="center">
+  <img src="assets/feature-dashboard.png" alt="Claude Mission Control dashboard overview" width="100%">
+</p>
+
+**Global search** — filter the live stream and the session kanban straight from the header.
+
+<p align="center">
+  <img src="assets/feature-search.png" alt="Global search filtering the live stream and kanban" width="100%">
+</p>
+
+**Session details** — click any kanban card for its status, timings, counts and recent
+events. Panels are drag-and-drop reorderable (with a one-click reset).
+
+<p align="center">
+  <img src="assets/feature-session-detail.png" alt="Session detail dialog with recent events" width="100%">
+</p>
 
 ---
 
