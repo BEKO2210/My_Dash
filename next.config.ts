@@ -7,6 +7,17 @@ import type { NextConfig } from "next";
 const isDemo = process.env.MC_DEMO === "1";
 const basePath = isDemo ? process.env.MC_BASE_PATH ?? "/My_Dash" : undefined;
 
+// Conservative, non-breaking security headers for the local server. (No CSP: the
+// 3D graph/charts pull in inline styles, blob workers and WebGL, so a strict
+// policy would need careful nonce work — out of scope for a 127.0.0.1-only tool.)
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = isDemo
   ? {
       output: "export",
@@ -22,6 +33,10 @@ const nextConfig: NextConfig = isDemo
       output: "standalone",
       // better-sqlite3 is a native module — keep it out of the bundle so it loads via require() at runtime.
       serverExternalPackages: ["better-sqlite3"],
+      // Applied by the server (the static demo export ignores headers()).
+      async headers() {
+        return [{ source: "/:path*", headers: securityHeaders }];
+      },
     };
 
 export default nextConfig;

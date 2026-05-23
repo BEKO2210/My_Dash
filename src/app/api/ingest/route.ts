@@ -7,6 +7,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // The ONLY write path. Fed exclusively by Claude Code hooks (machine events), never by an LLM.
+//
+// Security model: the server binds to 127.0.0.1, so this endpoint is only reachable
+// from the local machine. It takes no cookies/ambient credentials, so classic CSRF
+// (a browser auto-attaching a session) doesn't apply — the only caller is the hook
+// forwarder. Set MC_HOOK_TOKEN to additionally require a shared secret (X-Hook-Token)
+// and reject any other local process from posting events.
 export async function POST(req: Request) {
   const requiredToken = process.env.MC_HOOK_TOKEN;
   if (requiredToken && req.headers.get("x-hook-token") !== requiredToken) {
