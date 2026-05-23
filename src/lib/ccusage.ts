@@ -26,9 +26,21 @@ export interface UsageBlock {
   costEur: number;
 }
 
+// Aggregated usage for one model across the reporting window.
+export interface UsageModel {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  costEur: number;
+}
+
 export interface UsageReport {
   days: UsageDay[];
   blocks: UsageBlock[]; // last 24h, 5h buckets
+  models: UsageModel[]; // per-model totals (from --breakdown)
   totals: {
     inputTokens: number;
     outputTokens: number;
@@ -53,6 +65,17 @@ export interface UsageSession {
   lastActivity: string | null;
 }
 
+export interface CcusageModelBreakdown {
+  modelName?: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheCreationTokens?: number;
+  cacheReadTokens?: number;
+  cost?: number;
+  totalCost?: number;
+}
+
 export interface CcusageDaily {
   period?: string;
   inputTokens?: number;
@@ -61,6 +84,7 @@ export interface CcusageDaily {
   cacheReadTokens?: number;
   totalTokens?: number;
   totalCost?: number;
+  modelBreakdowns?: CcusageModelBreakdown[];
 }
 
 export interface CcusageBlock {
@@ -105,6 +129,7 @@ export function empty(): UsageReport {
   return {
     days: [],
     blocks: [],
+    models: [],
     totals: { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
     available: false,
   };
@@ -126,6 +151,35 @@ export function mapDailyRows(rows: CcusageDaily[], rate: number): UsageDay[] {
       costEur: costUsd * rate,
     };
   });
+}
+
+// Aggregate the per-day model breakdowns into per-model totals, sorted by cost.
+export function mapModelBreakdown(daily: CcusageDaily[], rate: number): UsageModel[] {
+  const byModel = new Map<string, UsageModel>();
+  for (const d of daily) {
+    for (const b of d.modelBreakdowns ?? []) {
+      const model = b.modelName ?? b.model ?? "unknown";
+      const m =
+        byModel.get(model) ??
+        ({
+          model,
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheTokens: 0,
+          totalTokens: 0,
+          costUsd: 0,
+          costEur: 0,
+        } satisfies UsageModel);
+      m.inputTokens += b.inputTokens ?? 0;
+      m.outputTokens += b.outputTokens ?? 0;
+      m.cacheTokens += (b.cacheCreationTokens ?? 0) + (b.cacheReadTokens ?? 0);
+      m.costUsd += b.cost ?? b.totalCost ?? 0;
+      m.totalTokens = m.inputTokens + m.outputTokens + m.cacheTokens;
+      m.costEur = m.costUsd * rate;
+      byModel.set(model, m);
+    }
+  }
+  return [...byModel.values()].sort((a, b) => b.costUsd - a.costUsd);
 }
 
 // Keep only non-gap blocks whose end falls within the 24h before `now`.
@@ -196,7 +250,13 @@ export function buildReport(
     },
     { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
   );
-  return { days, blocks: blocks ? mapBlockRows(blocks, rate, now) : [], totals, available: true };
+  return {
+    days,
+    blocks: blocks ? mapBlockRows(blocks, rate, now) : [],
+    models: mapModelBreakdown(daily, rate),
+    totals,
+    available: true,
+  };
 }
 
 export async function getUsage(): Promise<UsageReport> {
@@ -204,13 +264,13 @@ export async function getUsage(): Promise<UsageReport> {
 
   const rate = eurRate();
   const bin = path.join(process.cwd(), "node_modules", ".bin", "ccusage");
-  const run = (cmd: string) =>
-    execFileAsync(bin, [cmd, "--json"], { timeout: 20_000, maxBuffer: 16 * 1024 * 1024 });
+  const run = (cmd: string, ...args: string[]) =>
+    execFileAsync(bin, [cmd, "--json", ...args], { timeout: 20_000, maxBuffer: 16 * 1024 * 1024 });
 
   try {
-    // Daily (multi-day chart) + blocks (last-24h view) in parallel. Blocks are
-    // best-effort — a failure there still yields the daily report.
-    const [dailyRes, blocksRes] = await Promise.allSettled([run("daily"), run("blocks")]);
+    // Daily (multi-day chart, with per-model breakdown) + blocks (last-24h view)
+    // in parallel. Blocks are best-effort — a failure still yields the daily report.
+    const [dailyRes, blocksRes] = await Promise.allSettled([run("daily", "--breakdown"), run("blocks")]);
 
     if (dailyRes.status !== "fulfilled") throw new Error("ccusage daily failed");
 

@@ -5,6 +5,7 @@ import {
   eurRate,
   mapBlockRows,
   mapDailyRows,
+  mapModelBreakdown,
   mapSessionRows,
   type CcusageBlock,
   type CcusageDaily,
@@ -110,6 +111,7 @@ describe("buildReport", () => {
     expect(report.available).toBe(true);
     expect(report.days).toHaveLength(2);
     expect(report.blocks).toHaveLength(1);
+    expect(report.models).toEqual([]); // no modelBreakdowns in the fixture
     expect(report.totals).toMatchObject({
       inputTokens: 5,
       outputTokens: 10,
@@ -137,6 +139,42 @@ describe("buildReport", () => {
       costUsd: 0,
       costEur: 0,
     });
+  });
+});
+
+describe("mapModelBreakdown", () => {
+  it("aggregates per-model breakdowns across days, sorted by cost", () => {
+    const daily: CcusageDaily[] = [
+      {
+        period: "d1",
+        modelBreakdowns: [
+          { modelName: "opus", inputTokens: 100, outputTokens: 10, cost: 5 },
+          { modelName: "sonnet", inputTokens: 50, outputTokens: 5, cost: 1 },
+        ],
+      },
+      {
+        period: "d2",
+        modelBreakdowns: [
+          { modelName: "opus", inputTokens: 200, cacheReadTokens: 40, cost: 3 },
+        ],
+      },
+    ];
+    const models = mapModelBreakdown(daily, 0.5);
+    expect(models.map((m) => m.model)).toEqual(["opus", "sonnet"]); // opus first (higher cost)
+    const opus = models[0];
+    expect(opus.inputTokens).toBe(300);
+    expect(opus.outputTokens).toBe(10);
+    expect(opus.cacheTokens).toBe(40);
+    expect(opus.totalTokens).toBe(350);
+    expect(opus.costUsd).toBe(8);
+    expect(opus.costEur).toBe(4);
+  });
+
+  it("falls back to `model` field and tolerates missing breakdowns", () => {
+    expect(mapModelBreakdown([{ period: "d" }], 1)).toEqual([]);
+    expect(mapModelBreakdown([{ modelBreakdowns: [{ model: "x", totalCost: 2 }] }], 1)[0]).toMatchObject(
+      { model: "x", costUsd: 2 },
+    );
   });
 });
 
