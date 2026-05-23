@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { EventRow, HookPayload, SessionRow, ToolCallRow, ToolIoRow } from "@/lib/types";
@@ -9,6 +9,7 @@ import type { EventRow, HookPayload, SessionRow, ToolCallRow, ToolIoRow } from "
 // so the real schema + prepared statements are used — just on a disposable file.
 let ingest: (typeof import("@/lib/ingest"))["ingest"];
 let db: (typeof import("@/lib/db"))["db"];
+let updateSessionUsage: (typeof import("@/lib/transcript-sync"))["updateSessionUsage"];
 let dataDir: string;
 
 beforeAll(async () => {
@@ -16,6 +17,7 @@ beforeAll(async () => {
   process.env.MC_DATA_DIR = dataDir;
   ({ ingest } = await import("@/lib/ingest"));
   ({ db } = await import("@/lib/db"));
+  ({ updateSessionUsage } = await import("@/lib/transcript-sync"));
 });
 
 afterAll(() => {
@@ -208,6 +210,30 @@ describe("ingest — model", () => {
   it("leaves model null when the payload omits it", () => {
     const { event } = send("SessionStart", { session_id: "s1" });
     expect(event.model).toBeNull();
+  });
+});
+
+describe("ingest — transcript usage sync", () => {
+  it("writes transcript-derived token totals onto the session", async () => {
+    send("SessionStart", { session_id: "s1" });
+    const file = path.join(dataDir, "transcript.jsonl");
+    writeFileSync(
+      file,
+      JSON.stringify({
+        message: {
+          role: "assistant",
+          model: "claude-opus-4-7",
+          content: [{ type: "text", text: "x" }],
+          usage: { input_tokens: 500, output_tokens: 120 },
+        },
+      }),
+    );
+
+    await updateSessionUsage("s1", file);
+
+    const s = session("s1")!;
+    expect(s.token_input).toBe(500);
+    expect(s.token_output).toBe(120);
   });
 });
 
