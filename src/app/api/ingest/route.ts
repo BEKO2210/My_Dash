@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ingest } from "@/lib/ingest";
-import type { HookPayload } from "@/lib/types";
+import { parseHookPayload } from "@/lib/hook-schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,16 +20,24 @@ export async function POST(req: Request) {
   }
 
   const headerEvent = req.headers.get("x-hook-event") ?? "";
-  let payload: HookPayload;
+  let raw: unknown;
   try {
     const text = await req.text();
     if (text.length > MAX_BODY) {
       return NextResponse.json({ ok: false, error: "payload too large" }, { status: 413 });
     }
-    payload = text ? (JSON.parse(text) as HookPayload) : {};
+    raw = text ? JSON.parse(text) : {};
   } catch {
     return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });
   }
+
+  // Tolerant schema check: unknown fields pass, but a wrong-typed known field is
+  // a malformed request (real hooks never send those).
+  const parsed = parseHookPayload(raw);
+  if (!parsed.ok) {
+    return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
+  }
+  const payload = parsed.payload;
 
   // Real Claude Code hooks always carry a session_id. Anything without one
   // (health checks, stray/empty POSTs) is ignored so it never creates a junk
