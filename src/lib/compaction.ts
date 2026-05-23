@@ -37,3 +37,43 @@ export function recentCompactions(db: Database.Database, limit: number): Compact
     .all(limit) as EventRow[];
   return rows.map(parseCompaction);
 }
+
+export interface CompactionSummary {
+  total: number;
+  auto: number;
+  manual: number;
+}
+
+export function compactionSummary(compactions: Compaction[]): CompactionSummary {
+  let auto = 0;
+  let manual = 0;
+  for (const c of compactions) {
+    if (c.trigger === "manual") manual += 1;
+    else auto += 1;
+  }
+  return { total: compactions.length, auto, manual };
+}
+
+export interface CompactionDay {
+  date: string; // YYYY-MM-DD (UTC)
+  count: number;
+}
+
+// Per-day compaction counts over the last `days` days (oldest first, gaps filled).
+export function compactionDaily(
+  compactions: Compaction[],
+  days: number,
+  now: Date = new Date(),
+): CompactionDay[] {
+  const counts = new Map<string, number>();
+  for (const c of compactions) {
+    const key = (c.created_at.includes("T") ? c.created_at : c.created_at.replace(" ", "T")).slice(0, 10);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const out: CompactionDay[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const key = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10);
+    out.push({ date: key, count: counts.get(key) ?? 0 });
+  }
+  return out;
+}
