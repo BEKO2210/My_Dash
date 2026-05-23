@@ -79,4 +79,18 @@ describe("pruneAll", () => {
     expect(events).toBe(5);
     expect(count(db, "events")).toBe(3);
   });
+
+  it("drops tool_io rows orphaned by tool_calls pruning", () => {
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    const insCall = db.prepare("INSERT INTO tool_calls (session_id, tool_name) VALUES ('s','Read')");
+    const insIo = db.prepare("INSERT INTO tool_io (tool_call_id) VALUES (?)");
+    for (let i = 0; i < 6; i++) insIo.run(Number(insCall.run().lastInsertRowid));
+
+    process.env.MC_MAX_TOOL_CALLS = "2";
+    const { toolCalls, toolIo } = pruneAll(db);
+    expect(toolCalls).toBe(4);
+    expect(toolIo).toBe(4); // the 4 io rows whose call was pruned
+    expect(count(db, "tool_io")).toBe(2);
+  });
 });

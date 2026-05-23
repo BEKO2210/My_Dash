@@ -55,6 +55,18 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status);
   CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
   `,
+
+  // v2 — per-tool-call I/O (raw input/output + error flag) for the tool inspector
+  // and error panels. Keyed 1:1 to tool_calls.id; pruned alongside it (retention).
+  `
+  CREATE TABLE IF NOT EXISTS tool_io (
+    tool_call_id  INTEGER PRIMARY KEY,
+    input_json    TEXT,
+    output_json   TEXT,
+    is_error      INTEGER NOT NULL DEFAULT 0,
+    error_text    TEXT
+  );
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction
