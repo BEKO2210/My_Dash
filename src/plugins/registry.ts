@@ -7,6 +7,7 @@ import { BudgetGauge } from "./budget-gauge/widget";
 import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
 import { ToolFrequency } from "./tool-frequency/widget";
+import { FileHotspots } from "./file-hotspots/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -84,5 +85,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-2",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: ToolFrequency,
+  },
+  {
+    id: "file-hotspots",
+    title: "Datei-Hotspots",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: FileHotspots,
   },
 ];

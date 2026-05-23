@@ -98,6 +98,10 @@ const DE: Record<string, string> = {
   "tools.range7d": "7T",
   "tools.range30d": "30T",
   "tools.rangeAll": "Alle",
+  "files.title": "Datei-Hotspots",
+  "files.info": "Meistbearbeitete Dateien (Fläche & Farbe = geänderte Zeilen) im Zeitraum.",
+  "files.empty": "Noch keine Datei-Änderungen.",
+  "files.edits": "Bearbeitungen",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -259,6 +263,10 @@ const EN: Record<string, string> = {
   "tools.range7d": "7d",
   "tools.range30d": "30d",
   "tools.rangeAll": "All",
+  "files.title": "File hotspots",
+  "files.info": "Most-edited files (area & color = changed lines) in the range.",
+  "files.empty": "No file changes yet.",
+  "files.edits": "edits",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
