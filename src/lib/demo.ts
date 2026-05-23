@@ -341,7 +341,15 @@ export function demoUsage() {
     return { ...base, date: `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}` };
   });
 
-  return { days, months, blocks, models, totals, available: true };
+  const burn = {
+    tokensPerMinute: 1800,
+    costPerHour: 4.5,
+    projectedCostUsd: 9,
+    projectedCostEur: +(9 * rate).toFixed(2),
+    remainingMinutes: 95,
+  };
+
+  return { days, months, blocks, burn, models, totals, available: true };
 }
 
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
