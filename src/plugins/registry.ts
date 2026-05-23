@@ -4,6 +4,7 @@ import { Kanban } from "./kanban/widget";
 import { TokenChart } from "./token-chart/widget";
 import { ToolGraph } from "./tool-graph/widget";
 import { BudgetGauge } from "./budget-gauge/widget";
+import { KpiBar } from "./kpi-bar/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -26,6 +27,13 @@ export interface Widget {
 }
 
 export const widgets: Widget[] = [
+  {
+    id: "kpi-bar",
+    title: "Übersicht",
+    span: "lg:col-span-6",
+    height: "h-auto",
+    component: KpiBar,
+  },
   {
     id: "kanban",
     title: "Sessions",
