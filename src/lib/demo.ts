@@ -114,6 +114,7 @@ function toRow(s: DSession): SessionRow {
     ended_at: s.ended_at,
     token_input: 0,
     token_output: 0,
+    token_cache: 0,
     cost_usd: 0,
   };
 }

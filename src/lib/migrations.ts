@@ -73,6 +73,11 @@ export const MIGRATIONS: string[] = [
   `
   ALTER TABLE events ADD COLUMN model TEXT;
   `,
+
+  // v4 — cached-token total per session (input/output/cost columns already exist).
+  `
+  ALTER TABLE sessions ADD COLUMN token_cache INTEGER DEFAULT 0;
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

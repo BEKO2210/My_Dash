@@ -36,6 +36,8 @@ describe("parseTranscriptUsage", () => {
     expect(s.inputTokens).toBe(300);
     expect(s.outputTokens).toBe(130);
     expect(s.cacheTokens).toBe(60); // 10 + 20 + 30
+    expect(s.cacheCreationTokens).toBe(10);
+    expect(s.cacheReadTokens).toBe(50); // 20 + 30
     expect(s.turns).toBe(2);
     expect(s.model).toBe("claude-opus-4-7");
     expect(s.lastAssistantText).toBe("Done");
@@ -46,6 +48,8 @@ describe("parseTranscriptUsage", () => {
       inputTokens: 0,
       outputTokens: 0,
       cacheTokens: 0,
+      cacheCreationTokens: 0,
+      cacheReadTokens: 0,
       model: null,
       lastAssistantText: null,
       turns: 0,
