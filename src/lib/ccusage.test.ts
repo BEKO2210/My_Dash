@@ -5,8 +5,10 @@ import {
   eurRate,
   mapBlockRows,
   mapDailyRows,
+  mapSessionRows,
   type CcusageBlock,
   type CcusageDaily,
+  type CcusageSession,
 } from "@/lib/ccusage";
 
 const NOW = Date.parse("2026-05-23T12:00:00Z");
@@ -135,6 +137,53 @@ describe("buildReport", () => {
       costUsd: 0,
       costEur: 0,
     });
+  });
+});
+
+describe("mapSessionRows", () => {
+  it("maps a session row and converts cost to EUR", () => {
+    const rows: CcusageSession[] = [
+      {
+        sessionId: "s1",
+        models: ["claude-opus-4-7"],
+        inputTokens: 100,
+        outputTokens: 50,
+        cacheCreationTokens: 10,
+        cacheReadTokens: 20,
+        totalTokens: 180,
+        totalCost: 4,
+        lastActivity: "2026-05-23",
+      },
+    ];
+    expect(mapSessionRows(rows, 0.5)).toEqual([
+      {
+        sessionId: "s1",
+        models: ["claude-opus-4-7"],
+        inputTokens: 100,
+        outputTokens: 50,
+        cacheTokens: 30,
+        totalTokens: 180,
+        costUsd: 4,
+        costEur: 2,
+        lastActivity: "2026-05-23",
+      },
+    ]);
+  });
+
+  it("falls back across field-name variants and defaults", () => {
+    const [s] = mapSessionRows([{ costUSD: 1, modelsUsed: ["m"] }], 1);
+    expect(s).toMatchObject({
+      sessionId: "",
+      models: ["m"],
+      costUsd: 1,
+      costEur: 1,
+      lastActivity: null,
+      cacheTokens: 0,
+    });
+  });
+
+  it("returns an empty array for no rows", () => {
+    expect(mapSessionRows([], 0.92)).toEqual([]);
   });
 });
 
