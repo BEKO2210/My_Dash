@@ -3,6 +3,7 @@ import {
   buildReport,
   empty,
   eurRate,
+  extractBurn,
   mapBlockRows,
   mapDailyRows,
   mapModelBreakdown,
@@ -103,6 +104,41 @@ describe("mapBlockRows", () => {
   });
 });
 
+describe("extractBurn", () => {
+  it("reads burn rate + projection from the active block", () => {
+    const blocks: CcusageBlock[] = [
+      { startTime: "2026-05-23T08:00:00Z" },
+      {
+        startTime: "2026-05-23T11:00:00Z",
+        isActive: true,
+        burnRate: { tokensPerMinute: 1200, costPerHour: 6 },
+        projection: { totalCost: 10, remainingMinutes: 90 },
+      },
+    ];
+    expect(extractBurn(blocks, 0.5)).toEqual({
+      tokensPerMinute: 1200,
+      costPerHour: 6,
+      projectedCostUsd: 10,
+      projectedCostEur: 5,
+      remainingMinutes: 90,
+    });
+  });
+
+  it("returns null when there is no active block", () => {
+    expect(extractBurn([{ startTime: "x" }], 1)).toBeNull();
+  });
+
+  it("defaults missing burn fields to zero", () => {
+    expect(extractBurn([{ startTime: "x", isActive: true }], 1)).toEqual({
+      tokensPerMinute: 0,
+      costPerHour: 0,
+      projectedCostUsd: 0,
+      projectedCostEur: 0,
+      remainingMinutes: 0,
+    });
+  });
+});
+
 describe("buildReport", () => {
   it("sums totals across days and includes mapped blocks", () => {
     const daily: CcusageDaily[] = [
@@ -117,6 +153,7 @@ describe("buildReport", () => {
     expect(report.blocks).toHaveLength(1);
     expect(report.models).toEqual([]); // no modelBreakdowns in the fixture
     expect(report.months).toEqual([]); // no monthly rows passed
+    expect(report.burn).toBeNull(); // no active block in the fixture
     expect(report.totals).toMatchObject({
       inputTokens: 5,
       outputTokens: 10,

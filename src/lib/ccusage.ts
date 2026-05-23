@@ -37,10 +37,20 @@ export interface UsageModel {
   costEur: number;
 }
 
+// Live spend rate + projection for the active 5-hour block.
+export interface BurnInfo {
+  tokensPerMinute: number;
+  costPerHour: number;
+  projectedCostUsd: number;
+  projectedCostEur: number;
+  remainingMinutes: number;
+}
+
 export interface UsageReport {
   days: UsageDay[];
   months: UsageDay[]; // monthly aggregates (same shape; date = "YYYY-MM")
   blocks: UsageBlock[]; // last 24h, 5h buckets
+  burn: BurnInfo | null; // active-block burn rate / projection
   models: UsageModel[]; // per-model totals (from --breakdown)
   totals: {
     inputTokens: number;
@@ -102,6 +112,8 @@ export interface CcusageBlock {
     cacheCreationInputTokens?: number;
     cacheReadInputTokens?: number;
   };
+  burnRate?: { tokensPerMinute?: number; costPerHour?: number } | null;
+  projection?: { totalTokens?: number; totalCost?: number; remainingMinutes?: number } | null;
 }
 
 export interface CcusageSession {
@@ -132,6 +144,7 @@ export function empty(): UsageReport {
     days: [],
     months: [],
     blocks: [],
+    burn: null,
     models: [],
     totals: { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
     available: false,
@@ -213,6 +226,22 @@ export function mapBlockRows(rows: CcusageBlock[], rate: number, now: number): U
     });
 }
 
+// Live burn rate + projection from the active (non-gap) block, if any.
+export function extractBurn(blocks: CcusageBlock[], rate: number): BurnInfo | null {
+  const active = blocks.find((b) => b.isActive && !b.isGap);
+  if (!active) return null;
+  const br = active.burnRate ?? {};
+  const pj = active.projection ?? {};
+  const projectedCostUsd = pj.totalCost ?? 0;
+  return {
+    tokensPerMinute: br.tokensPerMinute ?? 0,
+    costPerHour: br.costPerHour ?? 0,
+    projectedCostUsd,
+    projectedCostEur: projectedCostUsd * rate,
+    remainingMinutes: pj.remainingMinutes ?? 0,
+  };
+}
+
 // Per-session rows from `ccusage session` (field names vary by version → defensive).
 export function mapSessionRows(rows: CcusageSession[], rate: number): UsageSession[] {
   return rows.map((r) => {
@@ -258,6 +287,7 @@ export function buildReport(
     days,
     months: mapDailyRows(monthly, rate),
     blocks: blocks ? mapBlockRows(blocks, rate, now) : [],
+    burn: blocks ? extractBurn(blocks, rate) : null,
     models: mapModelBreakdown(daily, rate),
     totals,
     available: true,
