@@ -12,8 +12,11 @@ import { mkdirSync, readdirSync, statSync, unlinkSync, existsSync } from "node:f
 import path from "node:path";
 
 const KEEP = Number(process.env.MC_BACKUP_KEEP) > 0 ? Number(process.env.MC_BACKUP_KEEP) : 14;
-const src = path.join(process.cwd(), "data", "mission-control.db");
-const backupDir = path.join(process.cwd(), "backups");
+// Honour the same data location as the app (Electron passes MC_DATA_DIR); the
+// backup directory is overridable too.
+const dataDir = process.env.MC_DATA_DIR || path.join(process.cwd(), "data");
+const src = path.join(dataDir, "mission-control.db");
+const backupDir = process.env.MC_BACKUP_DIR || path.join(process.cwd(), "backups");
 
 if (!existsSync(src)) {
   console.error(`Keine Datenbank gefunden: ${src}\nLäuft das Dashboard schon? (./start.sh)`);
