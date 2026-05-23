@@ -187,6 +187,11 @@ const DE: Record<string, string> = {
   "compaction.trigger.auto": "auto",
   "compaction.trigger.manual": "manuell",
 
+  "tags.title": "Themen-Cloud",
+  "tags.info": "Häufige Begriffe aus deinen Prompts – lokal berechnet, ohne LLM. Größe = Häufigkeit.",
+  "tags.empty": "Noch keine Begriffe.",
+  "tags.emptyHint": "Sobald du Prompts schreibst, erscheinen die häufigsten Begriffe hier.",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -435,6 +440,11 @@ const EN: Record<string, string> = {
   "compaction.perDay": "Per day (14d)",
   "compaction.trigger.auto": "auto",
   "compaction.trigger.manual": "manual",
+
+  "tags.title": "Topic cloud",
+  "tags.info": "Frequent terms from your prompts — computed locally, no LLM. Size = frequency.",
+  "tags.empty": "No terms yet.",
+  "tags.emptyHint": "As soon as you write prompts, the most frequent terms appear here.",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

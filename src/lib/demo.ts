@@ -10,6 +10,7 @@ import type { PromptHistoryItem } from "./prompts";
 import type { Compaction } from "./compaction";
 import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
+import { topTerms } from "./tags";
 import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
@@ -638,6 +639,31 @@ export function demoCompactions() {
   return { compactions: out };
 }
 
+export function demoTags() {
+  const texts: string[] = [];
+  for (const s of sessions) for (const p of s.prompts) texts.push(p.text);
+  const terms = topTerms(texts, 40);
+  // Seed a richer cloud if the demo hasn't accumulated enough prompts yet.
+  if (terms.length < 8) {
+    return {
+      terms: topTerms(
+        [
+          "refactor the ingest pipeline and add retention tests",
+          "build the dashboard widget registry and plugins",
+          "improve token cost tracking and budget gauge",
+          "fix the sankey flow chart colors and tooltips",
+          "add subagent tree and mcp server panel",
+          "compaction timeline and prompt history widgets",
+          "session timeline latency heatmap error rate",
+          "playwright screenshots visual audit readability",
+        ],
+        40,
+      ),
+    };
+  }
+  return { terms };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -670,6 +696,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/subagents")) return json(demoSubagents());
     if (path.endsWith("/api/mcp")) return json(demoMcp());
     if (path.endsWith("/api/compactions")) return json(demoCompactions());
+    if (path.endsWith("/api/tags")) return json(demoTags());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
