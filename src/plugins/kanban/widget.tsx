@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { KanbanSquare, Folder, Hammer, Radio, X } from "lucide-react";
+import { KanbanSquare, Coins, Folder, Hammer, Radio, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
-import { relativeTime, STATUS_META } from "@/lib/format";
+import { formatCompact, formatMoney, relativeTime, STATUS_META } from "@/lib/format";
 import type { EventRow, SessionRow, SessionStatus } from "@/lib/types";
 
 type SessionCard = SessionRow & { event_count: number; tool_count: number; stale?: boolean };
@@ -150,6 +150,15 @@ function Card({ s, onOpen }: { s: SessionCard; onOpen: () => void }) {
             <Hammer className="h-3 w-3" />
             {s.tool_count}
           </span>
+          {s.cost_usd > 0 && (
+            <span
+              className="flex items-center gap-1"
+              title={`${formatCompact(s.token_input + s.token_output + s.token_cache)} tok`}
+            >
+              <Coins className="h-3 w-3" />
+              {formatMoney(s.cost_usd, "USD")}
+            </span>
+          )}
         </span>
         <span>{relativeTime(s.last_seen, lang)}</span>
       </div>
