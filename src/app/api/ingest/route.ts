@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ingest } from "@/lib/ingest";
 import { parseHookPayload } from "@/lib/hook-schema";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
     const { event } = ingest(headerEvent, payload);
     return NextResponse.json({ ok: true, id: event.id });
   } catch (err) {
+    log.error("/api/ingest failed", err);
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "ingest failed" },
       { status: 500 },

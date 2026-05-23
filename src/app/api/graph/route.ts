@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { buildGraphData, type PromptRow } from "@/lib/graph";
+import { log } from "@/lib/log";
 import type { SessionRow, ToolCallRow } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
   try {
     return buildGraph(req);
   } catch (err) {
-    console.error("/api/graph failed:", err);
+    log.error("/api/graph failed", err);
     return NextResponse.json({ nodes: [], links: [] });
   }
 }

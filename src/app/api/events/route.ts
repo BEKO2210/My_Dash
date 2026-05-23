@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ events });
   } catch (err) {
-    console.error("/api/events failed:", err);
+    log.error("/api/events failed", err);
     return NextResponse.json({ events: [] });
   }
 }
