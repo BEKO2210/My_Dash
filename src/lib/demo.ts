@@ -3,6 +3,7 @@
 // Exposes the same shapes as the real API routes; demo mode patches fetch +
 // LiveProvider to read from here. Pure client-safe (no node imports).
 
+import { latencyStats } from "./latency";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -445,6 +446,18 @@ export function demoFiles() {
   return { files };
 }
 
+export function demoLatency() {
+  // Long-tailed synthetic durations: mostly fast, a few slow outliers.
+  const values: number[] = [];
+  for (let i = 0; i < 600; i++) {
+    const r = Math.random();
+    if (r < 0.6) values.push(5 + Math.round(Math.random() * 60));
+    else if (r < 0.9) values.push(60 + Math.round(Math.random() * 400));
+    else values.push(500 + Math.round(Math.random() * 6000));
+  }
+  return { stats: latencyStats(values), tools: ["Read", "Edit", "Bash", "Grep", "WebFetch"] };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -474,6 +487,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
+    if (path.endsWith("/api/tools/latency")) return json(demoLatency());
     if (path.endsWith("/api/tools")) return json(demoTools());
     if (path.endsWith("/api/files")) return json(demoFiles());
     if (path.includes("/api/events")) {
