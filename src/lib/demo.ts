@@ -7,6 +7,7 @@ import { latencyStats } from "./latency";
 import { buildSankey, type SankeyTriple } from "./sankey";
 import type { ProjectUsage } from "./projects";
 import type { PromptHistoryItem } from "./prompts";
+import { streakStats, peakHour, type DayCount } from "./streak";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -538,6 +539,27 @@ export function demoPrompts() {
   return { prompts: items.slice(0, 100) };
 }
 
+export function demoStreak() {
+  const today = new Date();
+  const days: DayCount[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today.getTime() - i * 86_400_000);
+    const key = date.toISOString().slice(0, 10);
+    const weekday = date.getDay();
+    const weekendDip = weekday === 0 || weekday === 6 ? 0.3 : 1;
+    // Keep the last few days active so the demo always shows a live streak.
+    const base = i <= 4 ? 2 : Math.round((1 + Math.random() * 4) * weekendDip);
+    days.push({ date: key, count: Math.max(0, base) });
+  }
+  const hours = new Array<number>(24).fill(0);
+  for (let h = 0; h < 24; h++) {
+    const work = h >= 9 && h <= 18 ? 1 : 0.15;
+    const peak = h === 11 || h === 15 ? 1.6 : 1;
+    hours[h] = Math.round(20 * work * peak + Math.random() * 6);
+  }
+  return { streak: streakStats(days), days, hours, peakHour: peakHour(hours) };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -566,6 +588,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/usage/projects")) return json(demoProjects());
     if (path.endsWith("/api/usage")) return json(demoUsage());
     if (path.endsWith("/api/prompts")) return json(demoPrompts());
+    if (path.endsWith("/api/streak")) return json(demoStreak());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
