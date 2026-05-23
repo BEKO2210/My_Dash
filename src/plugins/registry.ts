@@ -14,6 +14,7 @@ import { ErrorRate } from "./error-rate/widget";
 import { ModelDonut } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
 import { ProjectLeaderboard } from "./project-leaderboard/widget";
+import { LiveNow } from "./live-now/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -140,5 +141,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: ProjectLeaderboard,
+  },
+  {
+    id: "live-now",
+    title: "Jetzt live",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: LiveNow,
   },
 ];

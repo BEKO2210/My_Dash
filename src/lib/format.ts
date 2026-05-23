@@ -22,6 +22,17 @@ export function relativeTime(s: string | null | undefined, lang: "de" | "en" = "
   return ago(Math.round(hrs / 24), "d");
 }
 
+// Elapsed wall-clock duration → "12s", "2m 15s", "1h 03m". For live timers.
+export function formatDuration(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  if (m > 0) return `${m}m ${String(s).padStart(2, "0")}s`;
+  return `${s}s`;
+}
+
 export function formatCompact(n: number): string {
   if (!Number.isFinite(n)) return "0";
   if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
