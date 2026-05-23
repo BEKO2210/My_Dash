@@ -11,6 +11,7 @@ import { FileHotspots } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
 import { Latency } from "./latency/widget";
 import { ErrorRate } from "./error-rate/widget";
+import { ModelDonut } from "./model-donut/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -116,5 +117,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: ErrorRate,
+  },
+  {
+    id: "model-donut",
+    title: "Modelle",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: ModelDonut,
   },
 ];
