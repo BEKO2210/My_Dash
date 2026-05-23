@@ -4,7 +4,12 @@
   "private": true,
   "description": "A local, read-only observability dashboard for Claude Code — live event stream, session kanban, token/cost charts and a 3D tool-call graph.",
   "license": "MIT",
-  "author": "Belkis Aslani",
+  "author": {
+    "name": "Belkis Aslani",
+    "email": "129214713+BEKO2210@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/BEKO2210/My_Dash",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "build": "next build",
@@ -18,7 +23,15 @@
     "protect": "node scripts/protect.mjs lock",
     "unprotect": "node scripts/protect.mjs unlock",
     "import-history": "node scripts/import-history.mjs",
-    "install-hooks": "node scripts/install-hooks.mjs"
+    "install-hooks": "node scripts/install-hooks.mjs",
+    "build:standalone": "next build && node scripts/assemble-standalone.mjs",
+    "rebuild:standalone": "node scripts/rebuild-standalone.mjs",
+    "pack": "npm run build:standalone && npm run rebuild:standalone",
+    "electron:dev": "npm run pack && electron .",
+    "dist": "npm run pack && electron-builder",
+    "dist:linux": "npm run pack && electron-builder --linux",
+    "dist:win": "npm run pack && electron-builder --win",
+    "dist:mac": "npm run pack && electron-builder --mac"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
@@ -40,11 +53,37 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@electron/rebuild": "^3.7.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"
+  },
+  "build": {
+    "appId": "com.belkisaslani.claude-mission-control",
+    "productName": "Claude Mission Control",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": ".next/standalone", "to": "standalone" },
+      { "from": "scripts", "to": "scripts" },
+      { "from": "assets/Icon.png", "to": "Icon.png" }
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "electron/build"
+    },
+    "npmRebuild": false,
+    "win": { "target": ["nsis"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "mac": { "target": ["dmg"], "category": "public.app-category.developer-tools", "identity": null },
+    "linux": { "target": ["AppImage", "deb"], "category": "Development" }
   }
 }

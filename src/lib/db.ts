@@ -47,7 +47,9 @@ CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
 `;
 
 function createDb(): Database.Database {
-  const dataDir = path.join(process.cwd(), "data");
+  // Packaged builds (Electron) pass MC_DATA_DIR (a stable per-user location);
+  // source runs fall back to ./data next to the project.
+  const dataDir = process.env.MC_DATA_DIR || path.join(process.cwd(), "data");
   mkdirSync(dataDir, { recursive: true });
   const db = new Database(path.join(dataDir, "mission-control.db"));
   db.pragma("journal_mode = WAL");

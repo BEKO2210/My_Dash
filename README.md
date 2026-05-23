@@ -136,7 +136,39 @@ Side sources (read-only):
 
 One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
 
-## Quick start
+## Install (desktop app)
+
+Double-click installers for **Windows, macOS and Linux** are built by the release
+workflow and attached to each [GitHub Release](https://github.com/BEKO2210/My_Dash/releases):
+
+| OS | File |
+|----|------|
+| Windows | `Claude Mission Control Setup <version>.exe` (NSIS installer) |
+| macOS | `Claude Mission Control-<version>.dmg` |
+| Linux | `.AppImage` (portable) or `.deb` |
+
+> **Alpha note:** the installers are **unsigned**. On Windows, SmartScreen shows
+> *More info → Run anyway*; on macOS, right-click the app → **Open** the first time.
+
+The app bundles its own Node runtime (nothing to install separately). It runs in the
+background with a tray icon — click the tray → **Connect Claude Code (install hooks)**,
+then restart any open Claude Code session and activity appears live. It can auto-start at
+login and keeps the ingest server running when the window is closed. The local database
+lives in your OS user-data folder.
+
+### Build the installers yourself
+
+```bash
+npm install
+npm run dist          # installer for your current OS → dist/
+npm run dist:win      # or target a specific OS (build each on that OS, e.g. via CI)
+npm run dist:mac
+npm run dist:linux
+```
+
+CI (`.github/workflows/release.yml`) builds all three on a tag push (`v*`).
+
+## Quick start (from source)
 
 **One click (Linux):**
 
@@ -191,7 +223,8 @@ src/
 ├─ lib/                 # db, event bus, ingest projection, ccusage, formatting
 ├─ plugins/             # ◀ widgets: live-stream, kanban, token-chart, tool-graph + registry.ts
 └─ components/          # dashboard shell, live SSE provider, search, panel
-scripts/                # claude-hook.sh, install-hooks, import-history, seed-demo
+scripts/                # claude-hook.sh, install-hooks, import-history, seed-demo, packaging
+electron/               # desktop shell (main process + build icon) — packaged via electron-builder
 assets/                 # logo, icon, demo clips (gif/mp4) + screenshots
 ```
 

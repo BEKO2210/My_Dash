@@ -23,6 +23,9 @@
 # production
 /build
 
+# electron-builder installers
+/dist
+
 # database backups (local snapshots — see npm run backup)
 /backups
 
