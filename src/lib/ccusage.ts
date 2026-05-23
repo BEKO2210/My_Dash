@@ -40,6 +40,19 @@ export interface UsageReport {
   available: boolean; // false when ccusage couldn't run (offline / no data)
 }
 
+// Per-conversation usage from `ccusage session`.
+export interface UsageSession {
+  sessionId: string;
+  models: string[];
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  costEur: number;
+  lastActivity: string | null;
+}
+
 export interface CcusageDaily {
   period?: string;
   inputTokens?: number;
@@ -65,8 +78,23 @@ export interface CcusageBlock {
   };
 }
 
+export interface CcusageSession {
+  sessionId?: string;
+  models?: string[];
+  modelsUsed?: string[];
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheCreationTokens?: number;
+  cacheReadTokens?: number;
+  totalTokens?: number;
+  totalCost?: number;
+  costUSD?: number;
+  lastActivity?: string;
+}
+
 const TTL_MS = 30_000;
 let cache: { at: number; report: UsageReport } | null = null;
+let sessionCache: { at: number; sessions: UsageSession[] } | null = null;
 
 export function eurRate(): number {
   const r = Number(process.env.EUR_PER_USD);
@@ -128,6 +156,25 @@ export function mapBlockRows(rows: CcusageBlock[], rate: number, now: number): U
     });
 }
 
+// Per-session rows from `ccusage session` (field names vary by version → defensive).
+export function mapSessionRows(rows: CcusageSession[], rate: number): UsageSession[] {
+  return rows.map((r) => {
+    const cacheTokens = (r.cacheCreationTokens ?? 0) + (r.cacheReadTokens ?? 0);
+    const costUsd = r.totalCost ?? r.costUSD ?? 0;
+    return {
+      sessionId: r.sessionId ?? "",
+      models: r.models ?? r.modelsUsed ?? [],
+      inputTokens: r.inputTokens ?? 0,
+      outputTokens: r.outputTokens ?? 0,
+      cacheTokens,
+      totalTokens: r.totalTokens ?? 0,
+      costUsd,
+      costEur: costUsd * rate,
+      lastActivity: r.lastActivity ?? null,
+    };
+  });
+}
+
 // Assemble the full report from already-parsed ccusage rows. `blocks === null`
 // means the blocks command was unavailable (best-effort) → empty blocks list.
 export function buildReport(
@@ -181,5 +228,31 @@ export async function getUsage(): Promise<UsageReport> {
     const report = empty();
     cache = { at: Date.now(), report };
     return report;
+  }
+}
+
+export interface SessionUsageReport {
+  sessions: UsageSession[];
+  available: boolean;
+}
+
+// Per-session cost/tokens/models from ccusage. Cached + degrades gracefully.
+export async function getSessionUsage(): Promise<SessionUsageReport> {
+  if (sessionCache && Date.now() - sessionCache.at < TTL_MS) {
+    return { sessions: sessionCache.sessions, available: true };
+  }
+  const rate = eurRate();
+  const bin = path.join(process.cwd(), "node_modules", ".bin", "ccusage");
+  try {
+    const { stdout } = await execFileAsync(bin, ["session", "--json"], {
+      timeout: 20_000,
+      maxBuffer: 16 * 1024 * 1024,
+    });
+    const parsed = JSON.parse(stdout) as { sessions?: CcusageSession[] };
+    const sessions = mapSessionRows(parsed.sessions ?? [], rate);
+    sessionCache = { at: Date.now(), sessions };
+    return { sessions, available: true };
+  } catch {
+    return { sessions: [], available: false };
   }
 }
