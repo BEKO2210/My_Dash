@@ -114,6 +114,21 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_prompts_session ON prompts(session_id);
   `,
+
+  // v8 — per-file change estimates from Edit/Write/NotebookEdit for hotspots.
+  `
+  CREATE TABLE IF NOT EXISTS file_edits (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id    TEXT NOT NULL,
+    tool_call_id  INTEGER,
+    path          TEXT NOT NULL,
+    added         INTEGER DEFAULT 0,
+    removed       INTEGER DEFAULT 0,
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_file_edits_path ON file_edits(path);
+  CREATE INDEX IF NOT EXISTS idx_file_edits_session ON file_edits(session_id);
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

@@ -81,6 +81,17 @@ export interface ToolIoRow {
   error_text: string | null;
 }
 
+// An estimated file change from an Edit/Write/NotebookEdit tool call.
+export interface FileEditRow {
+  id: number;
+  session_id: string;
+  tool_call_id: number | null;
+  path: string;
+  added: number;
+  removed: number;
+  created_at: string;
+}
+
 // A stored user prompt (redacted + capped) with a token estimate.
 export interface PromptRow {
   id: number;
