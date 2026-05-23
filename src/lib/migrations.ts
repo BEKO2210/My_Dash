@@ -135,6 +135,17 @@ export const MIGRATIONS: string[] = [
   ALTER TABLE sessions ADD COLUMN branch TEXT;
   ALTER TABLE sessions ADD COLUMN git_commit TEXT;
   `,
+
+  // v10 — hour-granularity activity rollup (counts per type) for fast heatmaps /
+  // time-series. Kept even after raw events are pruned.
+  `
+  CREATE TABLE IF NOT EXISTS activity_buckets (
+    bucket      TEXT NOT NULL,
+    event_type  TEXT NOT NULL,
+    count       INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (bucket, event_type)
+  );
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

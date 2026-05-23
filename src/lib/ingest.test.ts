@@ -37,7 +37,7 @@ afterAll(() => {
 
 beforeEach(() => {
   db.exec(
-    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM prompts; DELETE FROM file_edits; DELETE FROM sessions;",
+    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM prompts; DELETE FROM file_edits; DELETE FROM activity_buckets; DELETE FROM sessions;",
   );
   // The Pre/Post duration pairing keeps starts in a process-global map; reset it
   // so each test is deterministic.
@@ -68,6 +68,12 @@ const prompts = (id: string) =>
   db.prepare("SELECT * FROM prompts WHERE session_id = ? ORDER BY id").all(id) as PromptRow[];
 const fileEdits = (id: string) =>
   db.prepare("SELECT * FROM file_edits WHERE session_id = ? ORDER BY id").all(id) as FileEditRow[];
+const activity = () =>
+  db.prepare("SELECT bucket, event_type, count FROM activity_buckets").all() as {
+    bucket: string;
+    event_type: string;
+    count: number;
+  }[];
 
 describe("ingest — session creation", () => {
   it("creates an active session and derives project_name from cwd", () => {
@@ -382,6 +388,20 @@ describe("ingest — git context sync", () => {
     await updateSessionGit("s1", "/no/such/dir/xyz");
     expect(session("s1")!.git_commit).toBeNull();
     expect(session("s1")!.branch).toBeNull();
+  });
+});
+
+describe("ingest — activity rollup", () => {
+  it("rolls up event counts by hour bucket and type", () => {
+    send("PreToolUse", { session_id: "s1", tool_name: "Read" });
+    send("PreToolUse", { session_id: "s1", tool_name: "Read" });
+    send("Stop", { session_id: "s1" });
+
+    const rows = activity();
+    expect(rows.find((r) => r.event_type === "PreToolUse")!.count).toBe(2);
+    expect(rows.find((r) => r.event_type === "Stop")!.count).toBe(1);
+    // bucket is an hour key derived from created_at.
+    expect(rows[0].bucket).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}$/);
   });
 });
 
