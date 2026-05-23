@@ -7,6 +7,7 @@ import { latencyStats } from "./latency";
 import { buildSankey, type SankeyTriple } from "./sankey";
 import type { ProjectUsage } from "./projects";
 import type { PromptHistoryItem } from "./prompts";
+import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
@@ -600,6 +601,22 @@ export function demoSubagents() {
   return { groups: groups.reverse() };
 }
 
+export function demoMcp() {
+  const base = [
+    { server: "github", calls: 124, errorRate: 0.04, tools: 9, avgMs: 380 },
+    { server: "notion", calls: 67, errorRate: 0, tools: 5, avgMs: 210 },
+    { server: "supabase", calls: 41, errorRate: 0.12, tools: 7, avgMs: 540 },
+    { server: "playwright", calls: 23, errorRate: 0, tools: 4, avgMs: 95 },
+  ];
+  const now = dbNow();
+  const servers: McpServerUsage[] = base.map((b) => ({
+    ...b,
+    failures: Math.round(b.calls * b.errorRate),
+    last_at: now,
+  }));
+  return { servers };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -630,6 +647,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/prompts")) return json(demoPrompts());
     if (path.endsWith("/api/streak")) return json(demoStreak());
     if (path.endsWith("/api/subagents")) return json(demoSubagents());
+    if (path.endsWith("/api/mcp")) return json(demoMcp());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
