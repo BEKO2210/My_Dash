@@ -29,7 +29,17 @@ await rebuild({ buildPath: root, electronVersion, onlyModules: ["better-sqlite3"
 copyFileSync(projectBin, standaloneBin);
 console.log(`Copied Electron-ABI better-sqlite3 into standalone (Electron ${electronVersion})`);
 
-// 3) Restore the project copy for the system Node so dev/build/tests keep working.
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-execFileSync(npm, ["rebuild", "better-sqlite3"], { cwd: root, stdio: "inherit" });
-console.log("Restored project better-sqlite3 for the system Node");
+// 3) Restore the project copy for the system Node so local dev/build/tests keep
+//    working. Skipped in CI (the job ends after packaging) and never allowed to
+//    fail the build — the standalone copy is already correct at this point.
+//    `shell: true` is required so `npm` resolves to npm.cmd on Windows (Node
+//    refuses to spawn .cmd directly without a shell).
+if (!process.env.CI) {
+  try {
+    execFileSync("npm", ["rebuild", "better-sqlite3"], { cwd: root, stdio: "inherit", shell: true });
+    console.log("Restored project better-sqlite3 for the system Node");
+  } catch (err) {
+    console.warn("Could not restore project better-sqlite3 for Node:", err?.message ?? err);
+    console.warn("Run `npm rebuild better-sqlite3` before using the dev server again.");
+  }
+}
