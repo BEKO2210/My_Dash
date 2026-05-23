@@ -31,6 +31,7 @@ describe("migrate", () => {
         "prompts",
         "file_edits",
         "activity_buckets",
+        "config",
       ]),
     );
   });

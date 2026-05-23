@@ -136,4 +136,12 @@ export const MIGRATIONS = [
     PRIMARY KEY (bucket, event_type)
   );
   `,
+
+  // v11 — generic app config (key/value), e.g. budget limits.
+  `
+  CREATE TABLE IF NOT EXISTS config (
+    key   TEXT PRIMARY KEY,
+    value TEXT
+  );
+  `,
 ];
