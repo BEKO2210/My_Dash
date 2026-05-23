@@ -19,6 +19,7 @@ import type {
 let ingest: (typeof import("@/lib/ingest"))["ingest"];
 let db: (typeof import("@/lib/db"))["db"];
 let updateSessionUsage: (typeof import("@/lib/transcript-sync"))["updateSessionUsage"];
+let updateSessionGit: (typeof import("@/lib/git-sync"))["updateSessionGit"];
 let dataDir: string;
 
 beforeAll(async () => {
@@ -27,6 +28,7 @@ beforeAll(async () => {
   ({ ingest } = await import("@/lib/ingest"));
   ({ db } = await import("@/lib/db"));
   ({ updateSessionUsage } = await import("@/lib/transcript-sync"));
+  ({ updateSessionGit } = await import("@/lib/git-sync"));
 });
 
 afterAll(() => {
@@ -365,6 +367,21 @@ describe("ingest — transcript usage sync", () => {
     expect(s.token_output).toBe(120);
     expect(s.token_cache).toBe(300); // 100 + 200
     expect(s.cost_usd).toBeCloseTo(0.018675, 9);
+  });
+});
+
+describe("ingest — git context sync", () => {
+  it("writes the git commit onto the session from its cwd", async () => {
+    send("SessionStart", { session_id: "s1" });
+    await updateSessionGit("s1", process.cwd());
+    expect(session("s1")!.git_commit).toMatch(/^[0-9a-f]{7,}$/);
+  });
+
+  it("leaves git fields null for a non-git cwd", async () => {
+    send("SessionStart", { session_id: "s1" });
+    await updateSessionGit("s1", "/no/such/dir/xyz");
+    expect(session("s1")!.git_commit).toBeNull();
+    expect(session("s1")!.branch).toBeNull();
   });
 });
 
