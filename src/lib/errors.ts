@@ -34,6 +34,66 @@ export function errorStats(db: Database.Database, sinceIso: string | null = null
   return { toolCalls: total, failures, errorRate: total ? failures / total : 0 };
 }
 
+// Per-day totals + failures over the last `days` days (oldest first, gaps filled).
+export interface ErrorPoint {
+  date: string; // YYYY-MM-DD (UTC)
+  total: number;
+  failures: number;
+}
+
+export function errorSeries(db: Database.Database, days: number, now: Date = new Date()): ErrorPoint[] {
+  const startKey = new Date(now.getTime() - (days - 1) * 86_400_000).toISOString().slice(0, 10);
+  const rows = db
+    .prepare(
+      `SELECT substr(created_at, 1, 10) AS date,
+              COUNT(*) AS total,
+              SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failures
+       FROM tool_calls
+       WHERE created_at >= ?
+       GROUP BY date`,
+    )
+    .all(`${startKey} 00:00:00`) as ErrorPoint[];
+  const map = new Map(rows.map((r) => [r.date, r]));
+  const out: ErrorPoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const key = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10);
+    const r = map.get(key);
+    out.push({ date: key, total: r?.total ?? 0, failures: r?.failures ?? 0 });
+  }
+  return out;
+}
+
+// Tools with the most failures (only those with at least one), with their rate.
+export interface FailingTool {
+  tool: string;
+  failures: number;
+  total: number;
+  rate: number;
+}
+
+export function topFailingTools(
+  db: Database.Database,
+  limit = 6,
+  sinceIso: string | null = null,
+): FailingTool[] {
+  const cond = sinceIso ? "WHERE created_at >= ?" : "";
+  const params = sinceIso ? [sinceIso, limit] : [limit];
+  const rows = db
+    .prepare(
+      `SELECT tool_name AS tool,
+              COUNT(*) AS total,
+              SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failures
+       FROM tool_calls
+       ${cond}
+       GROUP BY tool_name
+       HAVING SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) > 0
+       ORDER BY failures DESC, tool ASC
+       LIMIT ?`,
+    )
+    .all(...params) as { tool: string; total: number; failures: number }[];
+  return rows.map((r) => ({ ...r, rate: r.total ? r.failures / r.total : 0 }));
+}
+
 export function recentErrors(db: Database.Database, limit: number): ErrorItem[] {
   return db
     .prepare(

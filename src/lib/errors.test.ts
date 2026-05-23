@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
-import { errorStats, recentErrors } from "@/lib/errors";
+import { errorSeries, errorStats, recentErrors, topFailingTools } from "@/lib/errors";
 import { migrate } from "@/lib/migrations";
 
 let open: Database.Database | null = null;
@@ -55,5 +55,42 @@ describe("recentErrors", () => {
 
   it("respects the limit", () => {
     expect(recentErrors(seeded(), 1)).toHaveLength(1);
+  });
+});
+
+function dated(): Database.Database {
+  const db = (open = new Database(":memory:"));
+  migrate(db);
+  const ins = db.prepare(
+    "INSERT INTO tool_calls (session_id, tool_name, success, created_at) VALUES ('s', ?, ?, ?)",
+  );
+  ins.run("Bash", 0, "2026-05-23 10:00:00");
+  ins.run("Bash", 1, "2026-05-23 11:00:00");
+  ins.run("Read", 0, "2026-05-22 10:00:00");
+  ins.run("Read", 1, "2026-05-22 11:00:00");
+  ins.run("Edit", 1, "2026-05-20 10:00:00");
+  return db;
+}
+
+describe("errorSeries", () => {
+  it("returns one filled entry per day, oldest first", () => {
+    const series = errorSeries(dated(), 3, new Date("2026-05-23T12:00:00Z"));
+    expect(series.map((p) => p.date)).toEqual(["2026-05-21", "2026-05-22", "2026-05-23"]);
+    expect(series[0]).toEqual({ date: "2026-05-21", total: 0, failures: 0 }); // gap filled
+    expect(series[1]).toEqual({ date: "2026-05-22", total: 2, failures: 1 });
+    expect(series[2]).toEqual({ date: "2026-05-23", total: 2, failures: 1 });
+  });
+});
+
+describe("topFailingTools", () => {
+  it("ranks tools with failures by failure count, with rate", () => {
+    const rows = topFailingTools(dated());
+    expect(rows.map((r) => r.tool)).toEqual(["Bash", "Read"]); // Edit has no failures
+    expect(rows[0]).toMatchObject({ tool: "Bash", failures: 1, total: 2, rate: 0.5 });
+  });
+
+  it("respects the since window", () => {
+    const rows = topFailingTools(dated(), 6, "2026-05-23 00:00:00");
+    expect(rows.map((r) => r.tool)).toEqual(["Bash"]); // only the 05-23 failure remains
   });
 });
