@@ -29,6 +29,7 @@ describe("migrate", () => {
         "tool_io",
         "session_links",
         "prompts",
+        "file_edits",
       ]),
     );
   });

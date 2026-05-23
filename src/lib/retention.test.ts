@@ -80,17 +80,24 @@ describe("pruneAll", () => {
     expect(count(db, "events")).toBe(3);
   });
 
-  it("drops tool_io rows orphaned by tool_calls pruning", () => {
+  it("drops tool_io and file_edits rows orphaned by tool_calls pruning", () => {
     const db = (open = new Database(":memory:"));
     migrate(db);
-    const insCall = db.prepare("INSERT INTO tool_calls (session_id, tool_name) VALUES ('s','Read')");
+    const insCall = db.prepare("INSERT INTO tool_calls (session_id, tool_name) VALUES ('s','Edit')");
     const insIo = db.prepare("INSERT INTO tool_io (tool_call_id) VALUES (?)");
-    for (let i = 0; i < 6; i++) insIo.run(Number(insCall.run().lastInsertRowid));
+    const insFe = db.prepare("INSERT INTO file_edits (session_id, tool_call_id, path) VALUES ('s', ?, '/x')");
+    for (let i = 0; i < 6; i++) {
+      const id = Number(insCall.run().lastInsertRowid);
+      insIo.run(id);
+      insFe.run(id);
+    }
 
     process.env.MC_MAX_TOOL_CALLS = "2";
-    const { toolCalls, toolIo } = pruneAll(db);
+    const { toolCalls, toolIo, fileEdits } = pruneAll(db);
     expect(toolCalls).toBe(4);
-    expect(toolIo).toBe(4); // the 4 io rows whose call was pruned
+    expect(toolIo).toBe(4);
+    expect(fileEdits).toBe(4);
     expect(count(db, "tool_io")).toBe(2);
+    expect(count(db, "file_edits")).toBe(2);
   });
 });

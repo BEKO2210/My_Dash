@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type {
   EventRow,
+  FileEditRow,
   HookPayload,
   PromptRow,
   SessionLinkRow,
@@ -34,7 +35,7 @@ afterAll(() => {
 
 beforeEach(() => {
   db.exec(
-    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM prompts; DELETE FROM sessions;",
+    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM prompts; DELETE FROM file_edits; DELETE FROM sessions;",
   );
   // The Pre/Post duration pairing keeps starts in a process-global map; reset it
   // so each test is deterministic.
@@ -63,6 +64,8 @@ const links = (parentId: string) =>
   db.prepare("SELECT * FROM session_links WHERE parent_session_id = ?").all(parentId) as SessionLinkRow[];
 const prompts = (id: string) =>
   db.prepare("SELECT * FROM prompts WHERE session_id = ? ORDER BY id").all(id) as PromptRow[];
+const fileEdits = (id: string) =>
+  db.prepare("SELECT * FROM file_edits WHERE session_id = ? ORDER BY id").all(id) as FileEditRow[];
 
 describe("ingest — session creation", () => {
   it("creates an active session and derives project_name from cwd", () => {
@@ -252,6 +255,36 @@ describe("ingest — tool calls", () => {
       tool_response: {},
     });
     expect(links("s1")).toHaveLength(0);
+  });
+
+  it("records a file_edit for a successful Edit", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Edit",
+      tool_input: { file_path: "/src/x.ts", old_string: "a", new_string: "a\nb\nc" },
+      tool_response: { ok: true },
+    });
+    const [fe] = fileEdits("s1");
+    expect(fe.path).toBe("/src/x.ts");
+    expect(fe.added).toBe(3);
+    expect(fe.removed).toBe(1);
+    expect(fe.tool_call_id).toBe(toolCalls("s1")[0].id);
+  });
+
+  it("does not record a file_edit for a failed edit or a non-file tool", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Edit",
+      tool_input: { file_path: "/src/x.ts", old_string: "a", new_string: "b" },
+      tool_response: { is_error: true },
+    });
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: "ls" },
+      tool_response: {},
+    });
+    expect(fileEdits("s1")).toHaveLength(0);
   });
 
   it("does not create a tool_call for a PostToolUse without a tool_name", () => {
