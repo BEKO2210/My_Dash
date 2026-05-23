@@ -81,6 +81,16 @@ export interface ToolIoRow {
   error_text: string | null;
 }
 
+// A stored user prompt (redacted + capped) with a token estimate.
+export interface PromptRow {
+  id: number;
+  session_id: string;
+  event_id: number | null;
+  text: string | null;
+  token_estimate: number;
+  created_at: string;
+}
+
 // A parent/child relationship between sessions — currently a Task → subagent link.
 export interface SessionLinkRow {
   id: number;

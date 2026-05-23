@@ -100,6 +100,20 @@ export const MIGRATIONS: string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_session_links_parent ON session_links(parent_session_id);
   `,
+
+  // v7 — prompts as first-class, queryable rows (redacted + capped text, token
+  // estimate). Powers the prompt-history and tag-cloud widgets.
+  `
+  CREATE TABLE IF NOT EXISTS prompts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id      TEXT NOT NULL,
+    event_id        INTEGER,
+    text            TEXT,
+    token_estimate  INTEGER DEFAULT 0,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_prompts_session ON prompts(session_id);
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction
