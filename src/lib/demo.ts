@@ -7,6 +7,7 @@ import { latencyStats } from "./latency";
 import { buildSankey, type SankeyTriple } from "./sankey";
 import type { ProjectUsage } from "./projects";
 import type { PromptHistoryItem } from "./prompts";
+import type { Compaction } from "./compaction";
 import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import type { SubagentGroup } from "./subagents";
@@ -617,6 +618,26 @@ export function demoMcp() {
   return { servers };
 }
 
+export function demoCompactions() {
+  const out: Compaction[] = [];
+  let id = 1;
+  const now = Date.now();
+  for (let i = 0; i < 12; i++) {
+    const ago = Math.floor(Math.random() * 13) * 86_400_000 + Math.floor(Math.random() * 86_400_000);
+    const created = new Date(now - ago).toISOString().slice(0, 19).replace("T", " ");
+    const manual = Math.random() < 0.25;
+    out.push({
+      id: id++,
+      session_id: "demo-" + Math.random().toString(36).slice(2, 10),
+      trigger: manual ? "manual" : "auto",
+      customInstructions: manual ? "keep the roadmap context" : null,
+      created_at: created,
+    });
+  }
+  out.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  return { compactions: out };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -648,6 +669,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/streak")) return json(demoStreak());
     if (path.endsWith("/api/subagents")) return json(demoSubagents());
     if (path.endsWith("/api/mcp")) return json(demoMcp());
+    if (path.endsWith("/api/compactions")) return json(demoCompactions());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
