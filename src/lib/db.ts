@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 
 // Schema lives here as the single source of truth (avoids runtime file-path lookups
 // that break under Next's bundling). Every statement is IF NOT EXISTS → safe to run on each boot.
@@ -51,7 +52,7 @@ function createDb(): Database.Database {
   // Opening the real database file then races on the SQLite lock ("database is
   // locked"). The build only needs the schema to exist for page-data collection, so
   // use a throwaway in-memory database during the build phase.
-  if (process.env.NEXT_PHASE === "phase-production-build") {
+  if (process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD) {
     const mem = new Database(":memory:");
     mem.exec(SCHEMA);
     return mem;
