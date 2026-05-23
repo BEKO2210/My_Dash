@@ -5,6 +5,7 @@
 
 import { latencyStats } from "./latency";
 import { buildSankey, type SankeyTriple } from "./sankey";
+import type { ProjectUsage } from "./projects";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -494,6 +495,29 @@ export function demoSankey() {
   return buildSankey(triples);
 }
 
+export function demoProjects() {
+  const seed = [
+    { project: "my_dash", sessions: 42, tools: 318, costUsd: 24.7 },
+    { project: "shopify-bot", sessions: 28, tools: 211, costUsd: 18.3 },
+    { project: "infra-scripts", sessions: 17, tools: 96, costUsd: 7.1 },
+    { project: "docs-site", sessions: 9, tools: 41, costUsd: 2.8 },
+    { project: "(unknown)", sessions: 4, tools: 12, costUsd: 0.4 },
+  ];
+  const projects: ProjectUsage[] = seed.map((s) => {
+    const tokenInput = s.tools * 1800;
+    const tokenOutput = s.tools * 4200;
+    const tokenCache = s.tools * 90_000;
+    return {
+      ...s,
+      tokenInput,
+      tokenOutput,
+      tokenCache,
+      totalTokens: tokenInput + tokenOutput + tokenCache,
+    };
+  });
+  return { projects };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -519,6 +543,7 @@ export function installDemoBackend() {
     }
     if (path.endsWith("/api/sessions")) return json({ sessions: demoSessions() });
     if (path.endsWith("/api/graph")) return json(demoGraph());
+    if (path.endsWith("/api/usage/projects")) return json(demoProjects());
     if (path.endsWith("/api/usage")) return json(demoUsage());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());

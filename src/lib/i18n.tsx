@@ -126,6 +126,15 @@ const DE: Record<string, string> = {
   "sankey.info": "Fluss von Projekt → Tool → Ressourcentyp aus den Tool-Aufrufen.",
   "sankey.empty": "Noch keine Tool-Ziele.",
 
+  "leaderboard.title": "Projekt-Rangliste",
+  "leaderboard.info": "Projekte nach Kosten, Sessions, Tools und Tokens. Spalte klicken zum Sortieren.",
+  "leaderboard.empty": "Noch keine Projekte.",
+  "leaderboard.project": "Projekt",
+  "leaderboard.sessions": "Sessions",
+  "leaderboard.tools": "Tools",
+  "leaderboard.tokens": "Tokens",
+  "leaderboard.cost": "Kosten",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -313,6 +322,15 @@ const EN: Record<string, string> = {
   "sankey.title": "Flow",
   "sankey.info": "Flow of project → tool → resource kind from tool calls.",
   "sankey.empty": "No tool targets yet.",
+
+  "leaderboard.title": "Project leaderboard",
+  "leaderboard.info": "Projects by cost, sessions, tools and tokens. Click a column to sort.",
+  "leaderboard.empty": "No projects yet.",
+  "leaderboard.project": "Project",
+  "leaderboard.sessions": "Sessions",
+  "leaderboard.tools": "Tools",
+  "leaderboard.tokens": "Tokens",
+  "leaderboard.cost": "Cost",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
