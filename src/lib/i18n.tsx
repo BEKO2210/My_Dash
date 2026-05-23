@@ -215,6 +215,11 @@ const DE: Record<string, string> = {
   "sessionDur.median": "Median",
   "sessionDur.max": "Max",
 
+  "reliability.title": "Zuverlässigkeit je Projekt",
+  "reliability.info": "Anteil erfolgreicher Tool-Aufrufe pro Projekt. Grün ≥95 %, Gelb ≥85 %, sonst Rot.",
+  "reliability.empty": "Noch keine Tool-Aufrufe.",
+  "reliability.fail": "Fehler",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -491,6 +496,11 @@ const EN: Record<string, string> = {
   "sessionDur.empty": "No completed sessions yet.",
   "sessionDur.median": "Median",
   "sessionDur.max": "Max",
+
+  "reliability.title": "Reliability per project",
+  "reliability.info": "Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red.",
+  "reliability.empty": "No tool calls yet.",
+  "reliability.fail": "fail",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

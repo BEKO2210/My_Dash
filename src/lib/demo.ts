@@ -12,6 +12,7 @@ import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
+import type { ProjectReliability } from "./reliability";
 import { durationStats } from "./session-duration";
 import type { VelocityDay } from "./velocity";
 import type { SubagentGroup } from "./subagents";
@@ -723,6 +724,23 @@ export function demoSessionDuration() {
   return durationStats(values);
 }
 
+export function demoReliability() {
+  const base = [
+    { project: "my_dash", total: 318, successRate: 0.97 },
+    { project: "shopify-bot", total: 211, successRate: 0.91 },
+    { project: "infra-scripts", total: 96, successRate: 0.82 },
+    { project: "docs-site", total: 41, successRate: 0.99 },
+    { project: "(unknown)", total: 12, successRate: 0.75 },
+  ];
+  const projects: ProjectReliability[] = base.map((b) => ({
+    project: b.project,
+    total: b.total,
+    failures: Math.round(b.total * (1 - b.successRate)),
+    successRate: b.successRate,
+  }));
+  return { projects };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -760,6 +778,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/calendar")) return json(demoCalendar());
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
+    if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
