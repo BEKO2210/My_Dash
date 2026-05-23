@@ -12,6 +12,7 @@ import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
+import { durationStats } from "./session-duration";
 import type { VelocityDay } from "./velocity";
 import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
@@ -711,6 +712,17 @@ export function demoVelocity() {
   return { days };
 }
 
+export function demoSessionDuration() {
+  const values: number[] = [];
+  for (let i = 0; i < 160; i++) {
+    // Right-skewed: most sessions short, a long tail of multi-hour ones.
+    const r = Math.random();
+    const minutes = r < 0.55 ? Math.random() * 15 : r < 0.85 ? 15 + Math.random() * 75 : 90 + Math.random() * 300;
+    values.push(Math.round(minutes * 60_000));
+  }
+  return durationStats(values);
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -747,6 +759,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/token-burn")) return json(demoTokenBurn());
     if (path.endsWith("/api/calendar")) return json(demoCalendar());
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
+    if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
