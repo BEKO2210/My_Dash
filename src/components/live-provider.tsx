@@ -26,10 +26,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     let es: EventSource | null = null;
     let retry: ReturnType<typeof setTimeout> | null = null;
     let backoff = 1000; // grows to a 15s ceiling so a down server is retried gently
+    let lastId = 0; // highest event id seen → resume point for a manual reconnect
 
     const ingestEvent = (e: EventRow) => {
       if (seen.current.has(e.id)) return;
       seen.current.add(e.id);
+      if (e.id > lastId) lastId = e.id;
       if (seen.current.size > MAX_EVENTS * 4) {
         seen.current = new Set([...seen.current].slice(-MAX_EVENTS));
       }
@@ -61,7 +63,9 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
 
     const connect = () => {
       if (closed) return;
-      es = new EventSource("/api/stream");
+      // On a manual reconnect, ask the server to replay anything we missed. (The
+      // browser's own auto-reconnect uses the Last-Event-ID header instead.)
+      es = new EventSource(lastId > 0 ? `/api/stream?lastEventId=${lastId}` : "/api/stream");
       es.onopen = () => {
         if (closed) return;
         setConnected(true);
