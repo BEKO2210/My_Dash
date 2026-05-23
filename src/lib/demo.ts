@@ -458,6 +458,27 @@ export function demoLatency() {
   return { stats: latencyStats(values), tools: ["Read", "Edit", "Bash", "Grep", "WebFetch"] };
 }
 
+export function demoErrors() {
+  const today = Date.now();
+  const series = Array.from({ length: 14 }, (_, i) => {
+    const total = 20 + Math.round(Math.random() * 40);
+    const failures = Math.round(total * (0.02 + Math.random() * 0.08));
+    return { date: new Date(today - (13 - i) * 86_400_000).toISOString().slice(0, 10), total, failures };
+  });
+  const failures = series.reduce((a, p) => a + p.failures, 0);
+  const total = series.reduce((a, p) => a + p.total, 0);
+  return {
+    stats: { toolCalls: total, failures, errorRate: total ? failures / total : 0 },
+    series,
+    topTools: [
+      { tool: "Bash", failures: 8, total: 74, rate: 8 / 74 },
+      { tool: "WebFetch", failures: 3, total: 11, rate: 3 / 11 },
+      { tool: "Edit", failures: 2, total: 98, rate: 2 / 98 },
+    ],
+    recent: [],
+  };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -488,6 +509,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
     if (path.endsWith("/api/tools/latency")) return json(demoLatency());
+    if (path.endsWith("/api/errors")) return json(demoErrors());
     if (path.endsWith("/api/tools")) return json(demoTools());
     if (path.endsWith("/api/files")) return json(demoFiles());
     if (path.includes("/api/events")) {
