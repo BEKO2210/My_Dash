@@ -30,6 +30,7 @@ describe("migrate", () => {
         "session_links",
         "prompts",
         "file_edits",
+        "activity_buckets",
       ]),
     );
   });
