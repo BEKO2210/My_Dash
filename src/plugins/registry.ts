@@ -8,6 +8,7 @@ import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
 import { ToolFrequency } from "./tool-frequency/widget";
 import { FileHotspots } from "./file-hotspots/widget";
+import { SessionTimeline } from "./session-timeline/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -92,5 +93,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: FileHotspots,
+  },
+  {
+    id: "session-timeline",
+    title: "Session-Timeline",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: SessionTimeline,
   },
 ];

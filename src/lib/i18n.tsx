@@ -102,6 +102,9 @@ const DE: Record<string, string> = {
   "files.info": "Meistbearbeitete Dateien (Fläche & Farbe = geänderte Zeilen) im Zeitraum.",
   "files.empty": "Noch keine Datei-Änderungen.",
   "files.edits": "Bearbeitungen",
+  "timeline.title": "Session-Timeline",
+  "timeline.info": "Sessions als Zeitbalken (Start bis Ende), eingefärbt nach Status.",
+  "timeline.empty": "Keine Sessions im Zeitraum.",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -267,6 +270,9 @@ const EN: Record<string, string> = {
   "files.info": "Most-edited files (area & color = changed lines) in the range.",
   "files.empty": "No file changes yet.",
   "files.edits": "edits",
+  "timeline.title": "Session timeline",
+  "timeline.info": "Sessions as time bars (start to end), colored by status.",
+  "timeline.empty": "No sessions in range.",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
