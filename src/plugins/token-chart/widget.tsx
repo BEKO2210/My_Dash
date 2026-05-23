@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { Coins } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { WidgetState } from "@/components/widget-state";
 import { useT } from "@/lib/i18n";
 import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
@@ -105,8 +106,10 @@ export function TokenChart() {
         </div>
       }
     >
-      {!usage || !usage.available || data.length === 0 ? (
-        <Empty available={usage?.available ?? true} range={range} />
+      {!usage ? (
+        <WidgetState icon={Coins} title={t("common.loading")} loading />
+      ) : !usage.available || data.length === 0 ? (
+        <WidgetState icon={Coins} title={emptyMessage(t, usage.available, range)} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -175,17 +178,7 @@ const tooltipStyle = {
   fontSize: 12,
 } as const;
 
-function Empty({ available, range }: { available: boolean; range: Range }) {
-  const { t } = useT();
-  const msg = !available
-    ? t("tokens.emptyUnavailable")
-    : range === "24h"
-      ? t("tokens.empty24h")
-      : t("tokens.emptyNone");
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
-      <Coins className="h-6 w-6 opacity-50" />
-      <p>{msg}</p>
-    </div>
-  );
+function emptyMessage(t: (key: string) => string, available: boolean, range: Range): string {
+  if (!available) return t("tokens.emptyUnavailable");
+  return range === "24h" ? t("tokens.empty24h") : t("tokens.emptyNone");
 }

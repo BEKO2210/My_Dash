@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { forceCollide } from "d3-force-3d";
 import { Boxes, Maximize2, Minimize2, X } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime, STATUS_META } from "@/lib/format";
@@ -401,15 +402,9 @@ export function ToolGraph() {
       >
         <div ref={wrapRef} className="relative h-full w-full">
           {!webglOk ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
-              <Boxes className="h-6 w-6 opacity-50" />
-              <p className="max-w-xs">{t("graph.noWebgl")}</p>
-            </div>
+            <WidgetState icon={Boxes} title={t("graph.noWebgl")} />
           ) : data.nodes.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted">
-              <Boxes className="h-6 w-6 opacity-50" />
-              <p>{t("graph.empty")}</p>
-            </div>
+            <WidgetState icon={Boxes} title={t("graph.empty")} />
           ) : dims.w > 0 ? (
             <>
               <ForceGraph3D
@@ -476,7 +471,9 @@ export function ToolGraph() {
                 ))}
               </div>
             </>
-          ) : null}
+          ) : (
+            <WidgetState icon={Boxes} title={t("common.loading")} loading />
+          )}
         </div>
       </Panel>
     </div>
