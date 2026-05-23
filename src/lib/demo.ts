@@ -322,7 +322,20 @@ export function demoUsage() {
     },
     { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
   );
-  return { days, blocks, totals, available: true };
+  const models = [
+    { model: "claude-opus-4-7", share: 0.7 },
+    { model: "claude-sonnet-4-6", share: 0.3 },
+  ].map((m) => ({
+    model: m.model,
+    inputTokens: Math.round(totals.inputTokens * m.share),
+    outputTokens: Math.round(totals.outputTokens * m.share),
+    cacheTokens: Math.round(totals.cacheTokens * m.share),
+    totalTokens: Math.round(totals.totalTokens * m.share),
+    costUsd: +(totals.costUsd * m.share).toFixed(2),
+    costEur: +(totals.costEur * m.share).toFixed(2),
+  }));
+
+  return { days, blocks, models, totals, available: true };
 }
 
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
