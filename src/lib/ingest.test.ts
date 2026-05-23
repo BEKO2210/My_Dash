@@ -2,7 +2,14 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { EventRow, HookPayload, SessionRow, ToolCallRow, ToolIoRow } from "@/lib/types";
+import type {
+  EventRow,
+  HookPayload,
+  SessionLinkRow,
+  SessionRow,
+  ToolCallRow,
+  ToolIoRow,
+} from "@/lib/types";
 
 // Exercise the real ingest write path against a throwaway SQLite database. We point
 // the db module at a temp dir via MC_DATA_DIR *before* importing it (dynamic import),
@@ -25,7 +32,9 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  db.exec("DELETE FROM events; DELETE FROM tool_calls; DELETE FROM sessions;");
+  db.exec(
+    "DELETE FROM events; DELETE FROM tool_calls; DELETE FROM tool_io; DELETE FROM session_links; DELETE FROM sessions;",
+  );
   // The Pre/Post duration pairing keeps starts in a process-global map; reset it
   // so each test is deterministic.
   (globalThis as unknown as { __mcPending?: Map<string, number> }).__mcPending?.clear();
@@ -49,6 +58,8 @@ const toolCalls = (id: string) =>
   db.prepare("SELECT * FROM tool_calls WHERE session_id = ? ORDER BY id").all(id) as ToolCallRow[];
 const toolIo = (callId: number) =>
   db.prepare("SELECT * FROM tool_io WHERE tool_call_id = ?").get(callId) as ToolIoRow | undefined;
+const links = (parentId: string) =>
+  db.prepare("SELECT * FROM session_links WHERE parent_session_id = ?").all(parentId) as SessionLinkRow[];
 
 describe("ingest — session creation", () => {
   it("creates an active session and derives project_name from cwd", () => {
@@ -213,6 +224,31 @@ describe("ingest — tool calls", () => {
     const call = toolCalls("s1")[0];
     expect(call.source).toBe("builtin");
     expect(call.mcp_server).toBeNull();
+  });
+
+  it("records a subagent link for a Task tool call", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Task",
+      tool_input: { subagent_type: "Explore", description: "find the bug" },
+      tool_response: { ok: true },
+    });
+    const [link] = links("s1");
+    expect(link).toBeDefined();
+    expect(link.kind).toBe("subagent");
+    expect(link.label).toBe("Explore");
+    expect(link.tool_call_id).toBe(toolCalls("s1")[0].id);
+    expect(link.child_session_id).toBeNull();
+  });
+
+  it("does not record a link for a non-Task tool", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: {},
+    });
+    expect(links("s1")).toHaveLength(0);
   });
 
   it("does not create a tool_call for a PostToolUse without a tool_name", () => {
