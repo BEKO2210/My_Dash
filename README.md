@@ -14,6 +14,7 @@
 <p align="center">
   <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-f59e0b?style=flat-square">
   <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-4f8cff?style=flat-square">
+  <a href="https://github.com/BEKO2210/My_Dash/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-Win_·_macOS_·_Linux-4f8cff?style=flat-square&logo=githubactions&logoColor=white"></a>
   <a href="https://beko2210.github.io/My_Dash/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-online-34d399?style=flat-square&logo=githubpages&logoColor=white"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-4f8cff?style=flat-square"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-ff6b9d?style=flat-square"></a>
@@ -138,10 +139,12 @@ One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
 
 ## Install (desktop app)
 
-Double-click installers for **Windows, macOS and Linux** are built by the release
-workflow and attached to each [GitHub Release](https://github.com/BEKO2210/My_Dash/releases):
+### ⬇️ [Download the latest release](https://github.com/BEKO2210/My_Dash/releases/latest)
 
-| OS | File |
+Double-click installers for **Windows, macOS and Linux** are built by the release
+workflow and attached to every [GitHub Release](https://github.com/BEKO2210/My_Dash/releases):
+
+| OS | File on the [latest release](https://github.com/BEKO2210/My_Dash/releases/latest) |
 |----|------|
 | Windows | `Claude Mission Control Setup <version>.exe` (NSIS installer) |
 | macOS | `Claude Mission Control-<version>.dmg` |
