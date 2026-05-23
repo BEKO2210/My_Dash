@@ -18,6 +18,7 @@ import { LiveNow } from "./live-now/widget";
 import { PromptHistory } from "./prompt-history/widget";
 import { Streak } from "./streak/widget";
 import { SubagentTree } from "./subagent-tree/widget";
+import { McpServers } from "./mcp-servers/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -172,5 +173,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: SubagentTree,
+  },
+  {
+    id: "mcp-servers",
+    title: "MCP-Server",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: McpServers,
   },
 ];

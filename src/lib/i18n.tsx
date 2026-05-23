@@ -168,6 +168,13 @@ const DE: Record<string, string> = {
   "subagents.emptyHint": "Sobald Claude einen Task-Subagenten startet, erscheint er hier.",
   "subagents.unnamed": "Unbenannter Subagent",
 
+  "mcp.title": "MCP-Server",
+  "mcp.info": "Aktivität je MCP-Server: Aufrufe, Fehlerrate und mittlere Latenz.",
+  "mcp.empty": "Noch keine MCP-Aufrufe.",
+  "mcp.emptyHint": "Sobald ein MCP-Tool (mcp__…) läuft, erscheint sein Server hier.",
+  "mcp.errors": "Fehler",
+  "mcp.tools": "Tools",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -397,6 +404,13 @@ const EN: Record<string, string> = {
   "subagents.empty": "No subagents yet.",
   "subagents.emptyHint": "As soon as Claude launches a Task subagent, it shows up here.",
   "subagents.unnamed": "Unnamed subagent",
+
+  "mcp.title": "MCP servers",
+  "mcp.info": "Activity per MCP server: calls, error rate and average latency.",
+  "mcp.empty": "No MCP calls yet.",
+  "mcp.emptyHint": "As soon as an MCP tool (mcp__…) runs, its server appears here.",
+  "mcp.errors": "errors",
+  "mcp.tools": "tools",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

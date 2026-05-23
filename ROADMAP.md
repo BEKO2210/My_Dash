@@ -280,7 +280,7 @@ README/Docs sind nachgezogen.
 95. **API-Doku (OpenAPI).** Alle Lesepfade + den einzigen Schreibpfad
     dokumentieren. *Ergebnis:* offener, integrierbarer Daten-Hub.
 
-## Phase I — Politur, Performance, Release (Runs 96–100)
+## Phase I — Politur & Performance (Runs 96–99)
 
 96. **Barrierefreiheit-Audit.** Voller a11y-Pass (ARIA, Fokus, Kontrast,
     Tastatur) + automatische axe-Checks in CI.
@@ -290,27 +290,60 @@ README/Docs sind nachgezogen.
     Tour) in App + Electron-Tray.
 99. **Doku-Refresh.** README/Architektur/Plugin-Docs auf den neuen Stand;
     Screenshots/GIFs neu; `src/lib/demo.ts` zeigt die neuen Widgets.
-100. ⚙️ **v1.0-Release.** Signierte Installer + Auto-Update, Version-Bump,
-     Changelog, Release-Workflow finalisieren, Pages-Demo mit allen Widgets.
+
+## Phase Z — Visuelle & funktionale Gesamtabnahme (Runs 100–119, **VOR dem Release**)
+
+Erst wenn **jeder** dieser 20 Checks grün ist, wird v1.0 freigegeben. Jeder Run
+nimmt Playwright-Screenshots (De **und** En, Light/Dark, Breiten: Desktop,
+2560px, 3840px, Mobil) auf, prüft das Thema **einzeln** und klickt **jede**
+Interaktion einmal an (jeder Button, jede sortierbare Spalte, jeder Balken,
+jede Zelle, jeder Tooltip). Bilder werden als CI-Artefakte gesammelt; jede
+Abweichung wird als Folge-Fix notiert. Konsole muss frei von Fehlern/Hydration
+sein.
+
+100. 📐 **Layout & Raster.** Abstände, Gutter, Padding, Ausrichtung, gleiche
+     Panel-Höhen, kein Überlauf — über alle Breakpoints.
+101. 🎨 **Farbsystem & Kontrast.** Palette, Akzent-/Statusfarben,
+     Farbenblind-Palette, Dark/Light-Kontrast (WCAG AA) je Widget.
+102. 🔤 **Typografie & Lesbarkeit.** Schriftgrößen, Zeilenhöhe, Truncation/
+     Ellipsis, `tabular-nums`, Mono-Felder, lange Texte/Übersetzungen.
+103. 📊 **KPI-Bar & Übersicht.** Werte, Count-up-Animation, Sparkline,
+     Lade-/Leer-/Fehlerzustände.
+104. 🗂️ **Kanban (Sessions).** Spalten, Karten, Status-Punkte, Filter, Klick
+     auf jede Karte + Drilldown.
+105. 📡 **Live-Stream & Jetzt-live.** SSE-Verbindung, Einlauf-Animation,
+     Pulse/Ping, tickender Timer.
+106. 💸 **Token-/Kosten-Chart.** Achsen, Tooltips, Hover, Legende, Umschalter
+     (Tokens/Kosten, USD/EUR).
+107. 🕸️ **Tool-Graph (3D).** Laden, Drehen/Zoom, Knoten-Klick, Labels,
+     Performance.
+108. ⛽ **Budget-Gauge.** Schwellen-Farben, Anzeige, Überschreitung, Animation.
+109. 🔥 **Heatmap (Aktivität).** Punchcard-Zellen, Farbstufen, p95-Clamp,
+     Tooltip jeder Zelle.
+110. 🛠️ **Top-Tools & Tool-Frequenz.** Balken, Sortierung, Hover — jeden Balken
+     einzeln prüfen.
+111. 🧩 **Datei-Hotspots (Treemap).** Kacheln, Farben, Tooltip, Klick.
+112. ⏱️ **Session-Timeline.** Spuren, Zeitfenster, Zoom/Scroll.
+113. 📈 **Latenz.** Histogramm-Buckets, p50/p95/p99, jeder Balken, Tooltip.
+114. ❗ **Fehlerrate & Fehler-Panel.** Serie, Top-Fehler-Tools, Fehlerliste,
+     Klick.
+115. 🍩 **Modelle-Donut.** Segmente, Legende, Center-Total, Hover jedes Segment.
+116. 🌊 **Sankey-Fluss.** Knoten/Links, Hover, Other-Bucket, Label-Lesbarkeit.
+117. 🏆 **Projekt-Leaderboard.** Sortierbare Spalten (jede Spalte klicken),
+     Medaillen, Hover-Zeilen.
+118. 🔢 **Streak/Produktivität & Subagent-Baum.** Streak-Kacheln, jeder Balken,
+     Auf-/Zuklappen jedes Knotens.
+119. 🔌 **MCP-Server + globale Interaktionen.** MCP-Zeilen/Balken; Sprach- &
+     Theme-Umschalter, Suche filtert alle Widgets, Layout-Reset/Drag, Info-
+     Hints überall; alle `/api/*`-Routen antworten; Demo-Modus zeigt alle
+     Widgets. Abschluss-Sammlung aller Screenshots.
+
+## Phase Ω — Release (Run 120)
+
+120. ⚙️ **v1.0-Release** (erst nach grüner Phase Z). Signierte Installer +
+     Auto-Update, Version-Bump, Changelog, Release-Workflow finalisieren,
+     Pages-Demo mit allen Widgets.
      *Ergebnis:* das beste Claude-Code-Observability-Tool — ausgeliefert.
-
-## Phase Z — Abschluss-Check: visuelle & funktionale Gesamtabnahme (nach allen Widgets)
-
-101. 📸 **Voller Widget-Audit per Playwright.** Wenn alle Widgets stehen: das
-     Dashboard end-to-end durchklicken und visuell abnehmen. Konkret:
-     - Mit Playwright **Screenshots von jedem einzelnen Widget** (`section`)
-       sowie ein Full-Page-Bild in De **und** En, Light/Dark, und auf mehreren
-       Breiten (Desktop, 2560px, 3840px, Mobil) aufnehmen.
-     - **Jedes** Widget visuell prüfen: Layout/Format, kein Überlauf, keine
-       abgeschnittenen Texte, Lade-/Leer-/Fehlerzustände, Animationen.
-     - **Alles anklicken**: sortierbare Spalten, Filter, Drilldowns, Tabs,
-       Tooltips/Info-Hints, Sprach- und Theme-Umschalter, Layout-Reset — jede
-       Interaktion einmal auslösen und auf Konsolen-/Hydrations-Fehler achten.
-     - Funktion bestätigen: SSE verbindet, Live-Daten fließen, Suche filtert,
-       jede `/api/*`-Route antwortet, Demo-Modus zeigt alle Widgets.
-     - Bilder als Artefakte sammeln (CI-Upload), Abweichungen als Folge-Fixes
-       notieren. Abnahme erst grün, wenn jedes Widget geprüft, bebildert und
-       fehlerfrei ist.
 
 ---
 
@@ -326,8 +359,11 @@ README/Docs sind nachgezogen.
 | F | 73–80 | Plugin-Plattform | aus „Registry" wird echtes Ökosystem |
 | G | 81–88 | Alerting | proaktiv, read-only-sicher |
 | H | 89–95 | Integrationen | OTLP/Prometheus/Git — offener Hub |
-| I | 96–100 | Politur & Release | a11y, Performance, v1.0 |
+| I | 96–99 | Politur & Performance | a11y, Performance, Onboarding, Docs |
+| Z | 100–119 | Visuelle & funktionale Gesamtabnahme | 20 Einzel-Checks **vor** Release |
+| Ω | 120 | Release | v1.0 erst nach grüner Phase Z |
 
-**Leitstern:** Nach 100 Runs ist Claude Mission Control das vollständigste,
-am besten gehärtete, lokal-first Observability-Tool für Claude Code — ohne die
-goldene Regel je gebrochen zu haben.
+**Leitstern:** Nach 120 Runs — inklusive einer 20-teiligen visuellen &
+funktionalen Gesamtabnahme **vor** dem Release — ist Claude Mission Control das
+vollständigste, am besten gehärtete, lokal-first Observability-Tool für Claude
+Code — ohne die goldene Regel je gebrochen zu haben.
