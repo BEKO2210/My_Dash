@@ -1,6 +1,7 @@
 // Minimal, monochrome OS glyphs (currentColor) for the download section.
 // Kept as small inline SVGs so no icon dependency or brand asset is needed.
 
+/** Inline Windows logo glyph (currentColor). */
 export function WindowsIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -9,6 +10,7 @@ export function WindowsIcon({ className }: { className?: string }) {
   );
 }
 
+/** Inline Apple logo glyph (currentColor). */
 export function AppleIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -17,6 +19,7 @@ export function AppleIcon({ className }: { className?: string }) {
   );
 }
 
+/** Inline Linux (penguin) glyph (currentColor). */
 export function LinuxIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">

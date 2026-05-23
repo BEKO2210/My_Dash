@@ -20,16 +20,19 @@ const URLS = {
 
 type OS = "windows" | "mac" | "linux";
 
+/** Best-effort desktop OS from the user agent; null for mobile/unknown (no desktop build). */
 function detectOS(): OS | null {
   if (typeof navigator === "undefined") return null;
   const ua = navigator.userAgent;
-  if (/Android/i.test(ua)) return null; // mobile — no desktop build
+  if (/Android/i.test(ua)) return null; // Android mobile — no desktop build
+  if (/iPhone|iPad|iPod/i.test(ua)) return null; // iOS mobile — no desktop build
   if (/Windows|Win32|Win64|WOW64/i.test(ua)) return "windows";
-  if (/Macintosh|Mac OS X|iPhone|iPad|iPod/i.test(ua)) return "mac";
+  if (/Macintosh|Mac OS X/i.test(ua)) return "mac";
   if (/Linux|X11/i.test(ua)) return "linux";
   return null;
 }
 
+/** Landing-page download block: detects the visitor's OS and offers per-platform installers. */
 export function DownloadSection() {
   const { t } = useT();
   const [os, setOs] = useState<OS | null>(null);
