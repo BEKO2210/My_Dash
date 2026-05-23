@@ -196,6 +196,13 @@ const DE: Record<string, string> = {
   "burn.info": "Wo die meisten Tokens verbrennen – geschätzt aus der Tool-I/O-Größe (Zeichen ÷ 4).",
   "burn.empty": "Noch keine Tool-Daten.",
 
+  "calendar.title": "Jahres-Kalender",
+  "calendar.info": "Aktivität pro Tag über das letzte Jahr – je dunkler, desto mehr Events.",
+  "calendar.empty": "Noch keine Aktivität.",
+  "calendar.events": "Events",
+  "calendar.less": "weniger",
+  "calendar.more": "mehr",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -453,6 +460,13 @@ const EN: Record<string, string> = {
   "burn.title": "Token burn per tool",
   "burn.info": "Where most tokens burn — estimated from tool I/O size (chars ÷ 4).",
   "burn.empty": "No tool data yet.",
+
+  "calendar.title": "Year calendar",
+  "calendar.info": "Activity per day over the last year — the darker, the more events.",
+  "calendar.empty": "No activity yet.",
+  "calendar.events": "events",
+  "calendar.less": "less",
+  "calendar.more": "more",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

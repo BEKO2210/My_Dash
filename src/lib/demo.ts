@@ -679,6 +679,21 @@ export function demoTokenBurn() {
   return { tools };
 }
 
+export function demoCalendar() {
+  const today = new Date();
+  const days: { date: string; count: number }[] = [];
+  for (let i = 370; i >= 0; i--) {
+    const date = new Date(today.getTime() - i * 86_400_000);
+    const key = date.toISOString().slice(0, 10);
+    const weekday = date.getUTCDay();
+    const weekend = weekday === 0 || weekday === 6 ? 0.25 : 1;
+    const burst = Math.random() < 0.12 ? 3 : 1; // occasional heavy days
+    const count = Math.max(0, Math.round((Math.random() * 40 - 6) * weekend * burst));
+    days.push({ date: key, count });
+  }
+  return { days };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -713,6 +728,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/compactions")) return json(demoCompactions());
     if (path.endsWith("/api/tags")) return json(demoTags());
     if (path.endsWith("/api/token-burn")) return json(demoTokenBurn());
+    if (path.endsWith("/api/calendar")) return json(demoCalendar());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
