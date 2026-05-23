@@ -227,6 +227,8 @@ function Header({
           <InfoHint text={t("header.eventsInfo")} align="right" />
         </span>
         <span
+          data-testid="connection-status"
+          data-state={connected ? "connected" : "disconnected"}
           className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
             connected
               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"

@@ -17,6 +17,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "seed": "node scripts/seed-demo.mjs",
     "backup": "node scripts/backup.mjs",
     "export-log": "node scripts/export-log.mjs",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^3.7.0",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
