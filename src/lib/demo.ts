@@ -124,6 +124,7 @@ function emit(s: DSession, eventType: string, toolName: string | null, summary: 
     session_id: s.id,
     event_type: eventType,
     tool_name: toolName,
+    model: null,
     summary,
     payload_json: "{}",
     created_at: dbNow(),
