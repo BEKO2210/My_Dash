@@ -187,6 +187,15 @@ const DE: Record<string, string> = {
   "compaction.trigger.auto": "auto",
   "compaction.trigger.manual": "manuell",
 
+  "tags.title": "Themen-Cloud",
+  "tags.info": "Häufige Begriffe aus deinen Prompts – lokal berechnet, ohne LLM. Größe = Häufigkeit.",
+  "tags.empty": "Noch keine Begriffe.",
+  "tags.emptyHint": "Sobald du Prompts schreibst, erscheinen die häufigsten Begriffe hier.",
+
+  "burn.title": "Token-Verbrauch je Tool",
+  "burn.info": "Wo die meisten Tokens verbrennen – geschätzt aus der Tool-I/O-Größe (Zeichen ÷ 4).",
+  "burn.empty": "Noch keine Tool-Daten.",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -435,6 +444,15 @@ const EN: Record<string, string> = {
   "compaction.perDay": "Per day (14d)",
   "compaction.trigger.auto": "auto",
   "compaction.trigger.manual": "manual",
+
+  "tags.title": "Topic cloud",
+  "tags.info": "Frequent terms from your prompts — computed locally, no LLM. Size = frequency.",
+  "tags.empty": "No terms yet.",
+  "tags.emptyHint": "As soon as you write prompts, the most frequent terms appear here.",
+
+  "burn.title": "Token burn per tool",
+  "burn.info": "Where most tokens burn — estimated from tool I/O size (chars ÷ 4).",
+  "burn.empty": "No tool data yet.",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

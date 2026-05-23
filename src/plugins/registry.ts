@@ -20,6 +20,8 @@ import { Streak } from "./streak/widget";
 import { SubagentTree } from "./subagent-tree/widget";
 import { McpServers } from "./mcp-servers/widget";
 import { CompactionTimeline } from "./compaction-timeline/widget";
+import { TagCloud } from "./tag-cloud/widget";
+import { TokenBurn } from "./token-burn/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -188,5 +190,19 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: CompactionTimeline,
+  },
+  {
+    id: "tag-cloud",
+    title: "Themen-Cloud",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: TagCloud,
+  },
+  {
+    id: "token-burn",
+    title: "Token-Verbrauch je Tool",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: TokenBurn,
   },
 ];
