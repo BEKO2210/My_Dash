@@ -209,6 +209,12 @@ const DE: Record<string, string> = {
   "velocity.toolsPerMin": "Tools / Minute",
   "velocity.eventsPerSession": "Events / Session",
 
+  "sessionDur.title": "Session-Dauer",
+  "sessionDur.info": "Verteilung der Session-Längen (Spanne erster bis letzter Event), plus Median und p95.",
+  "sessionDur.empty": "Noch keine abgeschlossenen Sessions.",
+  "sessionDur.median": "Median",
+  "sessionDur.max": "Max",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -479,6 +485,12 @@ const EN: Record<string, string> = {
   "velocity.empty": "No data yet.",
   "velocity.toolsPerMin": "Tools / minute",
   "velocity.eventsPerSession": "Events / session",
+
+  "sessionDur.title": "Session duration",
+  "sessionDur.info": "Distribution of session lengths (first to last event span), plus median and p95.",
+  "sessionDur.empty": "No completed sessions yet.",
+  "sessionDur.median": "Median",
+  "sessionDur.max": "Max",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
