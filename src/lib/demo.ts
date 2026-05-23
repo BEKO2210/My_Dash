@@ -6,6 +6,7 @@
 import { latencyStats } from "./latency";
 import { buildSankey, type SankeyTriple } from "./sankey";
 import type { ProjectUsage } from "./projects";
+import type { PromptHistoryItem } from "./prompts";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
 export const DEMO =
@@ -518,6 +519,25 @@ export function demoProjects() {
   return { projects };
 }
 
+export function demoPrompts() {
+  const items: PromptHistoryItem[] = [];
+  let id = 1;
+  for (const s of sessions) {
+    for (const p of s.prompts) {
+      items.push({
+        id: id++,
+        session_id: s.id,
+        project: s.project,
+        text: p.text,
+        token_estimate: Math.max(1, Math.ceil(p.text.length / 4)),
+        created_at: p.created_at,
+      });
+    }
+  }
+  items.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  return { prompts: items.slice(0, 100) };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -545,6 +565,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/graph")) return json(demoGraph());
     if (path.endsWith("/api/usage/projects")) return json(demoProjects());
     if (path.endsWith("/api/usage")) return json(demoUsage());
+    if (path.endsWith("/api/prompts")) return json(demoPrompts());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());

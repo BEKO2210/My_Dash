@@ -294,6 +294,24 @@ README/Docs sind nachgezogen.
      Changelog, Release-Workflow finalisieren, Pages-Demo mit allen Widgets.
      *Ergebnis:* das beste Claude-Code-Observability-Tool — ausgeliefert.
 
+## Phase Z — Abschluss-Check: visuelle & funktionale Gesamtabnahme (nach allen Widgets)
+
+101. 📸 **Voller Widget-Audit per Playwright.** Wenn alle Widgets stehen: das
+     Dashboard end-to-end durchklicken und visuell abnehmen. Konkret:
+     - Mit Playwright **Screenshots von jedem einzelnen Widget** (`section`)
+       sowie ein Full-Page-Bild in De **und** En, Light/Dark, und auf mehreren
+       Breiten (Desktop, 2560px, 3840px, Mobil) aufnehmen.
+     - **Jedes** Widget visuell prüfen: Layout/Format, kein Überlauf, keine
+       abgeschnittenen Texte, Lade-/Leer-/Fehlerzustände, Animationen.
+     - **Alles anklicken**: sortierbare Spalten, Filter, Drilldowns, Tabs,
+       Tooltips/Info-Hints, Sprach- und Theme-Umschalter, Layout-Reset — jede
+       Interaktion einmal auslösen und auf Konsolen-/Hydrations-Fehler achten.
+     - Funktion bestätigen: SSE verbindet, Live-Daten fließen, Suche filtert,
+       jede `/api/*`-Route antwortet, Demo-Modus zeigt alle Widgets.
+     - Bilder als Artefakte sammeln (CI-Upload), Abweichungen als Folge-Fixes
+       notieren. Abnahme erst grün, wenn jedes Widget geprüft, bebildert und
+       fehlerfrei ist.
+
 ---
 
 ## Überblick: Phasen auf einen Blick

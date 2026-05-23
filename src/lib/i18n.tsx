@@ -147,6 +147,11 @@ const DE: Record<string, string> = {
   "now.noActions": "Noch keine Aktionen in dieser Session.",
   "now.totalTokens": "Tokens gesamt",
 
+  "prompts.title": "Prompt-Verlauf",
+  "prompts.info": "Chronologische, durchsuchbare Liste deiner Prompts (Secrets werden vor dem Speichern entfernt).",
+  "prompts.empty": "Noch keine Prompts.",
+  "prompts.tokens": "Tokens",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -355,6 +360,11 @@ const EN: Record<string, string> = {
   "now.lastActions": "Latest actions",
   "now.noActions": "No actions in this session yet.",
   "now.totalTokens": "Total tokens",
+
+  "prompts.title": "Prompt history",
+  "prompts.info": "Chronological, searchable list of your prompts (secrets are stripped before storage).",
+  "prompts.empty": "No prompts yet.",
+  "prompts.tokens": "tokens",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
