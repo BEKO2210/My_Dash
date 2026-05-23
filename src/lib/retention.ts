@@ -28,9 +28,20 @@ export function pruneTable(
   return db.prepare(`DELETE FROM ${table} WHERE id <= ?`).run(cutoff.id).changes;
 }
 
-export function pruneAll(db: Database.Database): { events: number; toolCalls: number } {
-  return {
-    events: pruneTable(db, "events", retentionLimit("MC_MAX_EVENTS")),
-    toolCalls: pruneTable(db, "tool_calls", retentionLimit("MC_MAX_TOOL_CALLS")),
-  };
+// Drop tool_io rows whose tool_call was pruned, so the 1:1 side table can't
+// outgrow tool_calls. Returns how many orphans were removed.
+export function pruneOrphanToolIo(db: Database.Database): number {
+  return db.prepare(`DELETE FROM tool_io WHERE tool_call_id NOT IN (SELECT id FROM tool_calls)`).run()
+    .changes;
+}
+
+export function pruneAll(db: Database.Database): {
+  events: number;
+  toolCalls: number;
+  toolIo: number;
+} {
+  const events = pruneTable(db, "events", retentionLimit("MC_MAX_EVENTS"));
+  const toolCalls = pruneTable(db, "tool_calls", retentionLimit("MC_MAX_TOOL_CALLS"));
+  const toolIo = pruneOrphanToolIo(db);
+  return { events, toolCalls, toolIo };
 }

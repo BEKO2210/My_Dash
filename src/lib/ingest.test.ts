@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { EventRow, HookPayload, SessionRow, ToolCallRow } from "@/lib/types";
+import type { EventRow, HookPayload, SessionRow, ToolCallRow, ToolIoRow } from "@/lib/types";
 
 // Exercise the real ingest write path against a throwaway SQLite database. We point
 // the db module at a temp dir via MC_DATA_DIR *before* importing it (dynamic import),
@@ -45,6 +45,8 @@ const events = (id: string) =>
   db.prepare("SELECT * FROM events WHERE session_id = ? ORDER BY id").all(id) as EventRow[];
 const toolCalls = (id: string) =>
   db.prepare("SELECT * FROM tool_calls WHERE session_id = ? ORDER BY id").all(id) as ToolCallRow[];
+const toolIo = (callId: number) =>
+  db.prepare("SELECT * FROM tool_io WHERE tool_call_id = ?").get(callId) as ToolIoRow | undefined;
 
 describe("ingest — session creation", () => {
   it("creates an active session and derives project_name from cwd", () => {
@@ -141,6 +143,36 @@ describe("ingest — tool calls", () => {
       tool_response: { is_error: true },
     });
     expect(toolCalls("s1")[0].success).toBe(0);
+  });
+
+  it("stores tool input/output in tool_io for a successful call", () => {
+    send("PreToolUse", { session_id: "s1", tool_name: "Read", tool_input: { file_path: "/a.ts" } });
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: { content: "hi" },
+    });
+    const call = toolCalls("s1")[0];
+    const io = toolIo(call.id);
+    expect(io).toBeDefined();
+    expect(JSON.parse(io!.input_json!)).toEqual({ file_path: "/a.ts" });
+    expect(JSON.parse(io!.output_json!)).toEqual({ content: "hi" });
+    expect(io!.is_error).toBe(0);
+    expect(io!.error_text).toBeNull();
+  });
+
+  it("captures the error flag and message in tool_io for a failed call", () => {
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "x" } });
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: "x" },
+      tool_response: { is_error: true, error: "command not found" },
+    });
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(io.is_error).toBe(1);
+    expect(io.error_text).toBe("command not found");
   });
 
   it("pairs Pre/Post by elapsed wall-clock time for the duration", () => {

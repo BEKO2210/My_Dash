@@ -21,7 +21,9 @@ describe("migrate", () => {
     expect(version(db)).toBe(0);
     expect(migrate(db)).toBe(MIGRATIONS.length);
     expect(version(db)).toBe(MIGRATIONS.length);
-    expect(tables(db)).toEqual(expect.arrayContaining(["sessions", "events", "tool_calls"]));
+    expect(tables(db)).toEqual(
+      expect.arrayContaining(["sessions", "events", "tool_calls", "tool_io"]),
+    );
   });
 
   it("is idempotent — a second run is a no-op", () => {

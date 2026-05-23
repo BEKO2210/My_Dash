@@ -68,6 +68,15 @@ export interface ToolCallRow {
   created_at: string;
 }
 
+// Raw I/O for a single tool call (1:1 with tool_calls.id) — powers the inspector.
+export interface ToolIoRow {
+  tool_call_id: number;
+  input_json: string | null;
+  output_json: string | null;
+  is_error: number;
+  error_text: string | null;
+}
+
 // What the SSE stream pushes to the browser on every ingested event.
 export interface StreamMessage {
   event: EventRow;
