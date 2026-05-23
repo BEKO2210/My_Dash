@@ -43,8 +43,8 @@ test("dashboard renders all four widgets and connects", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
 
-  // Twelve widget panels (+ model-donut).
-  await expect(page.locator("section")).toHaveCount(12);
+  // Thirteen widget panels (+ sankey-flow).
+  await expect(page.locator("section")).toHaveCount(13);
   // Two titles are identical in both locales — safe to assert regardless of language.
   await expect(page.getByText("Sessions", { exact: true })).toBeVisible();
   await expect(page.getByText("Live Stream", { exact: true })).toBeVisible();
