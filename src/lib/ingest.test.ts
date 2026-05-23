@@ -195,6 +195,22 @@ describe("ingest — tool calls", () => {
   });
 });
 
+describe("ingest — model", () => {
+  it("captures the model from the payload when present", () => {
+    const { event } = send("UserPromptSubmit", {
+      session_id: "s1",
+      prompt: "hi",
+      model: "claude-opus-4-7",
+    });
+    expect(event.model).toBe("claude-opus-4-7");
+  });
+
+  it("leaves model null when the payload omits it", () => {
+    const { event } = send("SessionStart", { session_id: "s1" });
+    expect(event.model).toBeNull();
+  });
+});
+
 describe("ingest — return value", () => {
   it("returns the inserted event paired with the current session", () => {
     const { event, session: s } = send("UserPromptSubmit", { session_id: "s1", prompt: "hi" });

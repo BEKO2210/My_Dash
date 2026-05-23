@@ -53,6 +53,7 @@ export interface EventRow {
   session_id: string;
   event_type: string;
   tool_name: string | null;
+  model: string | null;
   summary: string | null;
   payload_json: string;
   created_at: string;

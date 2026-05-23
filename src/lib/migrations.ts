@@ -67,6 +67,12 @@ export const MIGRATIONS: string[] = [
     error_text    TEXT
   );
   `,
+
+  // v3 — model name per event (best-effort from the payload now; transcript
+  // tailing fills it in reliably later). Powers per-model analytics.
+  `
+  ALTER TABLE events ADD COLUMN model TEXT;
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction

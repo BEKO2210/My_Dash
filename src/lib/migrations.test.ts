@@ -26,6 +26,15 @@ describe("migrate", () => {
     );
   });
 
+  it("adds the model column to events (v3)", () => {
+    const db = fresh();
+    migrate(db);
+    const cols = (db.prepare("PRAGMA table_info(events)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    expect(cols).toContain("model");
+  });
+
   it("is idempotent — a second run is a no-op", () => {
     const db = fresh();
     migrate(db);
