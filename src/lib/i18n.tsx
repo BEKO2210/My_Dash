@@ -81,6 +81,11 @@ const DE: Record<string, string> = {
   "common.retry": "Erneut versuchen",
   "common.noResults": "Keine Treffer.",
   "common.loading": "Lädt…",
+  "kpi.active": "Aktive Sessions",
+  "kpi.events": "Events heute",
+  "kpi.tools": "Tool-Aufrufe heute",
+  "kpi.errors": "Fehlerquote heute",
+  "kpi.cost": "Kosten heute",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -225,6 +230,11 @@ const EN: Record<string, string> = {
   "common.retry": "Retry",
   "common.noResults": "No matches.",
   "common.loading": "Loading…",
+  "kpi.active": "Active sessions",
+  "kpi.events": "Events today",
+  "kpi.tools": "Tool calls today",
+  "kpi.errors": "Error rate today",
+  "kpi.cost": "Cost today",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

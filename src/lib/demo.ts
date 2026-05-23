@@ -367,6 +367,23 @@ export function demoBudget() {
   };
 }
 
+export function demoStats() {
+  const sessions = demoSessions();
+  const events = demoEvents(800);
+  const sparkline = Array.from({ length: 24 }, (_, i) => 3 + Math.round(Math.abs(Math.sin(i / 3)) * 14));
+  const u = demoUsage();
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    activeSessions: sessions.filter((s) => s.status !== "ended").length,
+    eventsToday: events.length,
+    toolCallsToday: events.filter((e) => e.event_type === "PostToolUse").length,
+    errorRate: 0.04,
+    sparkline,
+    costTodayUsd: u.days.find((d) => d.date === today)?.costUsd ?? 0,
+    costAvailable: true,
+  };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -394,6 +411,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/graph")) return json(demoGraph());
     if (path.endsWith("/api/usage")) return json(demoUsage());
     if (path.endsWith("/api/budget")) return json(demoBudget());
+    if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.includes("/api/events")) {
       const u = new URL(raw, window.location.href);
       const limit = Number(u.searchParams.get("limit")) || 100;
