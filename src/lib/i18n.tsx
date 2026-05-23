@@ -63,6 +63,19 @@ const DE: Record<string, string> = {
   "landing.github": "Auf GitHub ansehen",
   "landing.scroll": "Live-Demo ↓",
 
+  "download.title": "Herunterladen",
+  "download.subtitle":
+    "Lokale Desktop-App für Claude Code — installieren, starten, verbinden. Für Windows, macOS und Linux.",
+  "download.for": "Download für",
+  "download.download": "Herunterladen",
+  "download.detected": "Dein System",
+  "download.winFile": "Windows 10/11 · .exe-Installer",
+  "download.macFile": "macOS (Apple Silicon) · .dmg",
+  "download.linuxFile": "Linux · .AppImage",
+  "download.unsigned":
+    "Unsigniert (Alpha): Windows-SmartScreen bzw. macOS-Gatekeeper einmalig bestätigen.",
+  "download.allReleases": "Alle Versionen & Release-Notes →",
+
   "common.allProjects": "Alle Projekte",
   "common.close": "Schließen",
   "common.retry": "Erneut versuchen",
@@ -185,6 +198,19 @@ const EN: Record<string, string> = {
     "A live demo with random, simulated Claude tasks is running below — entirely in your browser, no server.",
   "landing.github": "View on GitHub",
   "landing.scroll": "Live demo ↓",
+
+  "download.title": "Download",
+  "download.subtitle":
+    "Local desktop app for Claude Code — install, launch, connect. For Windows, macOS and Linux.",
+  "download.for": "Download for",
+  "download.download": "Download",
+  "download.detected": "Your system",
+  "download.winFile": "Windows 10/11 · .exe installer",
+  "download.macFile": "macOS (Apple Silicon) · .dmg",
+  "download.linuxFile": "Linux · .AppImage",
+  "download.unsigned":
+    "Unsigned (alpha): confirm the Windows SmartScreen / macOS Gatekeeper prompt once.",
+  "download.allReleases": "All versions & release notes →",
 
   "common.allProjects": "All projects",
   "common.close": "Close",
