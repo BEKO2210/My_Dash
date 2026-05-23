@@ -22,6 +22,7 @@ import { McpServers } from "./mcp-servers/widget";
 import { CompactionTimeline } from "./compaction-timeline/widget";
 import { TagCloud } from "./tag-cloud/widget";
 import { TokenBurn } from "./token-burn/widget";
+import { CalendarHeatmap } from "./calendar-heatmap/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -204,5 +205,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: TokenBurn,
+  },
+  {
+    id: "calendar-heatmap",
+    title: "Jahres-Kalender",
+    span: "lg:col-span-6",
+    height: "h-auto",
+    component: CalendarHeatmap,
   },
 ];
