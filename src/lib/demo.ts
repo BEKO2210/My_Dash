@@ -401,6 +401,26 @@ export function demoActivity() {
   return { buckets };
 }
 
+export function demoTools() {
+  const tools = [
+    { tool: "Read", count: 142, failures: 0, source: "builtin", mcpServer: null, avgDurationMs: 12 },
+    { tool: "Edit", count: 98, failures: 2, source: "builtin", mcpServer: null, avgDurationMs: 35 },
+    { tool: "Bash", count: 74, failures: 6, source: "builtin", mcpServer: null, avgDurationMs: 420 },
+    { tool: "Grep", count: 51, failures: 0, source: "builtin", mcpServer: null, avgDurationMs: 28 },
+    {
+      tool: "mcp__github__create_pull_request",
+      count: 23,
+      failures: 1,
+      source: "mcp",
+      mcpServer: "github",
+      avgDurationMs: 900,
+    },
+    { tool: "Write", count: 19, failures: 0, source: "builtin", mcpServer: null, avgDurationMs: 22 },
+    { tool: "WebFetch", count: 11, failures: 1, source: "builtin", mcpServer: null, avgDurationMs: 650 },
+  ];
+  return { tools };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -430,6 +450,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
+    if (path.endsWith("/api/tools")) return json(demoTools());
     if (path.includes("/api/events")) {
       const u = new URL(raw, window.location.href);
       const limit = Number(u.searchParams.get("limit")) || 100;

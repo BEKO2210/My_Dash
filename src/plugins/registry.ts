@@ -6,6 +6,7 @@ import { ToolGraph } from "./tool-graph/widget";
 import { BudgetGauge } from "./budget-gauge/widget";
 import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
+import { ToolFrequency } from "./tool-frequency/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -76,5 +77,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-4",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: Heatmap,
+  },
+  {
+    id: "tool-frequency",
+    title: "Top-Tools",
+    span: "lg:col-span-2",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: ToolFrequency,
   },
 ];
