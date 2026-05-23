@@ -26,6 +26,8 @@ function mkCall(over: Partial<ToolCallRow> & { session_id: string; tool_name: st
     target: null,
     duration_ms: null,
     success: 1,
+    source: null,
+    mcp_server: null,
     created_at: "2026-05-23 10:00:00",
     ...over,
   };
