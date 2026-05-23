@@ -203,6 +203,12 @@ const DE: Record<string, string> = {
   "calendar.less": "weniger",
   "calendar.more": "mehr",
 
+  "velocity.title": "Geschwindigkeits-Trend",
+  "velocity.info": "Tools/Minute und Events/Session über 30 Tage (Ø = 7-Tage-Mittel). Degradations-Signal.",
+  "velocity.empty": "Noch keine Daten.",
+  "velocity.toolsPerMin": "Tools / Minute",
+  "velocity.eventsPerSession": "Events / Session",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -467,6 +473,12 @@ const EN: Record<string, string> = {
   "calendar.events": "events",
   "calendar.less": "less",
   "calendar.more": "more",
+
+  "velocity.title": "Velocity trend",
+  "velocity.info": "Tools/minute and events/session over 30 days (Ø = 7-day mean). Degradation signal.",
+  "velocity.empty": "No data yet.",
+  "velocity.toolsPerMin": "Tools / minute",
+  "velocity.eventsPerSession": "Events / session",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

@@ -12,6 +12,7 @@ import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
+import type { VelocityDay } from "./velocity";
 import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
@@ -694,6 +695,22 @@ export function demoCalendar() {
   return { days };
 }
 
+export function demoVelocity() {
+  const today = new Date();
+  const days: VelocityDay[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today.getTime() - i * 86_400_000).toISOString().slice(0, 10);
+    const sessions = 1 + Math.floor(Math.random() * 4);
+    const activeMinutes = sessions * (20 + Math.floor(Math.random() * 40));
+    // Mild downward drift in throughput over the window (a degradation signal).
+    const ratePerMin = (0.9 - (29 - i) * 0.012) * (0.8 + Math.random() * 0.4);
+    const toolCalls = Math.max(0, Math.round(activeMinutes * ratePerMin));
+    const events = toolCalls * 2 + sessions * 3 + Math.floor(Math.random() * 6);
+    days.push({ date, toolCalls, events, sessions, activeMinutes });
+  }
+  return { days };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -729,6 +746,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/tags")) return json(demoTags());
     if (path.endsWith("/api/token-burn")) return json(demoTokenBurn());
     if (path.endsWith("/api/calendar")) return json(demoCalendar());
+    if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
