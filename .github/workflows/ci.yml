@@ -41,3 +41,33 @@ jobs:
       # uses an in-memory database during `next build`, so no data dir is needed).
       - name: Build
         run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      # Playwright boots `npm run start` (see playwright.config.ts), seeds via the
+      # ingest API and asserts the dashboard renders, connects and populates.
+      - name: Smoke E2E
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: test-results
+          if-no-files-found: ignore
