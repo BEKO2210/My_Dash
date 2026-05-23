@@ -47,6 +47,16 @@ CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
 `;
 
 function createDb(): Database.Database {
+  // During `next build`, route modules are evaluated by several workers in parallel.
+  // Opening the real database file then races on the SQLite lock ("database is
+  // locked"). The build only needs the schema to exist for page-data collection, so
+  // use a throwaway in-memory database during the build phase.
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    const mem = new Database(":memory:");
+    mem.exec(SCHEMA);
+    return mem;
+  }
+
   // Packaged builds (Electron) pass MC_DATA_DIR (a stable per-user location);
   // source runs fall back to ./data next to the project.
   const dataDir = process.env.MC_DATA_DIR || path.join(process.cwd(), "data");
