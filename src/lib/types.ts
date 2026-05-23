@@ -81,6 +81,17 @@ export interface ToolIoRow {
   error_text: string | null;
 }
 
+// A parent/child relationship between sessions — currently a Task → subagent link.
+export interface SessionLinkRow {
+  id: number;
+  parent_session_id: string;
+  child_session_id: string | null;
+  tool_call_id: number | null;
+  kind: string;
+  label: string | null;
+  created_at: string;
+}
+
 // What the SSE stream pushes to the browser on every ingested event.
 export interface StreamMessage {
   event: EventRow;

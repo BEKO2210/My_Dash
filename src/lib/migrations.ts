@@ -84,6 +84,22 @@ export const MIGRATIONS: string[] = [
   ALTER TABLE tool_calls ADD COLUMN source TEXT;
   ALTER TABLE tool_calls ADD COLUMN mcp_server TEXT;
   `,
+
+  // v6 — parent/child links between sessions. Today a Task tool call records a
+  // 'subagent' link off its parent session (hooks don't expose a separate child
+  // session id; child_session_id is kept for future correlation). Powers the tree.
+  `
+  CREATE TABLE IF NOT EXISTS session_links (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_session_id  TEXT NOT NULL,
+    child_session_id   TEXT,
+    tool_call_id       INTEGER,
+    kind               TEXT NOT NULL DEFAULT 'subagent',
+    label              TEXT,
+    created_at         DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_session_links_parent ON session_links(parent_session_id);
+  `,
 ];
 
 // Apply any migrations the database hasn't seen yet. Each runs in a transaction
