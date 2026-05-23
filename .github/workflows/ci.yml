@@ -1,0 +1,43 @@
+name: CI
+
+# Lint, test and build on every pull request and on pushes to main.
+# This is the green gate every change must pass before it can be merged —
+# the safety net the rest of the roadmap builds on.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Newer pushes to the same branch/PR cancel in-flight runs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Full production build (better-sqlite3 builds during npm ci; the DB layer
+      # uses an in-memory database during `next build`, so no data dir is needed).
+      - name: Build
+        run: npm run build
