@@ -6,16 +6,19 @@ import { WindowsIcon, AppleIcon, LinuxIcon } from "@/components/os-icons";
 import { useT } from "@/lib/i18n";
 
 const REPO = "https://github.com/BEKO2210/My_Dash";
-const LATEST = `${REPO}/releases/latest/download`;
 const ALL_RELEASES = `${REPO}/releases`;
 
-// Stable, version-less asset names (see electron-builder `artifactName` in
-// package.json) so these links always resolve to the newest release.
+// Pinned to the published v0.1.0 release assets (verified live). The v0.1.0 tag
+// predates the stable artifactName config, so its filenames are version-stamped;
+// once a release is cut from main as a normal (non-prerelease) release, these can
+// move to the stable `releases/latest/download/Claude-Mission-Control*` form.
+const TAG = "v0.1.0";
+const DL = `${REPO}/releases/download/${TAG}`;
 const URLS = {
-  windows: `${LATEST}/Claude-Mission-Control-Setup.exe`,
-  mac: `${LATEST}/Claude-Mission-Control.dmg`,
-  linuxAppImage: `${LATEST}/Claude-Mission-Control.AppImage`,
-  linuxDeb: `${LATEST}/Claude-Mission-Control.deb`,
+  windows: `${DL}/Claude.Mission.Control.Setup.0.1.0.exe`,
+  mac: `${DL}/Claude.Mission.Control-0.1.0-arm64.dmg`,
+  linuxAppImage: `${DL}/Claude.Mission.Control-0.1.0.AppImage`,
+  linuxDeb: `${DL}/claude-mission-control_0.1.0_amd64.deb`,
 };
 
 type OS = "windows" | "mac" | "linux";
