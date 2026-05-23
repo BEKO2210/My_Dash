@@ -117,6 +117,11 @@ const DE: Record<string, string> = {
   "errors.failures": "Fehler",
   "errors.topTools": "Fehleranfälligste Tools",
   "errors.none": "Keine Fehler im Zeitraum. 🎉",
+  "donut.title": "Modelle",
+  "donut.info": "Anteil pro Modell an Tokens bzw. Kosten.",
+  "donut.empty": "Noch keine Modelldaten.",
+  "donut.total": "gesamt",
+  "donut.other": "Andere",
 
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
@@ -297,6 +302,11 @@ const EN: Record<string, string> = {
   "errors.failures": "failed",
   "errors.topTools": "Most failure-prone tools",
   "errors.none": "No errors in range. 🎉",
+  "donut.title": "Models",
+  "donut.info": "Share per model of tokens or cost.",
+  "donut.empty": "No model data yet.",
+  "donut.total": "total",
+  "donut.other": "Other",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
