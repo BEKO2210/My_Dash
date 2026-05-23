@@ -16,6 +16,7 @@ import { SankeyFlow } from "./sankey-flow/widget";
 import { ProjectLeaderboard } from "./project-leaderboard/widget";
 import { LiveNow } from "./live-now/widget";
 import { PromptHistory } from "./prompt-history/widget";
+import { Streak } from "./streak/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -156,5 +157,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: PromptHistory,
+  },
+  {
+    id: "streak",
+    title: "Streak & Produktivität",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: Streak,
   },
 ];

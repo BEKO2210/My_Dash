@@ -152,6 +152,16 @@ const DE: Record<string, string> = {
   "prompts.empty": "Noch keine Prompts.",
   "prompts.tokens": "Tokens",
 
+  "streak.title": "Streak & Produktivität",
+  "streak.info": "Tages-Streak aktiver Tage, Stoßzeiten und der Sessions-pro-Tag-Trend.",
+  "streak.empty": "Noch keine Aktivität.",
+  "streak.current": "Aktuell",
+  "streak.longest": "Längste",
+  "streak.activeDays": "Aktive Tage",
+  "streak.peak": "Stoßzeit",
+  "streak.perDay": "Sessions pro Tag (30 T.)",
+  "streak.peakHours": "Stoßzeiten (Stunde)",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -365,6 +375,16 @@ const EN: Record<string, string> = {
   "prompts.info": "Chronological, searchable list of your prompts (secrets are stripped before storage).",
   "prompts.empty": "No prompts yet.",
   "prompts.tokens": "tokens",
+
+  "streak.title": "Streak & productivity",
+  "streak.info": "Day-streak of active days, peak hours and the sessions-per-day trend.",
+  "streak.empty": "No activity yet.",
+  "streak.current": "Current",
+  "streak.longest": "Longest",
+  "streak.activeDays": "Active days",
+  "streak.peak": "Peak hour",
+  "streak.perDay": "Sessions per day (30d)",
+  "streak.peakHours": "Peak hours (hour)",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
