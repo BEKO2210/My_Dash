@@ -421,6 +421,30 @@ export function demoTools() {
   return { tools };
 }
 
+export function demoFiles() {
+  const raw: [string, number, number, number][] = [
+    ["src/lib/ingest.ts", 14, 320, 180],
+    ["src/components/dashboard.tsx", 9, 210, 90],
+    ["src/lib/ccusage.ts", 7, 160, 60],
+    ["src/plugins/tool-graph/widget.tsx", 6, 140, 70],
+    ["src/app/api/ingest/route.ts", 5, 80, 30],
+    ["README.md", 4, 60, 20],
+    ["src/lib/types.ts", 4, 50, 10],
+    ["src/lib/db.ts", 3, 40, 25],
+    ["package.json", 3, 20, 8],
+    ["src/lib/format.ts", 2, 30, 12],
+  ];
+  const files = raw.map(([path, edits, added, removed]) => ({
+    path,
+    name: path.split("/").pop() ?? path,
+    edits,
+    added,
+    removed,
+    churn: added + removed,
+  }));
+  return { files };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -451,6 +475,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
     if (path.endsWith("/api/tools")) return json(demoTools());
+    if (path.endsWith("/api/files")) return json(demoFiles());
     if (path.includes("/api/events")) {
       const u = new URL(raw, window.location.href);
       const limit = Number(u.searchParams.get("limit")) || 100;
