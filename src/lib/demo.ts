@@ -11,6 +11,7 @@ import type { Compaction } from "./compaction";
 import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
+import type { ToolTokenBurn } from "./token-burn";
 import type { SubagentGroup } from "./subagents";
 import type { EventRow, SessionRow, StreamMessage } from "./types";
 
@@ -664,6 +665,20 @@ export function demoTags() {
   return { terms };
 }
 
+export function demoTokenBurn() {
+  const base = [
+    { tool: "Read", tokens: 184_000, calls: 142 },
+    { tool: "Edit", tokens: 96_000, calls: 88 },
+    { tool: "Bash", tokens: 71_000, calls: 130 },
+    { tool: "Grep", tokens: 38_000, calls: 64 },
+    { tool: "Write", tokens: 22_000, calls: 31 },
+    { tool: "WebFetch", tokens: 14_000, calls: 12 },
+  ];
+  const total = base.reduce((a, t) => a + t.tokens, 0) || 1;
+  const tools: ToolTokenBurn[] = base.map((t) => ({ ...t, share: t.tokens / total }));
+  return { tools };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -697,6 +712,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/mcp")) return json(demoMcp());
     if (path.endsWith("/api/compactions")) return json(demoCompactions());
     if (path.endsWith("/api/tags")) return json(demoTags());
+    if (path.endsWith("/api/token-burn")) return json(demoTokenBurn());
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
