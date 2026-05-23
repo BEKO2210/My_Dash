@@ -3,6 +3,7 @@ import {
   parseDbTime,
   relativeTime,
   formatCompact,
+  formatDuration,
   formatMoney,
   eventKind,
 } from "@/lib/format";
@@ -67,6 +68,19 @@ describe("formatCompact", () => {
   it("falls back to 0 for non-finite input", () => {
     expect(formatCompact(NaN)).toBe("0");
     expect(formatCompact(Infinity)).toBe("0");
+  });
+});
+
+describe("formatDuration", () => {
+  it("formats seconds, minutes and hours", () => {
+    expect(formatDuration(0)).toBe("0s");
+    expect(formatDuration(45_000)).toBe("45s");
+    expect(formatDuration(135_000)).toBe("2m 15s");
+    expect(formatDuration(3_660_000)).toBe("1h 01m");
+  });
+
+  it("clamps negative durations to 0s", () => {
+    expect(formatDuration(-5000)).toBe("0s");
   });
 });
 
