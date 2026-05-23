@@ -3,6 +3,7 @@ import { LiveStream } from "./live-stream/widget";
 import { Kanban } from "./kanban/widget";
 import { TokenChart } from "./token-chart/widget";
 import { ToolGraph } from "./tool-graph/widget";
+import { BudgetGauge } from "./budget-gauge/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -52,5 +53,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: ToolGraph,
+  },
+  {
+    id: "budget-gauge",
+    title: "Budget",
+    span: "lg:col-span-2",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: BudgetGauge,
   },
 ];

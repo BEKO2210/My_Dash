@@ -352,6 +352,21 @@ export function demoUsage() {
   return { days, months, blocks, burn, models, totals, available: true };
 }
 
+export function demoBudget() {
+  const u = demoUsage();
+  const today = new Date().toISOString().slice(0, 10);
+  const month = new Date().toISOString().slice(0, 7);
+  const dSpent = u.days.find((d) => d.date === today)?.costUsd ?? 0;
+  const mSpent = u.months.find((m) => m.date === month)?.costUsd ?? 0;
+  const dailyUsd = 15;
+  const monthlyUsd = 300;
+  const gauge = (spentUsd: number, budgetUsd: number) => ({ budgetUsd, spentUsd, pct: spentUsd / budgetUsd });
+  return {
+    budgets: { dailyUsd, monthlyUsd },
+    status: { daily: gauge(dSpent, dailyUsd), monthly: gauge(mSpent, monthlyUsd) },
+  };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -378,6 +393,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/sessions")) return json({ sessions: demoSessions() });
     if (path.endsWith("/api/graph")) return json(demoGraph());
     if (path.endsWith("/api/usage")) return json(demoUsage());
+    if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.includes("/api/events")) {
       const u = new URL(raw, window.location.href);
       const limit = Number(u.searchParams.get("limit")) || 100;

@@ -133,6 +133,12 @@ const DE: Record<string, string> = {
   "tokens.output": "Output",
   "tokens.cache": "Cache",
 
+  "budget.title": "Budget",
+  "budget.info": "Heutige & monatliche Ausgaben gegen dein Budget (USD), mit Hochrechnung.",
+  "budget.daily": "Heute",
+  "budget.monthly": "Dieser Monat",
+  "budget.projected": "Hochrechnung",
+  "budget.none": "Kein Budget gesetzt.",
   "graph.title": "Tool-Graph (3D)",
   "graph.info":
     "Beziehungen Session → Tool → Ziel (Datei, Befehl, URL, Muster). Gleiche Ziele über Sessions hinweg teilen sich einen Knoten. Aktive Sessions leuchten. Knoten anklicken für Details, Vollbild oben rechts.",
@@ -271,6 +277,12 @@ const EN: Record<string, string> = {
   "tokens.output": "Output",
   "tokens.cache": "Cache",
 
+  "budget.title": "Budget",
+  "budget.info": "Today's & this month's spend against your budget (USD), with a projection.",
+  "budget.daily": "Today",
+  "budget.monthly": "This month",
+  "budget.projected": "Projected",
+  "budget.none": "No budget set.",
   "graph.title": "Tool Graph (3D)",
   "graph.info":
     "Relationships session → tool → target (file, command, URL, pattern). Equal targets across sessions share a node. Active sessions glow. Click a node for details; fullscreen top-right.",
