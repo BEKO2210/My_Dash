@@ -1,18 +1,20 @@
 import { db } from "./db";
 import { log } from "./log";
+import { estimateCostUsd } from "./pricing";
 import { summarizeTranscript } from "./transcript";
 
-// Writes the transcript-derived token totals onto the session. Cache tokens and
-// cost are layered on in a later run; here we populate the existing input/output
-// columns so the dashboard shows real per-session usage without ccusage.
-const setSessionUsage = db.prepare<[number, number, string]>(
-  `UPDATE sessions SET token_input = ?, token_output = ? WHERE id = ?`,
+// Writes the transcript-derived token totals + an estimated cost onto the session,
+// so the dashboard shows real per-session usage without ccusage (which reconciles
+// the cost later).
+const setSessionUsage = db.prepare<[number, number, number, number, string]>(
+  `UPDATE sessions SET token_input = ?, token_output = ?, token_cache = ?, cost_usd = ? WHERE id = ?`,
 );
 
 export async function updateSessionUsage(sessionId: string, transcriptPath: string): Promise<void> {
   const summary = await summarizeTranscript(transcriptPath);
   if (!summary || summary.turns === 0) return;
-  setSessionUsage.run(summary.inputTokens, summary.outputTokens, sessionId);
+  const cost = estimateCostUsd(summary);
+  setSessionUsage.run(summary.inputTokens, summary.outputTokens, summary.cacheTokens, cost, sessionId);
 }
 
 // Stop fires after every turn, so re-parsing the whole transcript each time would

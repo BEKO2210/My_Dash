@@ -45,6 +45,7 @@ export interface SessionRow {
   ended_at: string | null;
   token_input: number;
   token_output: number;
+  token_cache: number;
   cost_usd: number;
 }
 

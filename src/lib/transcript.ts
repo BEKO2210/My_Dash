@@ -7,7 +7,9 @@ import { open, readFile, stat } from "node:fs/promises";
 export interface TranscriptSummary {
   inputTokens: number;
   outputTokens: number;
-  cacheTokens: number;
+  cacheTokens: number; // creation + read (for storage)
+  cacheCreationTokens: number;
+  cacheReadTokens: number;
   model: string | null;
   lastAssistantText: string | null;
   turns: number; // assistant turns that carried usage
@@ -35,7 +37,8 @@ function textOf(content: unknown): string {
 export function parseTranscriptUsage(text: string): TranscriptSummary {
   let inputTokens = 0;
   let outputTokens = 0;
-  let cacheTokens = 0;
+  let cacheCreationTokens = 0;
+  let cacheReadTokens = 0;
   let turns = 0;
   let model: string | null = null;
   let lastAssistantText: string | null = null;
@@ -56,7 +59,8 @@ export function parseTranscriptUsage(text: string): TranscriptSummary {
     if (usage && typeof usage === "object") {
       inputTokens += num(usage.input_tokens);
       outputTokens += num(usage.output_tokens);
-      cacheTokens += num(usage.cache_creation_input_tokens) + num(usage.cache_read_input_tokens);
+      cacheCreationTokens += num(usage.cache_creation_input_tokens);
+      cacheReadTokens += num(usage.cache_read_input_tokens);
       turns++;
     }
     if (typeof msg.model === "string") model = msg.model;
@@ -64,7 +68,16 @@ export function parseTranscriptUsage(text: string): TranscriptSummary {
     if (txt) lastAssistantText = txt;
   }
 
-  return { inputTokens, outputTokens, cacheTokens, model, lastAssistantText, turns };
+  return {
+    inputTokens,
+    outputTokens,
+    cacheTokens: cacheCreationTokens + cacheReadTokens,
+    cacheCreationTokens,
+    cacheReadTokens,
+    model,
+    lastAssistantText,
+    turns,
+  };
 }
 
 const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;

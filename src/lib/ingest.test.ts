@@ -214,7 +214,7 @@ describe("ingest — model", () => {
 });
 
 describe("ingest — transcript usage sync", () => {
-  it("writes transcript-derived token totals onto the session", async () => {
+  it("writes transcript-derived tokens and an estimated cost onto the session", async () => {
     send("SessionStart", { session_id: "s1" });
     const file = path.join(dataDir, "transcript.jsonl");
     writeFileSync(
@@ -224,7 +224,12 @@ describe("ingest — transcript usage sync", () => {
           role: "assistant",
           model: "claude-opus-4-7",
           content: [{ type: "text", text: "x" }],
-          usage: { input_tokens: 500, output_tokens: 120 },
+          usage: {
+            input_tokens: 500,
+            output_tokens: 120,
+            cache_creation_input_tokens: 100,
+            cache_read_input_tokens: 200,
+          },
         },
       }),
     );
@@ -234,6 +239,8 @@ describe("ingest — transcript usage sync", () => {
     const s = session("s1")!;
     expect(s.token_input).toBe(500);
     expect(s.token_output).toBe(120);
+    expect(s.token_cache).toBe(300); // 100 + 200
+    expect(s.cost_usd).toBeCloseTo(0.018675, 9);
   });
 });
 
