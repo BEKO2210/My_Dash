@@ -271,6 +271,9 @@ const DE: Record<string, string> = {
   "cmd.goto": "Gehe zu",
   "cmd.digestDay": "Tages-Digest öffnen",
   "cmd.digestWeek": "Wochen-Digest öffnen",
+  "cmd.exportJson": "Exportieren: alle Daten (JSON)",
+  "cmd.exportSessionsCsv": "Exportieren: Sessions (CSV)",
+  "cmd.exportEventsCsv": "Exportieren: Events (CSV)",
 
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
@@ -695,6 +698,9 @@ const EN: Record<string, string> = {
   "cmd.goto": "Go to",
   "cmd.digestDay": "Open daily digest",
   "cmd.digestWeek": "Open weekly digest",
+  "cmd.exportJson": "Export: all data (JSON)",
+  "cmd.exportSessionsCsv": "Export: sessions (CSV)",
+  "cmd.exportEventsCsv": "Export: events (CSV)",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",
