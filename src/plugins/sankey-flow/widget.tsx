@@ -31,7 +31,7 @@ function SankeyNode({ x = 0, y = 0, width = 0, height = 0, payload = {} }: NodeP
         y={y + height / 2}
         textAnchor={labelLeft ? "end" : "start"}
         dominantBaseline="middle"
-        fill="#aab3c5"
+        style={{ fill: "var(--color-muted)" }}
         fontSize={10}
       >
         {payload.name}
