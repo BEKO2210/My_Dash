@@ -238,4 +238,10 @@ export const MIGRATIONS = [
   CREATE INDEX IF NOT EXISTS idx_otlp_log_name ON otlp_log(name);
   CREATE INDEX IF NOT EXISTS idx_otlp_log_session ON otlp_log(session_id);
   `,
+
+  // v17 — git remote URL per session, so branches can be correlated to the repo and
+  // a "open PR" link can be built (read-only, derived locally from the origin remote).
+  `
+  ALTER TABLE sessions ADD COLUMN remote_url TEXT;
+  `,
 ];

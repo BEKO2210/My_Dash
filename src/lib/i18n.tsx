@@ -230,6 +230,12 @@ const DE: Record<string, string> = {
   "anomaly.flag": "Auffällig über Basislinie",
   "anomaly.window": "24 h vs. 7-Tage-Basislinie",
 
+  "gitcorr.title": "Branches & PRs",
+  "gitcorr.info": "Sessions nach Git-Branch gruppiert, mit Links zum Branch und zum Öffnen eines PRs (lokal aus dem origin-Remote abgeleitet).",
+  "gitcorr.empty": "Noch keine Branch-Daten. Sessions in einem Git-Repo erfassen.",
+  "gitcorr.openPr": "PR öffnen",
+  "gitcorr.sessions": "Sessions",
+
   "incidents.title": "Was lief schief",
   "incidents.info": "Letzte fehlgeschlagene Tool-Aufrufe. Klick öffnet Eingabe und Fehlertext.",
   "incidents.empty": "Keine Fehler – alles grün. 🎉",
@@ -646,6 +652,12 @@ const EN: Record<string, string> = {
   "anomaly.vs": "vs.",
   "anomaly.flag": "Notably above baseline",
   "anomaly.window": "24h vs. 7-day baseline",
+
+  "gitcorr.title": "Branches & PRs",
+  "gitcorr.info": "Sessions grouped by git branch, with links to the branch and to open a PR (derived locally from the origin remote).",
+  "gitcorr.empty": "No branch data yet. Capture sessions inside a git repo.",
+  "gitcorr.openPr": "Open PR",
+  "gitcorr.sessions": "sessions",
 
   "incidents.title": "What went wrong",
   "incidents.info": "Latest failed tool calls. Click to reveal the input and error text.",

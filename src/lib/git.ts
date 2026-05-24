@@ -9,6 +9,7 @@ const execFileAsync = promisify(execFile);
 export interface GitContext {
   branch: string | null;
   commit: string | null;
+  remote: string | null;
 }
 
 export async function readGitContext(cwd: string): Promise<GitContext> {
@@ -22,10 +23,11 @@ export async function readGitContext(cwd: string): Promise<GitContext> {
     }
   };
 
-  const [branch, commit] = await Promise.all([
+  const [branch, commit, remote] = await Promise.all([
     run(["rev-parse", "--abbrev-ref", "HEAD"]),
     run(["rev-parse", "--short", "HEAD"]),
+    run(["config", "--get", "remote.origin.url"]),
   ]);
   // "HEAD" means a detached checkout — no meaningful branch name.
-  return { branch: branch === "HEAD" ? null : branch, commit };
+  return { branch: branch === "HEAD" ? null : branch, commit, remote };
 }

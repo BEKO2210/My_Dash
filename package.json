@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "A local, read-only observability dashboard for Claude Code — live event stream, session kanban, token/cost charts and a 3D tool-call graph.",
-  "license": "MIT",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "author": {
     "name": "Belkis Aslani",
     "email": "129214713+BEKO2210@users.noreply.github.com"

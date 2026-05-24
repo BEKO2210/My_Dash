@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleDot,
+  ExternalLink,
   GitBranch,
+  GitPullRequest,
   Layers,
   MessageSquare,
   Play,
@@ -24,6 +26,7 @@ import {
 import { WidgetState } from "@/components/widget-state";
 import { JsonTree } from "@/components/json-tree";
 import { DEMO, installDemoBackend } from "@/lib/demo";
+import { branchWebUrl, newPrUrl, parseRemoteUrl } from "@/lib/git-url";
 import { useT } from "@/lib/i18n";
 import {
   eventKind,
@@ -142,15 +145,47 @@ function SessionView({
           <span>{s.project_name ?? "—"}</span>
           <span aria-hidden>·</span>
           <span>{s.id}</span>
-          {s.branch && (
-            <>
-              <span aria-hidden>·</span>
-              <span className="inline-flex items-center gap-1">
-                <GitBranch className="h-3 w-3" />
-                {s.branch}
-              </span>
-            </>
-          )}
+          {s.branch &&
+            (() => {
+              const branch = s.branch;
+              const ref = parseRemoteUrl(s.remote_url);
+              const prUrl = ref ? newPrUrl(ref, branch) : null;
+              return (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className="inline-flex items-center gap-1">
+                    <GitBranch className="h-3 w-3" />
+                    {ref ? (
+                      <a
+                        href={branchWebUrl(ref, branch)}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="hover:text-accent"
+                      >
+                        {branch}
+                      </a>
+                    ) : (
+                      branch
+                    )}
+                  </span>
+                  {prUrl && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <a
+                        href={prUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-flex items-center gap-1 hover:text-accent"
+                      >
+                        <GitPullRequest className="h-3 w-3" />
+                        {t("gitcorr.openPr")}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </>
+                  )}
+                </>
+              );
+            })()}
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <Metric label={t("session.duration")} value={duration} />

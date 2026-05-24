@@ -386,12 +386,13 @@ umsetzbar (kein OSI-„Open Source", aber Quelltext einsehbar):
   Grant" (nicht-kommerziell frei) und Change-Date → fällt nach X Jahren auf
   eine OSS-Lizenz zurück.
 - **Hinweis:** Solche Lizenzen sind durchsetzbar, aber rechtlich verbindliche
-  Beratung gehört vor das Release. Bis dahin keine widersprüchliche Lizenz
-  committen.
+  Beratung gehört vor das Release.
 
-Umsetzung erfolgt in der Release-Phase (Run 120): `LICENSE` + `COMMERCIAL.md`
-hinzufügen, Lizenz-Header/`package.json`-`license`-Feld setzen, README-Abschnitt
-„Lizenz" ergänzen.
+**✅ Umgesetzt (Run 92):** `LICENSE` = **PolyForm Noncommercial 1.0.0** (+
+Copyright-/Commercial-Hinweis), `COMMERCIAL.md` mit Erwerbs-/Kontaktinfos,
+`package.json` `license`-Feld = `PolyForm-Noncommercial-1.0.0`, README-Badge und
+README-Abschnitt „Lizenz" aktualisiert. Vor dem Release (Run 120) noch rechtlich
+prüfen lassen.
 
 ---
 

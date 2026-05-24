@@ -49,6 +49,7 @@ export interface SessionRow {
   cost_usd: number;
   branch: string | null;
   git_commit: string | null;
+  remote_url: string | null;
   transcript_path: string | null;
 }
 

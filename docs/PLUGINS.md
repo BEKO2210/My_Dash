@@ -3,7 +3,7 @@
 # Widget plugins
 
 This catalogue is generated from the widget manifest in `src/plugins/registry.ts`.
-There are **28** built-in widgets. Third-party widgets dropped into
+There are **30** built-in widgets. Third-party widgets dropped into
 `plugins.local/` are auto-discovered at build (see
 [`plugins.local/README.md`](../plugins.local/README.md)).
 
@@ -57,6 +57,7 @@ export const plugin: Widget = {
 | Prompt-Verlauf | `prompt-history` | 3/6 | standard | — | Chronological, searchable list of your prompts (secrets are stripped before storage). |
 | Subagent-Baum | `subagent-tree` | 3/6 | standard | — | Which sessions spawned subagents via Task — expand to see the individual subagents. |
 | Session-Dauer | `session-duration` | 3/6 | standard | — | Distribution of session lengths (first to last event span), plus median and p95. |
+| Branches & PRs | `git-correlation` | 3/6 | standard | — | Sessions grouped by git branch, with links to the branch and to open a PR (derived locally from the origin remote). |
 
 ### Economy
 
@@ -97,4 +98,5 @@ export const plugin: Widget = {
 | Kompaktierungen | `compaction-timeline` | 3/6 | standard | — | When and how often the context was compacted (auto vs. manual). |
 | Zuverlässigkeit je Projekt | `reliability` | 3/6 | standard | — | Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red. |
 | Was lief schief | `incidents` | 3/6 | standard | — | Latest failed tool calls. Click to reveal the input and error text. |
+| Anomalie-Erkennung | `anomaly` | 3/6 | standard | — | Last 24h vs. baseline (7 days): is latency/error rate rising? — \"Is Claude getting worse?\" |
 
