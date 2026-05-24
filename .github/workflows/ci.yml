@@ -68,8 +68,9 @@ jobs:
       # tool-frequency (e2e/tool-frequency.spec.ts), file-hotspots
       # (e2e/file-hotspots.spec.ts), session-timeline
       # (e2e/session-timeline.spec.ts), latency (e2e/latency.spec.ts),
-      # error-rate/incidents (e2e/error-rate.spec.ts) and model-donut/token-burn
-      # (e2e/model-donut.spec.ts) audits as CI gates.
+      # error-rate/incidents (e2e/error-rate.spec.ts), model-donut/token-burn
+      # (e2e/model-donut.spec.ts) and sankey-flow/tag-cloud
+      # (e2e/sankey-flow.spec.ts) audits as CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -165,6 +166,21 @@ jobs:
         with:
           name: token-burn-screenshots
           path: test-results/token-burn-shots
+          if-no-files-found: ignore
+
+      # Always collect the sankey-flow + tag-cloud audit screenshots (Phase Z, Run 116).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sankey-flow-screenshots
+          path: test-results/sankey-flow-shots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tag-cloud-screenshots
+          path: test-results/tag-cloud-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4

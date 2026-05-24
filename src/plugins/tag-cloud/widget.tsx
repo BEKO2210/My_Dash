@@ -11,7 +11,7 @@ import type { TermCount } from "@/lib/tags";
 
 export function TagCloud() {
   const { tick } = useLive();
-  const { query } = useSearch();
+  const { query, setQuery } = useSearch();
   const { t } = useT();
   const [terms, setTerms] = useState<TermCount[] | null>(null);
 
@@ -52,10 +52,12 @@ export function TagCloud() {
           {filtered.map((tc) => {
             const s = scale(tc.count);
             return (
-              <span
+              <button
                 key={tc.term}
+                type="button"
+                onClick={() => setQuery(tc.term)}
                 title={`${tc.term}: ${tc.count}`}
-                className="cursor-default whitespace-nowrap transition-colors hover:text-accent"
+                className="cursor-pointer whitespace-nowrap bg-transparent p-0 transition-colors hover:text-accent"
                 style={{
                   fontSize: `${0.72 + s * 1.0}rem`,
                   fontWeight: 400 + Math.round(s * 3) * 100,
@@ -63,7 +65,7 @@ export function TagCloud() {
                 }}
               >
                 {tc.term}
-              </span>
+              </button>
             );
           })}
         </div>
