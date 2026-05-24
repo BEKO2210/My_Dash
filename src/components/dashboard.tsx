@@ -29,6 +29,7 @@ import { Landing } from "@/components/landing";
 import { SearchProvider, useSearch } from "@/components/search";
 import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { FacetProvider, useFacets } from "@/components/facets";
+import { CommandPalette } from "@/components/command-palette";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
 import type { SearchHit } from "@/lib/search-index";
@@ -241,6 +242,7 @@ export function Dashboard() {
               return (
               <div
                 key={w.id}
+                id={`mc-widget-${w.id}`}
                 // The 3D graph goes fullscreen via position:fixed, which breaks if an
                 // ancestor has a transform. So its cell uses an opacity-only entrance
                 // (no transform) while the others keep the subtle rise. `relative`
@@ -288,6 +290,7 @@ export function Dashboard() {
             onClose={() => setGalleryOpen(false)}
           />
         )}
+        <CommandPalette onResetLayout={resetLayout} onOpenGallery={() => setGalleryOpen(true)} />
         </FacetProvider>
         </TimeRangeProvider>
       </SearchProvider>
@@ -458,6 +461,15 @@ function Header({
         <FacetBar />
         <TimeRangePicker />
         <ViewsMenu order={order} sizes={sizes} hidden={hidden} onApplyLayout={onApplyLayout} />
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("mc:open-command"))}
+          aria-label={t("cmd.title")}
+          title={t("cmd.title")}
+          className="hidden items-center gap-1 rounded-full border border-panel-border bg-background/40 px-2 py-1 font-mono text-[11px] text-muted transition-colors hover:border-accent/50 hover:text-foreground sm:flex"
+        >
+          ⌘K
+        </button>
         <CopyLinkButton />
         <button
           type="button"
