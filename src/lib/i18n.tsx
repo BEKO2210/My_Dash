@@ -274,6 +274,7 @@ const DE: Record<string, string> = {
   "cmd.exportJson": "Exportieren: alle Daten (JSON)",
   "cmd.exportSessionsCsv": "Exportieren: Sessions (CSV)",
   "cmd.exportEventsCsv": "Exportieren: Events (CSV)",
+  "cmd.openapi": "API-Spezifikation öffnen (OpenAPI)",
 
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
@@ -701,6 +702,7 @@ const EN: Record<string, string> = {
   "cmd.exportJson": "Export: all data (JSON)",
   "cmd.exportSessionsCsv": "Export: sessions (CSV)",
   "cmd.exportEventsCsv": "Export: events (CSV)",
+  "cmd.openapi": "Open API spec (OpenAPI)",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",

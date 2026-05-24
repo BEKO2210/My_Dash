@@ -111,6 +111,16 @@ export function CommandPalette({
     list.push({ id: "export-json", group: t("cmd.actions"), label: t("cmd.exportJson"), keywords: "export download backup json", run: () => openExport("") });
     list.push({ id: "export-sessions-csv", group: t("cmd.actions"), label: t("cmd.exportSessionsCsv"), keywords: "export download csv sessions", run: () => openExport("?table=sessions&format=csv") });
     list.push({ id: "export-events-csv", group: t("cmd.actions"), label: t("cmd.exportEventsCsv"), keywords: "export download csv events", run: () => openExport("?table=events&format=csv") });
+    list.push({
+      id: "openapi",
+      group: t("cmd.actions"),
+      label: t("cmd.openapi"),
+      keywords: "api openapi spec swagger schema docs",
+      run: () => {
+        window.open("/api/openapi", "_blank", "noopener");
+        close();
+      },
+    });
     list.push({ id: "reset", group: t("cmd.actions"), label: t("layout.reset"), run: () => { onResetLayout(); close(); } });
     list.push({ id: "gallery", group: t("cmd.actions"), label: t("gallery.title"), run: () => { onOpenGallery(); close(); } });
     list.push({
