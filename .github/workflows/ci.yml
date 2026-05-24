@@ -66,8 +66,9 @@ jobs:
       # layout (e2e/layout.spec.ts), tool-graph (e2e/tool-graph.spec.ts),
       # budget-gauge (e2e/budget-gauge.spec.ts), heatmap (e2e/heatmap.spec.ts),
       # tool-frequency (e2e/tool-frequency.spec.ts), file-hotspots
-      # (e2e/file-hotspots.spec.ts) and session-timeline
-      # (e2e/session-timeline.spec.ts) audits as CI gates.
+      # (e2e/file-hotspots.spec.ts), session-timeline
+      # (e2e/session-timeline.spec.ts) and latency (e2e/latency.spec.ts) audits as
+      # CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -125,6 +126,14 @@ jobs:
         with:
           name: session-timeline-screenshots
           path: test-results/session-timeline-shots
+          if-no-files-found: ignore
+
+      # Always collect the latency audit screenshots (Phase Z, Run 113).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latency-screenshots
+          path: test-results/latency-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
