@@ -7,6 +7,8 @@
   --foreground: #e6e9ef;
   --muted: #9aa3b6;
   --accent: #4f8cff;
+  /* Empty (level-0) heatmap cell. A faint light tint reads on dark panels. */
+  --mc-heat-0: rgba(255, 255, 255, 0.04);
 }
 
 /* Light token set — swapped in via data-theme on <html>. Charts/tooltips that
@@ -21,6 +23,9 @@
      is fine on dark), incl. text on the accent/20 tint. A custom accent is set
      inline and wins over this. */
   --accent: #1e40af;
+  /* On white panels a 4%-white empty cell is invisible; use a faint dark tint so
+     the punchcard grid stays legible (shared by both heatmap widgets). */
+  --mc-heat-0: rgba(15, 23, 42, 0.06);
 }
 
 /* The bright -300/-400 semantic hues are tuned for dark panels and fail WCAG-AA on
