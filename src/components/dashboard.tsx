@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Profiler, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -106,7 +106,15 @@ export function Dashboard() {
   const [hidden, setHidden] = useState<string[]>([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
+  const [timings, setTimings] = useState<Record<string, number>>({});
   const [dragId, setDragId] = useState<string | null>(null);
+
+  // Per-plugin render telemetry via React's Profiler. Record only the first
+  // (mount) duration per widget so onRender never loops.
+  const onWidgetRender = useCallback((id: string, phase: string, actualDuration: number) => {
+    if (phase !== "mount") return;
+    setTimings((prev) => (prev[id] !== undefined ? prev : { ...prev, [id]: actualDuration }));
+  }, []);
 
   useEffect(() => {
     // Defer to a frame so the saved layout is adopted after hydration (avoids a
@@ -282,8 +290,12 @@ export function Dashboard() {
                   couldNotLoad={t("error.couldNotLoad")}
                   genericText={t("error.generic")}
                   retryLabel={t("common.retry")}
+                  disableLabel={t("error.disable")}
+                  onDisable={() => toggleHidden(w.id)}
                 >
-                  <w.component />
+                  <Profiler id={w.id} onRender={onWidgetRender}>
+                    <w.component />
+                  </Profiler>
                 </WidgetErrorBoundary>
               </div>
               );
@@ -298,6 +310,7 @@ export function Dashboard() {
             order={order}
             byId={byId}
             hidden={hidden}
+            timings={timings}
             onToggle={toggleHidden}
             onShowAll={() => persistHidden([])}
             onClose={() => setGalleryOpen(false)}
@@ -824,6 +837,7 @@ function WidgetGallery({
   order,
   byId,
   hidden,
+  timings,
   onToggle,
   onShowAll,
   onClose,
@@ -831,6 +845,7 @@ function WidgetGallery({
   order: string[];
   byId: Map<string, (typeof widgets)[number]>;
   hidden: string[];
+  timings: Record<string, number>;
   onToggle: (id: string) => void;
   onShowAll: () => void;
   onClose: () => void;
@@ -900,6 +915,14 @@ function WidgetGallery({
                             </span>
                             <span className="mt-0.5 line-clamp-2 block text-[11px] text-muted">{t(w.description)}</span>
                           </span>
+                          {timings[w.id] !== undefined && (
+                            <span
+                              className="shrink-0 font-mono text-[10px] tabular-nums text-muted/70"
+                              title={t("telemetry.renderTime")}
+                            >
+                              {Math.round(timings[w.id])}ms
+                            </span>
+                          )}
                         </button>
                       </li>
                     );
