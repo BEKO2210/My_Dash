@@ -82,6 +82,7 @@ export function SiteFooter() {
         <Column title={t("footer.product")}>
           <FootLink href="/">{t("nav.dashboard")}</FootLink>
           <FootLink href="/features">{t("nav.features")}</FootLink>
+          <FootLink href="/docs">{t("nav.docs")}</FootLink>
           <FootLink href={CONTACT.demo} external>
             {t("nav.demo")}
           </FootLink>

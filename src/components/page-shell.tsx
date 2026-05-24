@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n";
 
 const NAV = [
   { href: "/features", key: "nav.features" },
+  { href: "/docs", key: "nav.docs" },
   { href: "/about", key: "nav.about" },
   { href: "/contact", key: "nav.contact" },
 ] as const;
