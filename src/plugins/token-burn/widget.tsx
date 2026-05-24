@@ -1,35 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useT } from "@/lib/i18n";
 import { formatCompact } from "@/lib/format";
 import type { ToolTokenBurn } from "@/lib/token-burn";
 
 export function TokenBurn() {
-  const { tick } = useLive();
   const { t } = useT();
-  const [tools, setTools] = useState<ToolTokenBurn[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/token-burn?limit=8")
-        .then((r) => r.json())
-        .then((d: { tools: ToolTokenBurn[] }) => {
-          if (!cancelled) setTools(d.tools);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const { data } = usePluginQuery<{ tools: ToolTokenBurn[] }>("/api/token-burn?limit=8");
+  const tools = data?.tools ?? null;
 
   const empty = tools && (tools.length === 0 || tools.every((t) => t.tokens === 0));
   const max = (tools ?? []).reduce((m, t) => Math.max(m, t.tokens), 0) || 1;

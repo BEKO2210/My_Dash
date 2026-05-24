@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Plug } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { formatCompact, relativeTime } from "@/lib/format";
@@ -18,27 +17,10 @@ function errorColor(rate: number): string {
 }
 
 export function McpServers() {
-  const { tick } = useLive();
   const { query } = useSearch();
   const { t, lang } = useT();
-  const [servers, setServers] = useState<McpServerUsage[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/mcp?limit=50")
-        .then((r) => r.json())
-        .then((d: { servers: McpServerUsage[] }) => {
-          if (!cancelled) setServers(d.servers);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const { data } = usePluginQuery<{ servers: McpServerUsage[] }>("/api/mcp?limit=50");
+  const servers = data?.servers ?? null;
 
   const filtered = (servers ?? []).filter((s) => matchesQuery(query, s.server));
   const max = filtered.reduce((m, s) => Math.max(m, s.calls), 0) || 1;

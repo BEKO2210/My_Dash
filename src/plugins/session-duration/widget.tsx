@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Hourglass } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useT } from "@/lib/i18n";
 import { formatDuration } from "@/lib/format";
 import type { DurationStats } from "@/lib/session-duration";
@@ -19,25 +18,7 @@ const tooltipStyle = {
 
 export function SessionDuration() {
   const { t } = useT();
-  const { tick } = useLive();
-  const [stats, setStats] = useState<DurationStats | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/session-duration")
-        .then((r) => r.json())
-        .then((d: DurationStats) => {
-          if (!cancelled) setStats(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const { data: stats } = usePluginQuery<DurationStats>("/api/session-duration", { pollMs: 30_000 });
 
   return (
     <Panel title={t("sessionDur.title")} icon={<Hourglass className="h-4 w-4 text-accent" />} info={t("sessionDur.info")}>
