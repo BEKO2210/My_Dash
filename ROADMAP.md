@@ -338,6 +338,25 @@ sein.
      Hints überall; alle `/api/*`-Routen antworten; Demo-Modus zeigt alle
      Widgets. Abschluss-Sammlung aller Screenshots.
 
+### Z-Demo. 🌐 Demo-Website-Politur (nur die Pages-Demo, `src/lib/demo.ts`)
+
+Die öffentliche Demo (läuft idealerweise **nur** auf der Website) wirkt aktuell
+**zu hektisch und inkonsistent**. Ruhiger, glaubwürdiger und stabil machen:
+
+- **Sessions bleiben bestehen.** Mehrere offene Sessions sind ok, aber eine
+  **beendete Session verschwindet nie wieder** — sie bleibt in der „Beendet"-
+  Spalte (kein Wegrotieren/Abschneiden der Historie wie heute).
+- **Geld steigt realistisch & monoton.** Kosten/Tokens nur **aufwärts**, in
+  kleinen, plausiblen Schritten — **kein Hoch-/Runter-Springen**.
+- **Weniger Hektik.** Ereignis-Takt entschleunigen, keine sprunghaften
+  Zahlensprünge; Werte sanft fortschreiben statt neu zu würfeln.
+- **3D-Graph: episch statt zappelig.** Optik ist gut, aber er soll **nicht
+  springen** — eine **langsame, gleichmäßige (epische) Auto-Rotation**. Bei
+  **manueller** Bewegung nicht sofort weiterdrehen, sondern **15 s warten**,
+  dann sanft wieder die Auto-Rotation aufnehmen.
+- **Konsistenz.** Über Reloads hinweg ein stimmiges, kuratiertes Bild (seedbare
+  Demo-Daten), damit Screenshots/GIFs reproduzierbar sind.
+
 ## Phase Ω — Beta-Release (Run 120, **letzter Schritt**)
 
 120. 🚀 **v1.0.0-beta — unsignierte Beta für alle Betriebssysteme** (erst nach

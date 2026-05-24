@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Bell, Clock, Coins, Plug } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, Clock, Coins, Plug } from "lucide-react";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
 import type { AlertItem } from "@/lib/alerts";
+
+const DESKTOP_KEY = "mc-desktop-notif";
 
 const TYPE_ICON: Record<string, typeof AlertTriangle> = {
   mcp_error: Plug,
@@ -22,7 +24,30 @@ export function Notifications() {
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [desktop, setDesktop] = useState(false);
   const seenMaxId = useRef<number | null>(null);
+  const desktopRef = useRef(false);
+
+  useEffect(() => {
+    desktopRef.current = desktop;
+  }, [desktop]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      try {
+        if (
+          localStorage.getItem(DESKTOP_KEY) === "1" &&
+          typeof Notification !== "undefined" &&
+          Notification.permission === "granted"
+        ) {
+          setDesktop(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +66,14 @@ export function Notifications() {
             if (newest && !newest.read) {
               setToast(newest.message);
               setTimeout(() => setToast(null), 5000);
+              // Bridge to a native (Electron/OS) notification when enabled.
+              if (desktopRef.current && typeof Notification !== "undefined" && Notification.permission === "granted") {
+                try {
+                  new Notification("Claude Mission Control", { body: newest.message });
+                } catch {
+                  /* notifications unavailable */
+                }
+              }
             }
             seenMaxId.current = maxId;
           }
@@ -53,6 +86,29 @@ export function Notifications() {
       clearInterval(poll);
     };
   }, [tick]);
+
+  const toggleDesktop = () => {
+    if (desktop) {
+      setDesktop(false);
+      try {
+        localStorage.removeItem(DESKTOP_KEY);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    if (typeof Notification === "undefined") return;
+    void Notification.requestPermission().then((p) => {
+      if (p === "granted") {
+        setDesktop(true);
+        try {
+          localStorage.setItem(DESKTOP_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+  };
 
   const markAllRead = () => {
     setUnread(0);
@@ -95,9 +151,20 @@ export function Notifications() {
                 <Bell className="h-3.5 w-3.5 text-accent" />
                 {t("notif.title")}
               </span>
-              <button type="button" onClick={markAllRead} className="text-[11px] font-normal text-muted hover:text-foreground">
-                {t("notif.markRead")}
-              </button>
+              <span className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleDesktop}
+                  aria-pressed={desktop}
+                  title={t("notif.desktop")}
+                  className={`transition-colors ${desktop ? "text-accent" : "text-muted hover:text-foreground"}`}
+                >
+                  <BellRing className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={markAllRead} className="text-[11px] font-normal text-muted hover:text-foreground">
+                  {t("notif.markRead")}
+                </button>
+              </span>
             </header>
             {alerts.length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted">{t("notif.empty")}</p>
