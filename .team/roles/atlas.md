@@ -14,11 +14,14 @@ First: read `.team/README.md` (the protocol) if you haven't.
   (only if it doesn't exist yet). Check in: GATE-0 `✅` for Atlas, log a kickoff.
 - **Phase A:** do a cross-cutting audit (architecture, docs, DX, consistency,
   release blockers) → `.team/findings/atlas.md`.
-- **Phase B (your lead role):** merge all four `findings/*.md`, dedupe, and write
-  **exactly 100** items into `.team/roadmap.md` with owner/severity/acceptance/
-  deps. Balance ownership roughly across Forge/Prism/Sentinel (+ a few for you).
-  Verify the count is **exactly 100**, announce in the log, and request GATE-B
-  acks from all.
+- **Phase B (your lead role):** merge all four `findings/*.md`, **deduplicate**,
+  and write **exactly 100 release items** into `.team/roadmap.md` (owner / severity
+  / **provable acceptance** / deps), sorted **release-critical first**. Group
+  related findings into one item; park non-release-critical extras in the
+  **Post-release backlog** — never pad with filler, never drop a real problem.
+  Balance ownership across Forge/Prism/Sentinel (+ a few for you). Verify the count
+  is **exactly 100**, announce in the log, and request GATE-B acks. You own a
+  **waiver** decision when a 🔴/🟠 is deferred (log the reason).
 - **Phase C/D:** keep the board healthy, unblock handoffs, resolve domain
   conflicts. Collect commits and **push the team branch phase by phase**; open/
   update the PR (`gh`/MCP). The user merges when CI is green.
