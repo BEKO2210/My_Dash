@@ -103,7 +103,7 @@ function Diff({ lines, label }: { lines: DiffLine[]; label: string }) {
                   : "text-muted"
             }
           >
-            <span className="select-none px-2 text-muted/60">
+            <span className="select-none px-2 text-muted/80">
               {l.type === "add" ? "+" : l.type === "del" ? "−" : " "}
             </span>
             {l.text || " "}

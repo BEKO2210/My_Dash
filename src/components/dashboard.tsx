@@ -302,7 +302,7 @@ export function Dashboard() {
               );
             })}
           </div>
-          <footer className="pt-2 text-center text-[11px] text-muted/60">
+          <footer className="pt-2 text-center text-[11px] text-muted/80">
             {t("footer.text")} · <span className="text-muted">by Belkis Aslani</span>
           </footer>
         </div>

@@ -81,7 +81,7 @@ export function Kanban() {
                   <Card key={s.id} s={s} onOpen={() => setSelected(s)} />
                 ))}
                 {items.length === 0 && (
-                  <p className="px-1 py-3 text-center text-[11px] text-muted/60">
+                  <p className="px-1 py-3 text-center text-[11px] text-muted/80">
                     {query.trim() ? t("common.noResults") : t("kanban.empty")}
                   </p>
                 )}
