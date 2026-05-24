@@ -80,6 +80,72 @@ export function parseTranscriptUsage(text: string): TranscriptSummary {
   };
 }
 
+// ── Read-only conversation rendering ────────────────────────────────────────
+export interface TranscriptBlock {
+  type: "text" | "thinking" | "tool_use" | "tool_result";
+  text?: string; // text / thinking
+  name?: string; // tool_use name
+  input?: unknown; // tool_use input
+  output?: unknown; // tool_result content
+  isError?: boolean; // tool_result error flag
+}
+
+export interface TranscriptMessage {
+  role: "user" | "assistant";
+  blocks: TranscriptBlock[];
+}
+
+function blocksOf(content: unknown): TranscriptBlock[] {
+  if (typeof content === "string") {
+    const t = content.trim();
+    return t ? [{ type: "text", text: t }] : [];
+  }
+  if (!Array.isArray(content)) return [];
+  const out: TranscriptBlock[] = [];
+  for (const raw of content) {
+    if (!raw || typeof raw !== "object") continue;
+    const b = raw as Record<string, unknown>;
+    switch (b.type) {
+      case "text":
+        if (typeof b.text === "string" && b.text.trim()) out.push({ type: "text", text: b.text });
+        break;
+      case "thinking":
+        if (typeof b.thinking === "string" && b.thinking.trim())
+          out.push({ type: "thinking", text: b.thinking });
+        break;
+      case "tool_use":
+        out.push({ type: "tool_use", name: typeof b.name === "string" ? b.name : "tool", input: b.input });
+        break;
+      case "tool_result":
+        out.push({ type: "tool_result", output: b.content, isError: b.is_error === true });
+        break;
+    }
+  }
+  return out;
+}
+
+// Parse the JSONL transcript into an ordered, render-ready message list. Keeps
+// only the last `maxMessages` (transcripts can be long); drops empty messages.
+export function parseTranscriptMessages(text: string, maxMessages = 400): TranscriptMessage[] {
+  const out: TranscriptMessage[] = [];
+  for (const line of text.split("\n")) {
+    const t = line.trim();
+    if (!t) continue;
+    let obj: unknown;
+    try {
+      obj = JSON.parse(t);
+    } catch {
+      continue;
+    }
+    const msg = (obj as Record<string, unknown>)?.message as Record<string, unknown> | undefined;
+    if (!msg || (msg.role !== "user" && msg.role !== "assistant")) continue;
+    const blocks = blocksOf(msg.content);
+    if (blocks.length === 0) continue;
+    out.push({ role: msg.role, blocks });
+  }
+  return out.length > maxMessages ? out.slice(out.length - maxMessages) : out;
+}
+
 const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;
 
 // Read the transcript, capping at maxBytes by reading only the tail of very large

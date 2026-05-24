@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { parseTranscriptUsage, summarizeTranscript } from "@/lib/transcript";
+import { parseTranscriptMessages, parseTranscriptUsage, summarizeTranscript } from "@/lib/transcript";
 
 const TRANSCRIPT = [
   JSON.stringify({ type: "user", message: { role: "user", content: "hello" } }),
@@ -63,6 +63,51 @@ describe("parseTranscriptUsage", () => {
     const s = parseTranscriptUsage(line);
     expect(s.turns).toBe(0);
     expect(s.lastAssistantText).toBe("no usage");
+  });
+});
+
+describe("parseTranscriptMessages", () => {
+  it("renders user/assistant messages with text, thinking, tool_use and tool_result blocks", () => {
+    const jsonl = [
+      JSON.stringify({ message: { role: "user", content: "do the thing" } }),
+      JSON.stringify({
+        message: {
+          role: "assistant",
+          content: [
+            { type: "thinking", thinking: "let me plan" },
+            { type: "text", text: "On it" },
+            { type: "tool_use", name: "Read", input: { file_path: "/x.ts" } },
+          ],
+        },
+      }),
+      JSON.stringify({
+        message: {
+          role: "user",
+          content: [{ type: "tool_result", content: "file body", is_error: false }],
+        },
+      }),
+      "not json",
+      JSON.stringify({ message: { role: "assistant", content: [] } }), // dropped (empty)
+    ].join("\n");
+
+    const msgs = parseTranscriptMessages(jsonl);
+    expect(msgs).toHaveLength(3);
+    expect(msgs[0]).toEqual({ role: "user", blocks: [{ type: "text", text: "do the thing" }] });
+    expect(msgs[1].blocks.map((b) => b.type)).toEqual(["thinking", "text", "tool_use"]);
+    expect(msgs[1].blocks[2]).toMatchObject({ type: "tool_use", name: "Read" });
+    expect(msgs[2].blocks[0]).toMatchObject({ type: "tool_result", isError: false });
+  });
+
+  it("keeps only the last maxMessages", () => {
+    const lines = Array.from({ length: 5 }, (_, i) =>
+      JSON.stringify({ message: { role: "user", content: `m${i}` } }),
+    ).join("\n");
+    const msgs = parseTranscriptMessages(lines, 2);
+    expect(msgs.map((m) => m.blocks[0].text)).toEqual(["m3", "m4"]);
+  });
+
+  it("returns an empty array for an empty transcript", () => {
+    expect(parseTranscriptMessages("")).toEqual([]);
   });
 });
 

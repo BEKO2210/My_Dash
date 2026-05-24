@@ -286,6 +286,14 @@ const DE: Record<string, string> = {
   "session.toolCalls": "Tool-Aufrufe",
   "session.none": "Nichts vorhanden.",
 
+  "transcript.title": "Transcript",
+  "transcript.load": "Transcript laden",
+  "transcript.hint": "Read-only-Konversation dieser Session (Nachrichten, Thinking, Tool-Use).",
+  "transcript.empty": "Kein Transcript für diese Session verfügbar.",
+  "transcript.error": "Transcript konnte nicht geladen werden.",
+  "transcript.user": "Du",
+  "transcript.assistant": "Claude",
+
   "stream.title": "Live Stream",
   "stream.info":
     "Live-Strom aller Hook-Events in Echtzeit (neueste oben): Session-Start/-Ende, Prompts, Tool-Aufrufe und Stops. Speist sich per SSE aus den Claude-Code-Hooks.",
@@ -607,6 +615,14 @@ const EN: Record<string, string> = {
   "session.prompts": "Prompts",
   "session.toolCalls": "Tool calls",
   "session.none": "Nothing here.",
+
+  "transcript.title": "Transcript",
+  "transcript.load": "Load transcript",
+  "transcript.hint": "Read-only conversation for this session (messages, thinking, tool use).",
+  "transcript.empty": "No transcript available for this session.",
+  "transcript.error": "Could not load the transcript.",
+  "transcript.user": "You",
+  "transcript.assistant": "Claude",
 
   "stream.title": "Live Stream",
   "stream.info":
