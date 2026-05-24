@@ -236,6 +236,13 @@ const DE: Record<string, string> = {
   "layout.width": "Breite ändern",
   "layout.height": "Höhe ändern",
 
+  "gallery.title": "Widget-Galerie",
+  "gallery.info": "Widgets ein- oder ausblenden. Reihenfolge und Größe änderst du direkt am Widget.",
+  "gallery.close": "Schließen",
+  "gallery.showAll": "Alle anzeigen",
+  "gallery.done": "Fertig",
+  "gallery.allHidden": "Alle Widgets ausgeblendet. Öffne die Galerie, um welche einzublenden.",
+
   "status.active": "Aktiv",
   "status.waiting": "Wartet",
   "status.ended": "Beendet",
@@ -526,6 +533,13 @@ const EN: Record<string, string> = {
   "layout.reset": "Reset layout",
   "layout.width": "Change width",
   "layout.height": "Change height",
+
+  "gallery.title": "Widget gallery",
+  "gallery.info": "Show or hide widgets. Reorder and resize directly on the widget.",
+  "gallery.close": "Close",
+  "gallery.showAll": "Show all",
+  "gallery.done": "Done",
+  "gallery.allHidden": "All widgets hidden. Open the gallery to show some.",
 
   "status.active": "Active",
   "status.waiting": "Waiting",

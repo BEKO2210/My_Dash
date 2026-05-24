@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, GripHorizontal, MoveHorizontal, MoveVertical, RotateCcw, Search, X } from "lucide-react";
+import {
+  Activity,
+  Eye,
+  EyeOff,
+  GripHorizontal,
+  LayoutGrid,
+  MoveHorizontal,
+  MoveVertical,
+  RotateCcw,
+  Search,
+  X,
+} from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
 import { RadarLogo } from "@/components/radar-logo";
 import { LangToggle } from "@/components/lang-toggle";
@@ -11,7 +22,14 @@ import { Landing } from "@/components/landing";
 import { SearchProvider, useSearch } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { DEMO, installDemoBackend } from "@/lib/demo";
-import { HEIGHT_PRESETS, nextPreset, sanitizeSizes, SPAN_PRESETS, type SizeMap } from "@/lib/layout";
+import {
+  HEIGHT_PRESETS,
+  nextPreset,
+  sanitizeIdList,
+  sanitizeSizes,
+  SPAN_PRESETS,
+  type SizeMap,
+} from "@/lib/layout";
 import { widgets } from "@/plugins/registry";
 
 // In the static demo build, start the in-browser engine + patch fetch before any
@@ -21,6 +39,7 @@ if (DEMO) installDemoBackend();
 const DEFAULT_ORDER = widgets.map((w) => w.id);
 const ORDER_KEY = "mc-widget-order";
 const SIZE_KEY = "mc-widget-sizes";
+const HIDDEN_KEY = "mc-widget-hidden";
 
 function loadSizes(): SizeMap {
   try {
@@ -29,6 +48,16 @@ function loadSizes(): SizeMap {
     return sanitizeSizes(JSON.parse(raw), DEFAULT_ORDER);
   } catch {
     return {};
+  }
+}
+
+function loadHidden(): string[] {
+  try {
+    const raw = localStorage.getItem(HIDDEN_KEY);
+    if (!raw) return [];
+    return sanitizeIdList(JSON.parse(raw), DEFAULT_ORDER);
+  } catch {
+    return [];
   }
 }
 
@@ -53,6 +82,8 @@ export function Dashboard() {
   // Start from the default order (hydration-safe), then adopt any saved order.
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   const [sizes, setSizes] = useState<SizeMap>({});
+  const [hidden, setHidden] = useState<string[]>([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,11 +92,13 @@ export function Dashboard() {
     const id = requestAnimationFrame(() => {
       setOrder(loadOrder());
       setSizes(loadSizes());
+      setHidden(loadHidden());
     });
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const isCustom = order.join(",") !== DEFAULT_ORDER.join(",") || Object.keys(sizes).length > 0;
+  const isCustom =
+    order.join(",") !== DEFAULT_ORDER.join(",") || Object.keys(sizes).length > 0 || hidden.length > 0;
 
   const persist = useCallback((next: string[]) => {
     setOrder(next);
@@ -99,10 +132,37 @@ export function Dashboard() {
     [sizes, persistSizes],
   );
 
+  const persistHidden = useCallback((next: string[]) => {
+    setHidden(next);
+    try {
+      if (next.length === 0) localStorage.removeItem(HIDDEN_KEY);
+      else localStorage.setItem(HIDDEN_KEY, JSON.stringify(next));
+    } catch {
+      /* storage unavailable — visibility still applies for this session */
+    }
+  }, []);
+
+  const toggleHidden = useCallback(
+    (id: string) => {
+      setHidden((prev) => {
+        const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+        try {
+          if (next.length === 0) localStorage.removeItem(HIDDEN_KEY);
+          else localStorage.setItem(HIDDEN_KEY, JSON.stringify(next));
+        } catch {
+          /* storage unavailable */
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const resetLayout = useCallback(() => {
     persist(DEFAULT_ORDER);
     persistSizes({});
-  }, [persist, persistSizes]);
+    persistHidden([]);
+  }, [persist, persistSizes, persistHidden]);
 
   const onDropOn = useCallback(
     (targetId: string) => {
@@ -123,8 +183,11 @@ export function Dashboard() {
 
   const byId = useMemo(() => new Map(widgets.map((w) => [w.id, w])), []);
   const ordered = useMemo(
-    () => order.map((id) => byId.get(id)).filter((w): w is (typeof widgets)[number] => Boolean(w)),
-    [order, byId],
+    () =>
+      order
+        .map((id) => byId.get(id))
+        .filter((w): w is (typeof widgets)[number] => Boolean(w) && !hidden.includes(w!.id)),
+    [order, byId, hidden],
   );
 
   return (
@@ -132,7 +195,16 @@ export function Dashboard() {
       <SearchProvider>
         {DEMO && <Landing />}
         <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
-          <Header isCustomLayout={isCustom} onResetLayout={resetLayout} />
+          <Header
+            isCustomLayout={isCustom}
+            onResetLayout={resetLayout}
+            onOpenGallery={() => setGalleryOpen(true)}
+          />
+          {ordered.length === 0 && (
+            <div className="rounded-xl border border-dashed border-panel-border bg-panel/40 p-10 text-center text-sm text-muted">
+              {t("gallery.allHidden")}
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 min-[2560px]:gap-6 min-[3840px]:gap-8 lg:grid-cols-6">
             {ordered.map((w, i) => {
               const span = sizes[w.id]?.span ?? w.span;
@@ -177,6 +249,16 @@ export function Dashboard() {
             {t("footer.text")} · <span className="text-muted">by Belkis Aslani</span>
           </footer>
         </div>
+        {galleryOpen && (
+          <WidgetGallery
+            order={order}
+            byId={byId}
+            hidden={hidden}
+            onToggle={toggleHidden}
+            onShowAll={() => persistHidden([])}
+            onClose={() => setGalleryOpen(false)}
+          />
+        )}
       </SearchProvider>
     </LiveProvider>
   );
@@ -232,9 +314,11 @@ function WidgetToolbar({
 function Header({
   isCustomLayout,
   onResetLayout,
+  onOpenGallery,
 }: {
   isCustomLayout: boolean;
   onResetLayout: () => void;
+  onOpenGallery: () => void;
 }) {
   const { connected, events } = useLive();
   const { t, lang } = useT();
@@ -285,6 +369,15 @@ function Header({
             </button>
           )}
         </label>
+        <button
+          type="button"
+          onClick={onOpenGallery}
+          aria-label={t("gallery.title")}
+          title={t("gallery.title")}
+          className="hidden items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground sm:flex"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" />
+        </button>
         {isCustomLayout && (
           <button
             type="button"
@@ -319,5 +412,89 @@ function Header({
         </span>
       </div>
     </header>
+  );
+}
+
+function WidgetGallery({
+  order,
+  byId,
+  hidden,
+  onToggle,
+  onShowAll,
+  onClose,
+}: {
+  order: string[];
+  byId: Map<string, (typeof widgets)[number]>;
+  hidden: string[];
+  onToggle: (id: string) => void;
+  onShowAll: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useT();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const items = order
+    .map((id) => byId.get(id))
+    .filter((w): w is (typeof widgets)[number] => Boolean(w));
+  const visibleCount = items.filter((w) => !hidden.includes(w.id)).length;
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={t("gallery.title")} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div className="relative z-10 flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-panel-border bg-panel shadow-2xl shadow-black/50">
+        <header className="flex items-center justify-between border-b border-panel-border px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <LayoutGrid className="h-4 w-4 text-accent" />
+            {t("gallery.title")}
+            <span className="text-xs font-normal text-muted">
+              {visibleCount}/{items.length}
+            </span>
+          </div>
+          <button type="button" onClick={onClose} aria-label={t("gallery.close")} title={t("gallery.close")} className="text-muted hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+        <p className="px-4 pt-3 text-xs text-muted">{t("gallery.info")}</p>
+        <ul className="min-h-0 flex-1 overflow-auto p-2">
+          {items.map((w) => {
+            const isHidden = hidden.includes(w.id);
+            return (
+              <li key={w.id}>
+                <button
+                  type="button"
+                  onClick={() => onToggle(w.id)}
+                  aria-pressed={!isHidden}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-white/[0.04]"
+                >
+                  {isHidden ? (
+                    <EyeOff className="h-4 w-4 shrink-0 text-muted" />
+                  ) : (
+                    <Eye className="h-4 w-4 shrink-0 text-accent" />
+                  )}
+                  <span className={`flex-1 truncate ${isHidden ? "text-muted line-through" : "text-foreground"}`}>
+                    {w.title}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <footer className="flex justify-end gap-2 border-t border-panel-border px-4 py-3">
+          <button type="button" onClick={onShowAll} className="rounded-md border border-panel-border px-3 py-1.5 text-xs text-muted transition-colors hover:text-foreground">
+            {t("gallery.showAll")}
+          </button>
+          <button type="button" onClick={onClose} className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent/90">
+            {t("gallery.done")}
+          </button>
+        </footer>
+      </div>
+    </div>
   );
 }

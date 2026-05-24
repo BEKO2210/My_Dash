@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HEIGHT_PRESETS, nextPreset, sanitizeSizes, SPAN_PRESETS } from "@/lib/layout";
+import { HEIGHT_PRESETS, nextPreset, sanitizeIdList, sanitizeSizes, SPAN_PRESETS } from "@/lib/layout";
 
 describe("nextPreset", () => {
   it("advances and wraps around", () => {
@@ -30,5 +30,16 @@ describe("sanitizeSizes", () => {
   it("returns an empty map for non-object input", () => {
     expect(sanitizeSizes(null, valid)).toEqual({});
     expect(sanitizeSizes("nope", valid)).toEqual({});
+  });
+});
+
+describe("sanitizeIdList", () => {
+  it("keeps known string ids and dedupes them", () => {
+    expect(sanitizeIdList(["a", "b", "a", "x", 5], ["a", "b"])).toEqual(["a", "b"]);
+  });
+
+  it("returns an empty array for non-array input", () => {
+    expect(sanitizeIdList(null, ["a"])).toEqual([]);
+    expect(sanitizeIdList({}, ["a"])).toEqual([]);
   });
 });
