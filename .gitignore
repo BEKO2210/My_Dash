@@ -17,6 +17,10 @@
 /.playwright
 /.gallery-video
 
+# Team coordination: runtime locks/claims are ephemeral (keep the folder via .gitkeep)
+.team/locks/*
+!.team/locks/.gitkeep
+
 # mission-control local database
 /data
 
