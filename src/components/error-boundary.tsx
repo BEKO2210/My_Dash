@@ -45,7 +45,7 @@ export class WidgetErrorBoundary extends Component<Props, State> {
               ? `${this.props.label} — ${this.props.couldNotLoad ?? "konnte nicht geladen werden."}`
               : (this.props.genericText ?? "Widget-Fehler.")}
           </p>
-          <p className="max-w-[90%] break-words text-[11px] text-muted/70">{this.state.error.message}</p>
+          <p className="max-w-[90%] break-words text-[11px] text-muted">{this.state.error.message}</p>
           <div className="mt-1 flex items-center gap-2">
             <button
               onClick={this.reset}

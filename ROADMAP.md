@@ -305,6 +305,12 @@ sein.
      Panel-Höhen, kein Überlauf — über alle Breakpoints.
 101. 🎨 **Farbsystem & Kontrast.** Palette, Akzent-/Statusfarben,
      Farbenblind-Palette, Dark/Light-Kontrast (WCAG AA) je Widget.
+     - ✅ **Dark/Light-Kontrast (Run 101):** axe-Scan jetzt pro Theme (Hell **und**
+       Dunkel); Light-Theme-Kontrast behoben (dunklere semantische Farben + Akzent,
+       deckende statt transparente Muted-Labels). Beide Themes WCAG-AA-sauber.
+     - ↪️ **Farbenblind-Palette:** als eigener Folge-Run umgesetzt (separates
+       Theme-Feature: CB-sichere Status-/Semantik-Farben + Umschalter), um diesen
+       Run fokussiert zu halten.
 102. 🔤 **Typografie & Lesbarkeit.** Schriftgrößen, Zeilenhöhe, Truncation/
      Ellipsis, `tabular-nums`, Mono-Felder, lange Texte/Übersetzungen.
 103. 📊 **KPI-Bar & Übersicht.** Werte, Count-up-Animation, Sparkline,

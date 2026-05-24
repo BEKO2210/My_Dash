@@ -88,7 +88,7 @@ export function SessionTimeline() {
         <WidgetState icon={GanttChartSquare} title={t("timeline.empty")} />
       ) : (
         <div className="flex h-full flex-col p-3">
-          <div className="flex pb-1 text-[10px] text-muted/70">
+          <div className="flex pb-1 text-[10px] text-muted">
             <span className="w-24 shrink-0" />
             <div className="relative flex-1">
               {ticks.map((label, i) => (

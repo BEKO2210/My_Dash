@@ -88,7 +88,7 @@ export function Kanban() {
                   <Card key={s.id} s={s} onOpen={() => setSelected(s)} />
                 ))}
                 {items.length === 0 && (
-                  <p className="px-1 py-3 text-center text-[11px] text-muted/80">
+                  <p className="px-1 py-3 text-center text-[11px] text-muted">
                     {query.trim() ? t("common.noResults") : t("kanban.empty")}
                   </p>
                 )}
@@ -242,7 +242,7 @@ function SessionDetail({
             {t("kanban.recentEvents")}
           </p>
           {recent.length === 0 ? (
-            <p className="py-2 text-[11px] text-muted/70">{t("kanban.noEvents")}</p>
+            <p className="py-2 text-[11px] text-muted">{t("kanban.noEvents")}</p>
           ) : (
             <ul className="divide-y divide-panel-border/60">
               {recent.map((e) => (

@@ -27,6 +27,12 @@ test.beforeAll(async () => {
 // WCAG 2.1 A/AA, the conventional automated bar. Fail only on serious/critical so
 // the gate is meaningful without being noisy about minor best-practice hints.
 async function scan(page: Page) {
+  // Freeze fade-in animations to their end state so axe samples final (not mid-fade,
+  // dimmed) colors.
+  await page.addStyleTag({
+    content: "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition:none!important}",
+  });
+  await page.waitForTimeout(300);
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   return results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
 }
@@ -39,29 +45,33 @@ function report(violations: { id: string; impact?: string | null; nodes: unknown
   );
 }
 
-// Returning-user state: keep the first-run wizard out of these scans.
-function suppressOnboarding(page: Page) {
-  return page.addInitScript(() => {
+// Returning-user state with a chosen theme: keep the first-run wizard out and force
+// dark/light so contrast is audited per theme (Phase Z, Run 101).
+function prime(page: Page, mode: "dark" | "light" = "dark") {
+  return page.addInitScript((m) => {
     try {
       localStorage.setItem("mc-onboarded", "1");
+      localStorage.setItem("mc-theme", JSON.stringify({ mode: m, accent: "#4f8cff" }));
     } catch {
       /* ignore */
     }
+  }, mode);
+}
+
+for (const mode of ["dark", "light"] as const) {
+  test(`dashboard (${mode}) has no serious or critical accessibility violations`, async ({ page }) => {
+    await prime(page, mode);
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
+    await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
+
+    const violations = await scan(page);
+    expect(violations, report(violations)).toEqual([]);
   });
 }
 
-test("dashboard has no serious or critical accessibility violations", async ({ page }) => {
-  await suppressOnboarding(page);
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
-  await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
-
-  const violations = await scan(page);
-  expect(violations, report(violations)).toEqual([]);
-});
-
 test("session detail page has no serious or critical accessibility violations", async ({ page }) => {
-  await suppressOnboarding(page);
+  await prime(page, "dark");
   await page.goto(`/session?id=${SESSION_ID}`);
   await expect(page.getByRole("heading", { name: "Accessibility audit prompt" })).toBeVisible({ timeout: 15_000 });
 

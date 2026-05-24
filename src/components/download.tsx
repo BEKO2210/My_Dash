@@ -110,7 +110,7 @@ export function DownloadSection() {
         })}
       </div>
 
-      <p className="mt-4 text-[11px] text-muted/80">{t("download.unsigned")}</p>
+      <p className="mt-4 text-[11px] text-muted">{t("download.unsigned")}</p>
       <p className="mt-1 text-[11px]">
         <a href={ALL_RELEASES} target="_blank" rel="noreferrer" className="text-accent hover:underline">
           {t("download.allReleases")}
