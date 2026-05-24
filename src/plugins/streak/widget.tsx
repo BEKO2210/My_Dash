@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useT } from "@/lib/i18n";
 import type { DayCount, StreakStats } from "@/lib/streak";
 
@@ -16,26 +15,8 @@ interface StreakData {
 }
 
 export function Streak() {
-  const { tick } = useLive();
   const { t } = useT();
-  const [data, setData] = useState<StreakData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/streak?days=30")
-        .then((r) => r.json())
-        .then((d: StreakData) => {
-          if (!cancelled) setData(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const { data } = usePluginQuery<StreakData>("/api/streak?days=30");
 
   const empty = data && data.streak.totalSessions === 0;
 

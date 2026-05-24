@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { formatCompact } from "@/lib/format";
@@ -17,27 +16,10 @@ function rateColor(rate: number): { bar: string; text: string } {
 }
 
 export function Reliability() {
-  const { tick } = useLive();
   const { query } = useSearch();
   const { t } = useT();
-  const [projects, setProjects] = useState<ProjectReliability[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/reliability?limit=100")
-        .then((r) => r.json())
-        .then((d: { projects: ProjectReliability[] }) => {
-          if (!cancelled) setProjects(d.projects);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const { data } = usePluginQuery<{ projects: ProjectReliability[] }>("/api/reliability?limit=100");
+  const projects = data?.projects ?? null;
 
   const filtered = (projects ?? []).filter((p) => matchesQuery(query, p.project));
 
