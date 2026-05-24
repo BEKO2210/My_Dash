@@ -47,10 +47,12 @@ const clock = (s) => {
 
 let totalEvents = 0;
 const body = [];
+const structured = []; // machine-readable sibling of the Markdown transcript
 
 for (const s of sessions) {
   const evs = eventsFor.all(s.id);
   totalEvents += evs.length;
+  structured.push({ ...s, events: evs });
   const title = s.title || `Session ${s.id.slice(0, 8)}`;
   body.push(`## ${s.project_name || "—"} — ${title}`);
   body.push(
@@ -72,4 +74,14 @@ const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19);
 const outFile = path.join(outDir, `log-${stamp}.md`);
 writeFileSync(outFile, header + "\n" + body.join("\n") + "\n");
 
-console.log(`✓ Export: ${path.relative(process.cwd(), outFile)} (${sessions.length} Sessions, ${totalEvents} Events)`);
+// Structured JSON sibling (sessions with their events) for machine consumption.
+const jsonFile = path.join(outDir, `log-${stamp}.json`);
+writeFileSync(
+  jsonFile,
+  JSON.stringify({ generatedAt: new Date().toISOString(), sessions: structured }, null, 2) + "\n",
+);
+
+console.log(
+  `✓ Export: ${path.relative(process.cwd(), outFile)} + ${path.relative(process.cwd(), jsonFile)} ` +
+    `(${sessions.length} Sessions, ${totalEvents} Events)`,
+);
