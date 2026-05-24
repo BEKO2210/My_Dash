@@ -242,6 +242,18 @@ const DE: Record<string, string> = {
   "deeplink.copy": "Link zu dieser Ansicht kopieren",
   "deeplink.copied": "Link kopiert!",
 
+  "cmd.title": "Befehlspalette",
+  "cmd.placeholder": "Befehl eingeben oder Session suchen…",
+  "cmd.empty": "Keine Treffer.",
+  "cmd.range": "Zeitraum",
+  "cmd.status": "Status",
+  "cmd.actions": "Aktionen",
+  "cmd.widgets": "Widgets",
+  "cmd.sessions": "Sessions",
+  "cmd.setRange": "Zeitraum",
+  "cmd.setStatus": "Status",
+  "cmd.goto": "Gehe zu",
+
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
   "layout.width": "Breite ändern",
@@ -594,6 +606,18 @@ const EN: Record<string, string> = {
 
   "deeplink.copy": "Copy link to this view",
   "deeplink.copied": "Link copied!",
+
+  "cmd.title": "Command palette",
+  "cmd.placeholder": "Type a command or search a session…",
+  "cmd.empty": "No matches.",
+  "cmd.range": "Range",
+  "cmd.status": "Status",
+  "cmd.actions": "Actions",
+  "cmd.widgets": "Widgets",
+  "cmd.sessions": "Sessions",
+  "cmd.setRange": "Range",
+  "cmd.setStatus": "Status",
+  "cmd.goto": "Go to",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",
