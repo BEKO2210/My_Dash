@@ -20,7 +20,9 @@ import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { Landing } from "@/components/landing";
 import { SearchProvider, useSearch } from "@/components/search";
+import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { useT } from "@/lib/i18n";
+import { TIME_RANGES } from "@/lib/time-range";
 import { DEMO, installDemoBackend } from "@/lib/demo";
 import {
   HEIGHT_PRESETS,
@@ -193,6 +195,7 @@ export function Dashboard() {
   return (
     <LiveProvider>
       <SearchProvider>
+        <TimeRangeProvider>
         {DEMO && <Landing />}
         <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
           <Header
@@ -259,6 +262,7 @@ export function Dashboard() {
             onClose={() => setGalleryOpen(false)}
           />
         )}
+        </TimeRangeProvider>
       </SearchProvider>
     </LiveProvider>
   );
@@ -369,6 +373,7 @@ function Header({
             </button>
           )}
         </label>
+        <TimeRangePicker />
         <button
           type="button"
           onClick={onOpenGallery}
@@ -412,6 +417,26 @@ function Header({
         </span>
       </div>
     </header>
+  );
+}
+
+function TimeRangePicker() {
+  const { t } = useT();
+  const { range, setRange } = useTimeRange();
+  return (
+    <select
+      value={range}
+      onChange={(e) => setRange(e.target.value as (typeof TIME_RANGES)[number])}
+      aria-label={t("range.label")}
+      title={t("range.label")}
+      className="hidden rounded-full border border-panel-border bg-background/40 px-2.5 py-1 text-xs text-muted outline-none transition-colors hover:border-accent/50 focus:border-accent sm:block"
+    >
+      {TIME_RANGES.map((r) => (
+        <option key={r} value={r}>
+          {t(`range.${r}`)}
+        </option>
+      ))}
+    </select>
   );
 }
 

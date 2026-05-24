@@ -6,6 +6,7 @@ import { ShieldAlert } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
+import { useTimeRange } from "@/components/time-range";
 import { useT } from "@/lib/i18n";
 
 interface ErrorPoint {
@@ -25,10 +26,6 @@ interface Response {
   topTools: FailingTool[];
 }
 
-type Range = "7" | "30";
-const RANGES: Range[] = ["7", "30"];
-const RANGE_LABEL: Record<Range, string> = { "7": "tools.range7d", "30": "tools.range30d" };
-
 function tone(rate: number): string {
   if (rate >= 0.2) return "text-red-400";
   if (rate >= 0.05) return "text-amber-400";
@@ -45,13 +42,13 @@ const tooltipStyle = {
 export function ErrorRate() {
   const { t } = useT();
   const { tick } = useLive();
-  const [range, setRange] = useState<Range>("7");
+  const { days } = useTimeRange();
   const [data, setData] = useState<Response | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const load = () =>
-      fetch(`/api/errors?days=${range}`)
+      fetch(`/api/errors?days=${days}`)
         .then((r) => r.json())
         .then((d: Response) => {
           if (!cancelled) setData(d);
@@ -63,7 +60,7 @@ export function ErrorRate() {
       cancelled = true;
       clearInterval(poll);
     };
-  }, [range, tick]);
+  }, [days, tick]);
 
   const chart = (data?.series ?? []).map((p) => ({ date: p.date.slice(5), failures: p.failures }));
 
@@ -72,19 +69,6 @@ export function ErrorRate() {
       title={t("errors.title")}
       icon={<ShieldAlert className="h-4 w-4 text-accent" />}
       info={t("errors.info")}
-      right={
-        <div className="flex rounded-md border border-panel-border text-xs">
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
-            >
-              {t(RANGE_LABEL[r])}
-            </button>
-          ))}
-        </div>
-      }
     >
       {!data ? (
         <WidgetState icon={ShieldAlert} title={t("common.loading")} loading />

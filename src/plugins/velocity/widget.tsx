@@ -6,6 +6,7 @@ import { Gauge, TrendingDown, TrendingUp } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
+import { useTimeRange } from "@/components/time-range";
 import { useT } from "@/lib/i18n";
 import {
   eventsPerSession,
@@ -67,12 +68,13 @@ function Trend({
 export function Velocity() {
   const { tick } = useLive();
   const { t } = useT();
+  const { days: rangeDays } = useTimeRange();
   const [days, setDays] = useState<VelocityDay[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const load = () =>
-      fetch("/api/velocity?days=30")
+      fetch(`/api/velocity?days=${rangeDays}`)
         .then((r) => r.json())
         .then((d: { days: VelocityDay[] }) => {
           if (!cancelled) setDays(d.days);
@@ -84,7 +86,7 @@ export function Velocity() {
       cancelled = true;
       clearInterval(poll);
     };
-  }, [tick]);
+  }, [rangeDays, tick]);
 
   const empty = days && days.every((d) => d.toolCalls === 0 && d.events === 0);
 
