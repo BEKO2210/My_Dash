@@ -6,7 +6,13 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useT } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
-import type { BudgetProjection } from "@/lib/budget";
+import { gaugeTone, type BudgetProjection, type GaugeTone } from "@/lib/budget";
+
+const TONE_BAR: Record<GaugeTone, string> = {
+  ok: "bg-emerald-500",
+  warn: "bg-amber-500",
+  over: "bg-red-500",
+};
 
 interface BudgetUsage {
   budgetUsd: number | null;
@@ -80,19 +86,26 @@ function Gauge({
   const { t } = useT();
   if (usage.budgetUsd == null) return null;
   const pct = usage.pct ?? 0;
-  const color = pct >= 1 ? "bg-red-500" : pct >= 0.75 ? "bg-amber-500" : "bg-emerald-500";
+  const shownPct = Math.round(pct * 100);
+  const color = TONE_BAR[gaugeTone(pct)];
   const showProjected = proj != null && usage.spentUsd > 0;
+  const valueText = `${formatMoney(usage.spentUsd, "USD")} / ${formatMoney(usage.budgetUsd, "USD")} · ${shownPct}%`;
 
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
         <span className="font-semibold text-foreground">{label}</span>
-        <span className="tabular-nums text-muted">
-          {formatMoney(usage.spentUsd, "USD")} / {formatMoney(usage.budgetUsd, "USD")} ·{" "}
-          {Math.round(pct * 100)}%
-        </span>
+        <span className="tabular-nums text-muted">{valueText}</span>
       </div>
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-background/70">
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.min(100, Math.max(0, shownPct))}
+        aria-valuetext={valueText}
+        className="h-2.5 w-full overflow-hidden rounded-full bg-background/70"
+      >
         <div
           className={`h-full rounded-full ${color} transition-all duration-500`}
           style={{ width: `${Math.min(pct, 1) * 100}%` }}
