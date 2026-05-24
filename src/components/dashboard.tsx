@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
+  Bookmark,
+  BookmarkPlus,
   Eye,
   EyeOff,
   GripHorizontal,
@@ -13,6 +15,7 @@ import {
   MoveVertical,
   RotateCcw,
   Search,
+  Trash2,
   X,
 } from "lucide-react";
 import { LiveProvider, useLive } from "@/components/live-provider";
@@ -27,6 +30,7 @@ import { FacetProvider, useFacets } from "@/components/facets";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
 import type { SearchHit } from "@/lib/search-index";
+import { sanitizeViews, upsertView, type SavedView } from "@/lib/views";
 import { DEMO, installDemoBackend } from "@/lib/demo";
 import {
   HEIGHT_PRESETS,
@@ -170,6 +174,17 @@ export function Dashboard() {
     persistHidden([]);
   }, [persist, persistSizes, persistHidden]);
 
+  // Apply a saved view's layout, reconciling any widgets added since it was saved.
+  const applyLayout = useCallback(
+    (nextOrder: string[], nextSizes: SizeMap, nextHidden: string[]) => {
+      const full = [...nextOrder, ...DEFAULT_ORDER.filter((id) => !nextOrder.includes(id))];
+      persist(full);
+      persistSizes(nextSizes);
+      persistHidden(nextHidden);
+    },
+    [persist, persistSizes, persistHidden],
+  );
+
   const onDropOn = useCallback(
     (targetId: string) => {
       setDragId((current) => {
@@ -207,6 +222,10 @@ export function Dashboard() {
             isCustomLayout={isCustom}
             onResetLayout={resetLayout}
             onOpenGallery={() => setGalleryOpen(true)}
+            order={order}
+            sizes={sizes}
+            hidden={hidden}
+            onApplyLayout={applyLayout}
           />
           {ordered.length === 0 && (
             <div className="rounded-xl border border-dashed border-panel-border bg-panel/40 p-10 text-center text-sm text-muted">
@@ -325,10 +344,18 @@ function Header({
   isCustomLayout,
   onResetLayout,
   onOpenGallery,
+  order,
+  sizes,
+  hidden,
+  onApplyLayout,
 }: {
   isCustomLayout: boolean;
   onResetLayout: () => void;
   onOpenGallery: () => void;
+  order: string[];
+  sizes: SizeMap;
+  hidden: string[];
+  onApplyLayout: (order: string[], sizes: SizeMap, hidden: string[]) => void;
 }) {
   const { connected, events } = useLive();
   const { t, lang } = useT();
@@ -428,6 +455,7 @@ function Header({
         </label>
         <FacetBar />
         <TimeRangePicker />
+        <ViewsMenu order={order} sizes={sizes} hidden={hidden} onApplyLayout={onApplyLayout} />
         <button
           type="button"
           onClick={onOpenGallery}
@@ -471,6 +499,126 @@ function Header({
         </span>
       </div>
     </header>
+  );
+}
+
+const VIEWS_KEY = "mc-views";
+
+function ViewsMenu({
+  order,
+  sizes,
+  hidden,
+  onApplyLayout,
+}: {
+  order: string[];
+  sizes: SizeMap;
+  hidden: string[];
+  onApplyLayout: (order: string[], sizes: SizeMap, hidden: string[]) => void;
+}) {
+  const { t } = useT();
+  const { project, status, setProject, setStatus } = useFacets();
+  const { range, setRange } = useTimeRange();
+  const [views, setViews] = useState<SavedView[]>([]);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      try {
+        const raw = localStorage.getItem(VIEWS_KEY);
+        if (raw) setViews(sanitizeViews(JSON.parse(raw), DEFAULT_ORDER));
+      } catch {
+        /* ignore */
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const persistViews = (next: SavedView[]) => {
+    setViews(next);
+    try {
+      if (next.length === 0) localStorage.removeItem(VIEWS_KEY);
+      else localStorage.setItem(VIEWS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const save = () => {
+    const n = name.trim();
+    if (!n) return;
+    persistViews(upsertView(views, { name: n, order, sizes, hidden, project, status, range }));
+    setName("");
+  };
+
+  const apply = (v: SavedView) => {
+    onApplyLayout(v.order, v.sizes, v.hidden);
+    setProject(v.project);
+    setStatus(v.status);
+    setRange(v.range);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative hidden sm:block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={t("views.title")}
+        title={t("views.title")}
+        className="flex items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+      >
+        <Bookmark className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-50 w-64 rounded-lg border border-panel-border bg-panel p-2 shadow-2xl shadow-black/50">
+          <div className="flex gap-1.5">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && save()}
+              placeholder={t("views.namePlaceholder")}
+              aria-label={t("views.save")}
+              className="min-w-0 flex-1 rounded-md border border-panel-border bg-background/40 px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
+            />
+            <button
+              type="button"
+              onClick={save}
+              title={t("views.save")}
+              className="shrink-0 rounded-md border border-accent/40 bg-accent/10 px-2 text-accent transition-colors hover:bg-accent/20"
+            >
+              <BookmarkPlus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {views.length === 0 ? (
+            <p className="px-1 py-3 text-center text-[11px] text-muted">{t("views.empty")}</p>
+          ) : (
+            <ul className="mt-1.5 max-h-64 overflow-auto">
+              {views.map((v) => (
+                <li key={v.name} className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => apply(v)}
+                    className="min-w-0 flex-1 truncate rounded-md px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-white/[0.04]"
+                  >
+                    {v.name}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => persistViews(views.filter((x) => x.name !== v.name))}
+                    aria-label={t("views.delete")}
+                    title={t("views.delete")}
+                    className="shrink-0 p-1 text-muted hover:text-red-400"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

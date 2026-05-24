@@ -264,6 +264,12 @@ const DE: Record<string, string> = {
   "gallery.done": "Fertig",
   "gallery.allHidden": "Alle Widgets ausgeblendet. Öffne die Galerie, um welche einzublenden.",
 
+  "views.title": "Gespeicherte Ansichten",
+  "views.save": "Ansicht speichern",
+  "views.namePlaceholder": "Name der Ansicht…",
+  "views.empty": "Noch keine Ansichten gespeichert.",
+  "views.delete": "Ansicht löschen",
+
   "status.active": "Aktiv",
   "status.waiting": "Wartet",
   "status.ended": "Beendet",
@@ -607,6 +613,12 @@ const EN: Record<string, string> = {
   "gallery.showAll": "Show all",
   "gallery.done": "Done",
   "gallery.allHidden": "All widgets hidden. Open the gallery to show some.",
+
+  "views.title": "Saved views",
+  "views.save": "Save view",
+  "views.namePlaceholder": "View name…",
+  "views.empty": "No saved views yet.",
+  "views.delete": "Delete view",
 
   "status.active": "Active",
   "status.waiting": "Waiting",
