@@ -227,6 +227,13 @@ const DE: Record<string, string> = {
   "incidents.error": "Fehler",
   "incidents.loadError": "Detail konnte nicht geladen werden.",
 
+  "inspector.input": "Eingabe",
+  "inspector.output": "Ausgabe",
+  "inspector.diff": "Änderung",
+  "inspector.newContent": "Neuer Inhalt",
+  "inspector.ok": "OK",
+  "inspector.failed": "Fehlgeschlagen",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -541,6 +548,13 @@ const EN: Record<string, string> = {
   "incidents.input": "Input",
   "incidents.error": "Error",
   "incidents.loadError": "Could not load the detail.",
+
+  "inspector.input": "Input",
+  "inspector.output": "Output",
+  "inspector.diff": "Change",
+  "inspector.newContent": "New content",
+  "inspector.ok": "OK",
+  "inspector.failed": "Failed",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

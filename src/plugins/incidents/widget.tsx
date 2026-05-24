@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { JsonTree } from "@/components/json-tree";
+import { ToolCallInspector } from "@/components/tool-call-inspector";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
-import { isExpandable } from "@/lib/json-tree";
 import type { ErrorItem, ToolCallDetail } from "@/lib/errors";
 
 type Detail = ToolCallDetail | "loading" | "error";
@@ -99,30 +98,13 @@ export function Incidents() {
                   </span>
                 </button>
                 {open && (
-                  <div className="space-y-2 px-4 pb-3 pl-9 text-[11px]">
+                  <div className="px-4 pb-3 pl-9">
                     {detail === "loading" || detail === undefined ? (
-                      <p className="text-muted">{t("common.loading")}</p>
+                      <p className="text-[11px] text-muted">{t("common.loading")}</p>
                     ) : detail === "error" ? (
-                      <p className="text-muted">{t("incidents.loadError")}</p>
+                      <p className="text-[11px] text-muted">{t("incidents.loadError")}</p>
                     ) : (
-                      <>
-                        <div>
-                          <p className="mb-0.5 uppercase tracking-wide text-muted">{t("incidents.input")}</p>
-                          <div className="max-h-40 overflow-auto rounded bg-black/30 p-2">
-                            {isExpandable(detail.input) ? (
-                              <JsonTree data={detail.input} />
-                            ) : (
-                              <span className="font-mono text-foreground">{String(detail.input ?? "—")}</span>
-                            )}
-                          </div>
-                        </div>
-                        <Field
-                          label={t("incidents.error")}
-                          value={detail.error_text ?? toText(detail.output)}
-                          tone="text-red-400/90"
-                        />
-                        <p className="font-mono text-[10px] text-muted">{detail.session_id}</p>
-                      </>
+                      <ToolCallInspector detail={detail} />
                     )}
                   </div>
                 )}
@@ -132,26 +114,5 @@ export function Incidents() {
         </ul>
       )}
     </Panel>
-  );
-}
-
-function toText(value: unknown): string {
-  if (value == null) return "—";
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
-function Field({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return (
-    <div>
-      <p className="mb-0.5 uppercase tracking-wide text-muted">{label}</p>
-      <pre className={`max-h-28 overflow-auto whitespace-pre-wrap break-words rounded bg-black/30 p-2 font-mono ${tone}`}>
-        {value}
-      </pre>
-    </div>
   );
 }

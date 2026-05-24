@@ -509,7 +509,17 @@ export function demoLatency() {
 
 const DEMO_ERRORS = [
   { id: 9001, tool_name: "Bash", target: "npm test", error_text: "exit code 1: 2 failing tests", input: { command: "npm test" } },
-  { id: 9002, tool_name: "Edit", target: "src/app/page.tsx", error_text: "String to replace not found in file.", input: { file_path: "src/app/page.tsx", old_string: "<Foo />" } },
+  {
+    id: 9002,
+    tool_name: "Edit",
+    target: "src/app/page.tsx",
+    error_text: "String to replace not found in file.",
+    input: {
+      file_path: "src/app/page.tsx",
+      old_string: "export function Page() {\n  return <Dashboard />;\n}",
+      new_string: "export default function Page() {\n  return <Dashboard live />;\n}",
+    },
+  },
   { id: 9003, tool_name: "WebFetch", target: "api.example.com", error_text: "fetch failed: ETIMEDOUT after 30000ms", input: { url: "https://api.example.com/v1/data" } },
   { id: 9004, tool_name: "Read", target: "missing.ts", error_text: "ENOENT: no such file or directory", input: { file_path: "src/missing.ts" } },
 ];
