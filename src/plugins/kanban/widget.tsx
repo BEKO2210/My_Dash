@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { KanbanSquare, Coins, Folder, Hammer, Radio, X } from "lucide-react";
+import Link from "next/link";
+import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
@@ -208,15 +209,25 @@ function SessionDetail({
             <p className="text-[11px] uppercase tracking-wide text-muted">{t("kanban.detail")}</p>
             <h2 className="mt-0.5 break-words text-sm font-semibold text-foreground">{title}</h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            title={t("common.close")}
-            className="shrink-0 text-muted transition-colors hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href={`/session?id=${encodeURIComponent(session.id)}`}
+              aria-label={t("kanban.openPage")}
+              title={t("kanban.openPage")}
+              className="text-muted transition-colors hover:text-foreground"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("common.close")}
+              title={t("common.close")}
+              className="text-muted transition-colors hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         <div className="min-h-0 flex-1 overflow-auto px-4 py-3 text-xs">
