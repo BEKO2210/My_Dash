@@ -13,11 +13,13 @@ import {
   LayoutGrid,
   Link2,
   MessageSquare,
+  Moon,
   MoveHorizontal,
   MoveVertical,
   RotateCcw,
   Search,
   Settings,
+  Sun,
   Trash2,
   X,
 } from "lucide-react";
@@ -33,6 +35,8 @@ import { FacetProvider, useFacets } from "@/components/facets";
 import { CommandPalette } from "@/components/command-palette";
 import { PluginConfigProvider } from "@/components/plugin-config";
 import { SettingsDrawer } from "@/components/settings-drawer";
+import { useTheme } from "@/components/theme";
+import { ACCENT_PRESETS } from "@/lib/theme";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
 import type { SearchHit } from "@/lib/search-index";
@@ -513,6 +517,7 @@ function Header({
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
         )}
+        <ThemePicker />
         <LangToggle />
         <span className="hidden font-mono tabular-nums sm:inline">{clock}</span>
         <span className="hidden items-center gap-1 rounded-full border border-panel-border bg-background/40 px-2.5 py-1 tabular-nums sm:flex">
@@ -734,6 +739,64 @@ function CopyLinkButton() {
     >
       {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Link2 className="h-3.5 w-3.5" />}
     </button>
+  );
+}
+
+function ThemePicker() {
+  const { t } = useT();
+  const { mode, accent, setMode, setAccent } = useTheme();
+  const [open, setOpen] = useState(false);
+  const tab = (active: boolean) =>
+    `flex-1 rounded-md px-2 py-1 text-xs transition-colors ${active ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`;
+  return (
+    <div className="relative hidden sm:block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={t("theme.title")}
+        title={t("theme.title")}
+        className="flex items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+      >
+        {mode === "dark" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-50 w-56 space-y-3 rounded-lg border border-panel-border bg-panel p-3 shadow-2xl shadow-black/50">
+          <div className="flex gap-1.5">
+            <button type="button" onClick={() => setMode("dark")} className={tab(mode === "dark")}>
+              <Moon className="mx-auto h-3.5 w-3.5" />
+              {t("theme.dark")}
+            </button>
+            <button type="button" onClick={() => setMode("light")} className={tab(mode === "light")}>
+              <Sun className="mx-auto h-3.5 w-3.5" />
+              {t("theme.light")}
+            </button>
+          </div>
+          <div>
+            <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted">{t("theme.accent")}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {ACCENT_PRESETS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setAccent(c)}
+                  aria-label={c}
+                  style={{ background: c }}
+                  className={`h-6 w-6 rounded-full ring-2 ring-offset-2 ring-offset-panel transition ${accent === c ? "ring-foreground" : "ring-transparent"}`}
+                />
+              ))}
+              <input
+                type="color"
+                value={accent}
+                onChange={(e) => setAccent(e.target.value)}
+                aria-label={t("theme.custom")}
+                title={t("theme.custom")}
+                className="h-6 w-6 cursor-pointer rounded-full border border-panel-border bg-transparent"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

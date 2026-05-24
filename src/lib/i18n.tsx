@@ -267,6 +267,12 @@ const DE: Record<string, string> = {
   "range.90d": "90 Tage",
   "range.all": "Gesamt",
 
+  "theme.title": "Design",
+  "theme.dark": "Dunkel",
+  "theme.light": "Hell",
+  "theme.accent": "Akzentfarbe",
+  "theme.custom": "Eigene Farbe",
+
   "facets.project": "Projekt-Filter",
   "facets.allProjects": "Alle Projekte",
   "facets.status": "Status-Filter",
@@ -643,6 +649,12 @@ const EN: Record<string, string> = {
   "range.30d": "30 days",
   "range.90d": "90 days",
   "range.all": "All time",
+
+  "theme.title": "Theme",
+  "theme.dark": "Dark",
+  "theme.light": "Light",
+  "theme.accent": "Accent color",
+  "theme.custom": "Custom color",
 
   "facets.project": "Project filter",
   "facets.allProjects": "All projects",
