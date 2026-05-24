@@ -71,8 +71,9 @@ jobs:
       # error-rate/incidents (e2e/error-rate.spec.ts), model-donut/token-burn
       # (e2e/model-donut.spec.ts), sankey-flow/tag-cloud (e2e/sankey-flow.spec.ts),
       # project-leaderboard/reliability/git-correlation
-      # (e2e/project-leaderboard.spec.ts) and streak/subagent-tree
-      # (e2e/streak.spec.ts) audits as CI gates.
+      # (e2e/project-leaderboard.spec.ts), streak/subagent-tree
+      # (e2e/streak.spec.ts) and velocity/session-duration
+      # (e2e/velocity.spec.ts) audits as CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -221,6 +222,21 @@ jobs:
         with:
           name: subagent-tree-screenshots
           path: test-results/subagent-tree-shots
+          if-no-files-found: ignore
+
+      # Always collect the velocity + session-duration audit screenshots (Phase Z, Run 118b).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: velocity-screenshots
+          path: test-results/velocity-shots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: session-duration-screenshots
+          path: test-results/session-duration-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
