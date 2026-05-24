@@ -8,17 +8,18 @@ import { useT } from "@/lib/i18n";
 const REPO = "https://github.com/BEKO2210/My_Dash";
 const ALL_RELEASES = `${REPO}/releases`;
 
-// Pinned to the published v0.1.0 release assets (verified live). The v0.1.0 tag
-// predates the stable artifactName config, so its filenames are version-stamped;
-// once a release is cut from main as a normal (non-prerelease) release, these can
-// move to the stable `releases/latest/download/Claude-Mission-Control*` form.
-const TAG = "v0.1.0";
+// Pinned to the v1.0.0-beta release using the stable (version-less) artifactNames
+// from package.json `build`. These resolve once the `v1.0.0-beta` tag is pushed
+// and the release workflow publishes the assets. The beta is a pre-release, so it
+// won't appear under /releases/latest — `ALL_RELEASES` (the releases list) is the
+// always-working fallback shown alongside the per-OS buttons.
+const TAG = "v1.0.0-beta";
 const DL = `${REPO}/releases/download/${TAG}`;
 const URLS = {
-  windows: `${DL}/Claude.Mission.Control.Setup.0.1.0.exe`,
-  mac: `${DL}/Claude.Mission.Control-0.1.0-arm64.dmg`,
-  linuxAppImage: `${DL}/Claude.Mission.Control-0.1.0.AppImage`,
-  linuxDeb: `${DL}/claude-mission-control_0.1.0_amd64.deb`,
+  windows: `${DL}/Claude-Mission-Control-Setup.exe`,
+  mac: `${DL}/Claude-Mission-Control.dmg`,
+  linuxAppImage: `${DL}/Claude-Mission-Control.AppImage`,
+  linuxDeb: `${DL}/Claude-Mission-Control.deb`,
 };
 
 type OS = "windows" | "mac" | "linux";

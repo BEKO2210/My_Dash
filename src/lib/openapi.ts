@@ -212,7 +212,7 @@ function body(properties: Record<string, unknown>): Record<string, unknown> {
   return { required: true, content: { "application/json": { schema: { type: "object", properties } } } };
 }
 
-export function buildOpenApiSpec(version = process.env.npm_package_version ?? "0.1.0"): Record<string, unknown> {
+export function buildOpenApiSpec(version = process.env.npm_package_version ?? "1.0.0-beta"): Record<string, unknown> {
   const paths: Record<string, Record<string, unknown>> = {};
   for (const r of ROUTES) {
     const parameters = [

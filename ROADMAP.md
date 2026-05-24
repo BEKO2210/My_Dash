@@ -496,6 +496,13 @@ deterministische, reproduzierbare Galerie aus dem Demo-Build:
      *Ergebnis:* öffentliche Beta zum Ausprobieren auf jedem System — als Beta,
      unsigniert, alle OS als Download.
 
+     **✅ Vorbereitet (dieser PR):** Version-Bump auf `1.0.0-beta`
+     (`package.json`), `CHANGELOG.md`, README auf Beta umgestellt (Status/Version,
+     Download → Releases, Installationshinweise je OS), `release.yml` baut alle
+     OS-Installer und markiert den Release als **Pre-Release** (`generate_release_notes`).
+     **Letzter Schritt (manuell, deine Entscheidung):** Tag `v1.0.0-beta` pushen →
+     der Workflow baut & veröffentlicht die unsignierten Installer.
+
 ## Lizenzmodell (dual / source-available)
 
 **Privat & nicht-kommerziell: kostenlos. Firmen & kommerzieller Einsatz:

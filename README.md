@@ -12,9 +12,9 @@
 </p>
 
 <p align="center">
-  <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-f59e0b?style=flat-square">
-  <img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-4f8cff?style=flat-square">
-  <a href="https://github.com/BEKO2210/My_Dash/releases/tag/v0.1.0"><img alt="Download" src="https://img.shields.io/badge/download-Win_·_macOS_·_Linux-4f8cff?style=flat-square&logo=github&logoColor=white"></a>
+  <img alt="Status: beta" src="https://img.shields.io/badge/status-beta-22c55e?style=flat-square">
+  <img alt="Version 1.0.0-beta" src="https://img.shields.io/badge/version-1.0.0--beta-4f8cff?style=flat-square">
+  <a href="https://github.com/BEKO2210/My_Dash/releases"><img alt="Download" src="https://img.shields.io/badge/download-Win_·_macOS_·_Linux-4f8cff?style=flat-square&logo=github&logoColor=white"></a>
   <a href="https://beko2210.github.io/My_Dash/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-online-34d399?style=flat-square&logo=githubpages&logoColor=white"></a>
   <a href="LICENSE"><img alt="License: PolyForm Noncommercial 1.0.0" src="https://img.shields.io/badge/license-PolyForm_Noncommercial-4f8cff?style=flat-square"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-ff6b9d?style=flat-square"></a>
@@ -33,7 +33,7 @@
 </p>
 
 <p align="center">
-  <em>Alpha release (v0.1.0)</em> — local-first and usable today. The data contract
+  <em>Public beta (v1.0.0-beta)</em> — local-first and usable today. The data contract
   (<code>Hooks → /api/ingest → SQLite → UI</code>) is stable; more widgets land via the plugin registry.
 </p>
 
@@ -130,19 +130,24 @@ One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
 
 ## Install (desktop app)
 
-### ⬇️ [Download v0.1.0 (alpha)](https://github.com/BEKO2210/My_Dash/releases/tag/v0.1.0)
+### ⬇️ [Downloads — Windows · macOS · Linux](https://github.com/BEKO2210/My_Dash/releases)
 
-Double-click installers for **Windows, macOS and Linux** are built by the release
-workflow and attached to every [GitHub Release](https://github.com/BEKO2210/My_Dash/releases):
+Double-click installers are built by the release workflow and attached to the
+[GitHub Releases](https://github.com/BEKO2210/My_Dash/releases) (the beta is a
+**pre-release**, so grab it from the releases list):
 
-| OS | Direct download |
+| OS | Installer |
 |----|------|
-| Windows | [`Claude.Mission.Control.Setup.0.1.0.exe`](https://github.com/BEKO2210/My_Dash/releases/download/v0.1.0/Claude.Mission.Control.Setup.0.1.0.exe) (NSIS installer) |
-| macOS | [`Claude.Mission.Control-0.1.0-arm64.dmg`](https://github.com/BEKO2210/My_Dash/releases/download/v0.1.0/Claude.Mission.Control-0.1.0-arm64.dmg) (Apple Silicon) |
-| Linux | [`.AppImage`](https://github.com/BEKO2210/My_Dash/releases/download/v0.1.0/Claude.Mission.Control-0.1.0.AppImage) (portable) or [`.deb`](https://github.com/BEKO2210/My_Dash/releases/download/v0.1.0/claude-mission-control_0.1.0_amd64.deb) |
+| Windows | `Claude.Mission.Control.Setup.<version>.exe` (NSIS installer) |
+| macOS | `Claude.Mission.Control-<version>-arm64.dmg` (Apple Silicon) / `-x64.dmg` (Intel) |
+| Linux | `.AppImage` (portable) or `.deb` |
 
-> **Alpha note:** the installers are **unsigned**. On Windows, SmartScreen shows
-> *More info → Run anyway*; on macOS, right-click the app → **Open** the first time.
+> **Beta note — the installers are unsigned.** This is an early public beta, so your
+> OS will warn before running it:
+> - **Windows:** SmartScreen → *More info* → **Run anyway**.
+> - **macOS:** right-click the app → **Open** (the first launch only); or
+>   *System Settings → Privacy & Security → Open Anyway*.
+> - **Linux (AppImage):** `chmod +x Claude.Mission.Control-*.AppImage` then run it.
 
 The app bundles its own Node runtime (nothing to install separately). It runs in the
 background with a tray icon — click the tray → **Connect Claude Code (install hooks)**,
