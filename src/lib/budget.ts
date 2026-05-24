@@ -21,6 +21,16 @@ export interface BudgetStatus {
   monthly: BudgetUsage;
 }
 
+// Gauge severity from fraction-of-budget used: green under 75%, amber from 75%,
+// red once the budget is reached or exceeded. Kept pure so the thresholds are
+// unit-tested independently of the widget.
+export type GaugeTone = "ok" | "warn" | "over";
+export function gaugeTone(pct: number): GaugeTone {
+  if (pct >= 1) return "over";
+  if (pct >= 0.75) return "warn";
+  return "ok";
+}
+
 function positive(s: string | null | undefined): number | null {
   if (s == null) return null;
   const n = Number(s);

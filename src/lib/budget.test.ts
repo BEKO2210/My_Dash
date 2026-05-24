@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
-import { computeBudget, dayElapsedFraction, getBudgets, monthElapsedFraction, projectSpend } from "@/lib/budget";
+import { computeBudget, dayElapsedFraction, gaugeTone, getBudgets, monthElapsedFraction, projectSpend } from "@/lib/budget";
 import { setConfig } from "@/lib/config";
 import { migrate } from "@/lib/migrations";
 import type { UsageReport } from "@/lib/ccusage";
@@ -102,5 +102,23 @@ describe("elapsed fractions", () => {
   it("computes month fraction from day of month", () => {
     // 2026-05 has 31 days; on the 16th ~ (15 + 0.5)/31.
     expect(monthElapsedFraction(new Date(2026, 4, 16, 12, 0, 0))).toBeCloseTo((15 + 0.5) / 31, 3);
+  });
+});
+
+describe("gaugeTone", () => {
+  it("is ok below 75% of budget", () => {
+    expect(gaugeTone(0)).toBe("ok");
+    expect(gaugeTone(0.5)).toBe("ok");
+    expect(gaugeTone(0.7499)).toBe("ok");
+  });
+
+  it("warns from 75% up to the budget", () => {
+    expect(gaugeTone(0.75)).toBe("warn");
+    expect(gaugeTone(0.99)).toBe("warn");
+  });
+
+  it("flags over once the budget is reached or exceeded", () => {
+    expect(gaugeTone(1)).toBe("over");
+    expect(gaugeTone(1.5)).toBe("over");
   });
 });
