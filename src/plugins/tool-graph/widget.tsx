@@ -9,6 +9,7 @@ import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime, STATUS_META } from "@/lib/format";
+import { autoRotateSpeed, AUTO_ROTATE_SPEED } from "./auto-rotate";
 
 // Wrapper preserves the imperative ref through next/dynamic (camera + bloom composer).
 const ForceGraph3D = dynamic(() => import("./force-graph"), { ssr: false });
@@ -343,6 +344,56 @@ export function ToolGraph() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Z-Demo-4: slow, steady auto-rotation. Manual interaction pauses it; 15s after
+  // the user lets go it eases back up to full speed (never snaps). OrbitControls
+  // does the actual orbiting (autoRotate); we just gate speed by interaction time.
+  useEffect(() => {
+    if (!threeReady) return;
+    let raf = 0;
+    let tries = 0;
+    let interacting = false;
+    let lastEnd: number | null = null; // null until the user first grabs the graph
+    let detach = () => {};
+    const setup = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const controls = fgRef.current?.controls?.() as any;
+      if (!controls?.addEventListener) {
+        if (tries++ < 60) raf = requestAnimationFrame(setup);
+        return;
+      }
+      const onStart = () => {
+        interacting = true;
+      };
+      const onEnd = () => {
+        interacting = false;
+        lastEnd = performance.now();
+      };
+      controls.addEventListener("start", onStart);
+      controls.addEventListener("end", onEnd);
+      detach = () => {
+        controls.removeEventListener("start", onStart);
+        controls.removeEventListener("end", onEnd);
+        controls.autoRotate = false;
+      };
+      const loop = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = fgRef.current?.controls?.() as any;
+        if (c) {
+          const speed = interacting ? 0 : autoRotateSpeed(lastEnd === null ? null : performance.now() - lastEnd);
+          c.autoRotate = speed > 0;
+          c.autoRotateSpeed = speed > 0 ? speed : AUTO_ROTATE_SPEED;
+        }
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+    };
+    setup();
+    return () => {
+      cancelAnimationFrame(raf);
+      detach();
+    };
+  }, [threeReady]);
+
   const focusNode = useCallback((node: GraphNode) => {
     const fg = fgRef.current;
     if (!fg?.cameraPosition || typeof node.x !== "number") return;
@@ -419,6 +470,7 @@ export function ToolGraph() {
                 height={dims.h}
                 graphData={data}
                 backgroundColor="#06070b"
+                controlType="orbit"
                 showNavInfo={false}
                 nodeLabel={(n: object) => {
                   const g = n as GraphNode;
