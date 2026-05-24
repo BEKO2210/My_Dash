@@ -25,6 +25,7 @@ import { TokenBurn } from "./token-burn/widget";
 import { CalendarHeatmap } from "./calendar-heatmap/widget";
 import { Velocity } from "./velocity/widget";
 import { SessionDuration } from "./session-duration/widget";
+import { Reliability } from "./reliability/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -228,5 +229,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: SessionDuration,
+  },
+  {
+    id: "reliability",
+    title: "Zuverlässigkeit je Projekt",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: Reliability,
   },
 ];
