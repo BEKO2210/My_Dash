@@ -17,6 +17,7 @@ import {
   MoveVertical,
   RotateCcw,
   Search,
+  Settings,
   Trash2,
   X,
 } from "lucide-react";
@@ -30,6 +31,8 @@ import { SearchProvider, useSearch } from "@/components/search";
 import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { FacetProvider, useFacets } from "@/components/facets";
 import { CommandPalette } from "@/components/command-palette";
+import { PluginConfigProvider } from "@/components/plugin-config";
+import { SettingsDrawer } from "@/components/settings-drawer";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
 import type { SearchHit } from "@/lib/search-index";
@@ -98,6 +101,7 @@ export function Dashboard() {
   const [sizes, setSizes] = useState<SizeMap>({});
   const [hidden, setHidden] = useState<string[]>([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -220,6 +224,7 @@ export function Dashboard() {
       <SearchProvider>
         <TimeRangeProvider>
         <FacetProvider>
+        <PluginConfigProvider>
         {DEMO && <Landing />}
         <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
           <Header
@@ -260,10 +265,13 @@ export function Dashboard() {
                   dragLabel={t("layout.drag")}
                   widthLabel={t("layout.width")}
                   heightLabel={t("layout.height")}
+                  settingsLabel={t("settings.title")}
+                  hasSettings={Boolean(w.settings?.length)}
                   onStart={() => setDragId(w.id)}
                   onEnd={() => setDragId(null)}
                   onWidth={() => setSize(w.id, nextPreset(SPAN_PRESETS, span), height)}
                   onHeight={() => setSize(w.id, span, nextPreset(HEIGHT_PRESETS, height))}
+                  onSettings={() => setSettingsFor(w.id)}
                 />
                 <WidgetErrorBoundary
                   label={w.title}
@@ -292,6 +300,8 @@ export function Dashboard() {
           />
         )}
         <CommandPalette onResetLayout={resetLayout} onOpenGallery={() => setGalleryOpen(true)} />
+        {settingsFor && <SettingsDrawer widgetId={settingsFor} onClose={() => setSettingsFor(null)} />}
+        </PluginConfigProvider>
         </FacetProvider>
         </TimeRangeProvider>
       </SearchProvider>
@@ -303,18 +313,24 @@ function WidgetToolbar({
   dragLabel,
   widthLabel,
   heightLabel,
+  settingsLabel,
+  hasSettings,
   onStart,
   onEnd,
   onWidth,
   onHeight,
+  onSettings,
 }: {
   dragLabel: string;
   widthLabel: string;
   heightLabel: string;
+  settingsLabel: string;
+  hasSettings: boolean;
   onStart: () => void;
   onEnd: () => void;
   onWidth: () => void;
   onHeight: () => void;
+  onSettings: () => void;
 }) {
   const btn =
     "rounded p-0.5 text-muted transition-colors hover:text-foreground focus-visible:text-foreground";
@@ -342,6 +358,11 @@ function WidgetToolbar({
       <button type="button" aria-label={heightLabel} title={heightLabel} onClick={onHeight} className={btn}>
         <MoveVertical className="h-3.5 w-3.5" />
       </button>
+      {hasSettings && (
+        <button type="button" aria-label={settingsLabel} title={settingsLabel} onClick={onSettings} className={btn}>
+          <Settings className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }

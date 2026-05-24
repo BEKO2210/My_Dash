@@ -77,6 +77,13 @@ export type WidgetCategory =
   | "tools"
   | "quality";
 
+// Declarative per-widget settings, rendered by the settings drawer and persisted
+// via /api/plugins/config. `label` is an i18n key.
+export type PluginSetting =
+  | { key: string; type: "boolean"; label: string; default: boolean }
+  | { key: string; type: "number"; label: string; default: number; min?: number; max?: number }
+  | { key: string; type: "select"; label: string; default: string; options: { value: string; label: string }[] };
+
 export interface Widget {
   id: string;
   title: string;
@@ -89,6 +96,8 @@ export interface Widget {
   category: WidgetCategory;
   /** i18n key for a short description (reuses each widget's existing info copy). */
   description: string;
+  /** Optional declarative settings for the per-widget settings drawer. */
+  settings?: PluginSetting[];
   component: ComponentType;
 }
 
@@ -99,7 +108,7 @@ const H_TALL = "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]";
 export const widgets: Widget[] = [
   { id: "kpi-bar", title: "Übersicht", span: "lg:col-span-6", height: "h-auto", icon: LayoutDashboard, category: "overview", description: "kpi.info", component: KpiBar },
   { id: "kanban", title: "Sessions", span: "lg:col-span-4", height: H_TALL, icon: KanbanSquare, category: "sessions", description: "kanban.info", component: Kanban },
-  { id: "live-stream", title: "Live Stream", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", component: LiveStream },
+  { id: "live-stream", title: "Live Stream", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", settings: [{ key: "limit", type: "number", label: "stream.setLimit", default: 100, min: 10, max: 300 }], component: LiveStream },
   { id: "token-chart", title: "Tokens & Kosten", span: "lg:col-span-3", height: H, icon: Coins, category: "economy", description: "tokens.info", component: TokenChart },
   { id: "tool-graph", title: "Tool-Graph (3D)", span: "lg:col-span-3", height: H, icon: Boxes, category: "tools", description: "graph.info", component: ToolGraph },
   { id: "budget-gauge", title: "Budget", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },

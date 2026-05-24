@@ -338,12 +338,19 @@ sein.
      Hints überall; alle `/api/*`-Routen antworten; Demo-Modus zeigt alle
      Widgets. Abschluss-Sammlung aller Screenshots.
 
-## Phase Ω — Release (Run 120)
+## Phase Ω — Beta-Release (Run 120, **letzter Schritt**)
 
-120. ⚙️ **v1.0-Release** (erst nach grüner Phase Z). Signierte Installer +
-     Auto-Update, Version-Bump, Changelog, Release-Workflow finalisieren,
-     Pages-Demo mit allen Widgets.
-     *Ergebnis:* das beste Claude-Code-Observability-Tool — ausgeliefert.
+120. 🚀 **v1.0.0-beta — unsignierte Beta für alle Betriebssysteme** (erst nach
+     grüner Phase Z). Kein Code-Signing, ausdrücklich als **Beta** gekennzeichnet:
+     - Builds + Downloads für **alle OS**: **Windows** (`.exe`/portable),
+       **macOS** (`.dmg`, Intel + Apple Silicon) und **Linux**
+       (`AppImage`/`.deb`) — alle **unsigniert** (Installations-Hinweis je OS
+       in der README, z. B. Gatekeeper/SmartScreen-Umgehung für Beta-Builds).
+     - GitHub-Release `v1.0.0-beta` (Pre-Release-Flag gesetzt) mit allen
+       Artefakten als Download, Changelog, Version-Bump auf `1.0.0-beta`.
+     - Pages-Demo mit allen Widgets verlinkt.
+     *Ergebnis:* öffentliche Beta zum Ausprobieren auf jedem System — als Beta,
+     unsigniert, alle OS als Download.
 
 ## Lizenzmodell (dual / source-available)
 
@@ -383,7 +390,7 @@ hinzufügen, Lizenz-Header/`package.json`-`license`-Feld setzen, README-Abschnit
 | H | 89–95 | Integrationen | OTLP/Prometheus/Git — offener Hub |
 | I | 96–99 | Politur & Performance | a11y, Performance, Onboarding, Docs |
 | Z | 100–119 | Visuelle & funktionale Gesamtabnahme | 20 Einzel-Checks **vor** Release |
-| Ω | 120 | Release | v1.0 erst nach grüner Phase Z |
+| Ω | 120 | Beta-Release | v1.0.0-beta, **unsigniert**, alle OS als Download — nach grüner Phase Z |
 
 **Leitstern:** Nach 120 Runs — inklusive einer 20-teiligen visuellen &
 funktionalen Gesamtabnahme **vor** dem Release — ist Claude Mission Control das

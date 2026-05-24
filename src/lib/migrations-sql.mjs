@@ -166,4 +166,14 @@ export const MIGRATIONS = [
   INSERT INTO search_fts (text, kind, ref_id, session_id)
     SELECT text, 'prompt', id, session_id FROM prompts WHERE text IS NOT NULL AND text <> '';
   `,
+
+  // v14 — per-plugin settings (a small JSON blob per widget id) for the settings
+  // drawer. Separate from the hook-ingest write path; only the config route writes.
+  `
+  CREATE TABLE IF NOT EXISTS plugin_config (
+    plugin_id   TEXT PRIMARY KEY,
+    config_json TEXT NOT NULL DEFAULT '{}',
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  `,
 ];
