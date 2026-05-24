@@ -28,6 +28,7 @@
     "protect": "node scripts/protect.mjs lock",
     "unprotect": "node scripts/protect.mjs unlock",
     "import-history": "node scripts/import-history.mjs",
+    "machine:sync": "node scripts/sync-machine.mjs",
     "install-hooks": "node scripts/install-hooks.mjs",
     "build:standalone": "next build && node scripts/assemble-standalone.mjs",
     "rebuild:standalone": "node scripts/rebuild-standalone.mjs",

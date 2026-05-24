@@ -78,6 +78,7 @@ interface DSession {
   events: EventRow[];
   tools: DTool[];
   prompts: { text: string; created_at: string }[];
+  machine?: string | null;
 }
 
 const sessions: DSession[] = [];
@@ -139,6 +140,7 @@ function toRow(s: DSession): SessionRow {
     git_commit: null,
     remote_url: null,
     transcript_path: null,
+    machine: s.machine ?? null,
   };
 }
 

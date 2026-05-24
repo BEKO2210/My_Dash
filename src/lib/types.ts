@@ -51,6 +51,7 @@ export interface SessionRow {
   git_commit: string | null;
   remote_url: string | null;
   transcript_path: string | null;
+  machine: string | null;
 }
 
 export interface EventRow {

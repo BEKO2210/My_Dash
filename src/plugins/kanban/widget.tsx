@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, X } from "lucide-react";
+import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, Server, X } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
@@ -119,6 +119,15 @@ function Card({ s, onOpen }: { s: SessionCard; onOpen: () => void }) {
           <span className="flex items-center gap-1 truncate">
             <Folder className="h-3 w-3 shrink-0" />
             <span className="truncate">{s.project_name}</span>
+          </span>
+        )}
+        {s.machine && (
+          <span
+            className="flex shrink-0 items-center gap-1 rounded bg-accent/10 px-1.5 text-[10px] text-accent"
+            title={t("kanban.machine")}
+          >
+            <Server className="h-3 w-3" />
+            <span className="max-w-[6rem] truncate">{s.machine}</span>
           </span>
         )}
       </div>
