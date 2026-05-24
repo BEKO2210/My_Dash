@@ -250,6 +250,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). In short: keep the one-way data flow
 (`Hooks → /api/ingest → SQLite → UI`) intact, and run `npm test` + `npm run lint`
 before opening a pull request.
 
+By participating, you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Community & policies
+
+- 📦 [Changelog](CHANGELOG.md) — what changed in each release
+- 🤝 [Contributing guide](CONTRIBUTING.md)
+- 📜 [Code of Conduct](CODE_OF_CONDUCT.md)
+- 🔒 [Security policy](SECURITY.md) — how to report a vulnerability
+- 💼 [Commercial licensing](COMMERCIAL.md)
+
 ## License
 
 **Source-available, dual-licensed.** Noncommercial use is free under the

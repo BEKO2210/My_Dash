@@ -62,7 +62,13 @@ The grid renders it automatically.
 ## Reporting bugs
 
 Open an issue describing what you did, what you expected, and what happened.
-Screenshots or a copy of the relevant event payload help a lot.
+Screenshots or a copy of the relevant event payload help a lot. For security
+issues, please follow the [Security Policy](SECURITY.md) instead of a public issue.
+
+## Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). By participating,
+you are expected to uphold it.
 
 By contributing you agree that your contributions are licensed under the
-project's(LICENSE).
+project's [license](LICENSE).
