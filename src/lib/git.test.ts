@@ -20,10 +20,10 @@ describe("readGitContext", () => {
 
   it("returns nulls for a non-git directory", async () => {
     dir = mkdtempSync(path.join(tmpdir(), "mc-nogit-"));
-    expect(await readGitContext(dir)).toEqual({ branch: null, commit: null });
+    expect(await readGitContext(dir)).toEqual({ branch: null, commit: null, remote: null });
   });
 
   it("returns nulls for a directory that doesn't exist", async () => {
-    expect(await readGitContext("/no/such/dir/xyz")).toEqual({ branch: null, commit: null });
+    expect(await readGitContext("/no/such/dir/xyz")).toEqual({ branch: null, commit: null, remote: null });
   });
 });

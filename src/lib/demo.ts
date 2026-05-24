@@ -137,6 +137,7 @@ function toRow(s: DSession): SessionRow {
     cost_usd: +(s.events.length * 0.02).toFixed(3),
     branch: null,
     git_commit: null,
+    remote_url: null,
     transcript_path: null,
   };
 }
@@ -900,6 +901,30 @@ export function demoAnomaly(): AnomalyReport {
   };
 }
 
+export function demoGitBranches() {
+  const repo = "claude-mc/demo";
+  const branch = (name: string, n: number, sessions: { id: string; title: string }[], ago: number) => ({
+    branch: name,
+    project: "demo",
+    repo,
+    branchUrl: `https://github.com/${repo}/tree/${encodeURIComponent(name)}`,
+    prUrl: `https://github.com/${repo}/compare/${encodeURIComponent(name)}?expand=1`,
+    sessionCount: n,
+    sessions: sessions.map((s) => ({ id: s.id, title: s.title, lastSeen: new Date(Date.now() - ago).toISOString() })),
+    lastActivity: new Date(Date.now() - ago).toISOString(),
+  });
+  return {
+    branches: [
+      branch("feature/live-stream", 3, [
+        { id: "demo-1", title: "Add SSE live stream" },
+        { id: "demo-2", title: "Polish stream filters" },
+      ], 6 * 60_000),
+      branch("fix/cost-rounding", 1, [{ id: "demo-3", title: "Fix EUR rounding" }], 3 * 3_600_000),
+      branch("main", 2, [{ id: "demo-4", title: "Docs refresh" }], 26 * 3_600_000),
+    ],
+  };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -952,6 +977,7 @@ export function installDemoBackend() {
     if (path.includes("/api/alerts/quiet")) return json({ enabled: false, start: "22:00", end: "07:00" });
     if (path.endsWith("/api/alerts")) return json(demoAlerts());
     if (path.endsWith("/api/anomaly")) return json(demoAnomaly());
+    if (path.endsWith("/api/git/branches")) return json(demoGitBranches());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/search")) {
       const u = new URL(raw, window.location.href);
