@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wallet } from "lucide-react";
+import { TriangleAlert, Wallet } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useT } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
+import type { BudgetProjection } from "@/lib/budget";
 
 interface BudgetUsage {
   budgetUsd: number | null;
@@ -15,20 +16,7 @@ interface BudgetUsage {
 interface BudgetResponse {
   budgets: { dailyUsd: number | null; monthlyUsd: number | null };
   status: { daily: BudgetUsage; monthly: BudgetUsage };
-}
-
-// Linear projection of the period's spend from how much of it has elapsed.
-function project(usage: BudgetUsage, period: "day" | "month"): number | null {
-  if (usage.budgetUsd == null || usage.spentUsd <= 0) return null;
-  const now = new Date();
-  let fraction: number;
-  if (period === "day") {
-    fraction = (now.getHours() + now.getMinutes() / 60) / 24;
-  } else {
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    fraction = (now.getDate() - 1 + now.getHours() / 24) / daysInMonth;
-  }
-  return fraction > 0 ? usage.spentUsd / fraction : null;
+  projection?: { daily: BudgetProjection; monthly: BudgetProjection };
 }
 
 export function BudgetGauge() {
@@ -65,13 +53,15 @@ export function BudgetGauge() {
           description={<code className="text-accent">MC_BUDGET_DAILY</code>}
         />
       ) : (
-        <div className="flex h-full flex-col justify-center gap-6 p-5">
-          <Gauge label={t("budget.daily")} usage={data.status.daily} projected={project(data.status.daily, "day")} />
-          <Gauge
-            label={t("budget.monthly")}
-            usage={data.status.monthly}
-            projected={project(data.status.monthly, "month")}
-          />
+        <div className="flex h-full flex-col justify-center gap-5 p-5">
+          {(data.projection?.daily.overBudget || data.projection?.monthly.overBudget) && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              <TriangleAlert className="h-4 w-4 shrink-0" />
+              <span>{t("budget.alarm")}</span>
+            </div>
+          )}
+          <Gauge label={t("budget.daily")} usage={data.status.daily} proj={data.projection?.daily ?? null} />
+          <Gauge label={t("budget.monthly")} usage={data.status.monthly} proj={data.projection?.monthly ?? null} />
         </div>
       )}
     </Panel>
@@ -81,17 +71,17 @@ export function BudgetGauge() {
 function Gauge({
   label,
   usage,
-  projected,
+  proj,
 }: {
   label: string;
   usage: BudgetUsage;
-  projected: number | null;
+  proj: BudgetProjection | null;
 }) {
   const { t } = useT();
   if (usage.budgetUsd == null) return null;
   const pct = usage.pct ?? 0;
   const color = pct >= 1 ? "bg-red-500" : pct >= 0.75 ? "bg-amber-500" : "bg-emerald-500";
-  const projectedOver = projected != null && projected > usage.budgetUsd;
+  const showProjected = proj != null && usage.spentUsd > 0;
 
   return (
     <div>
@@ -108,9 +98,9 @@ function Gauge({
           style={{ width: `${Math.min(pct, 1) * 100}%` }}
         />
       </div>
-      {projected != null && (
-        <p className={`mt-1 text-[11px] ${projectedOver ? "text-red-400" : "text-muted"}`}>
-          {t("budget.projected")}: {formatMoney(projected, "USD")}
+      {showProjected && (
+        <p className={`mt-1 text-[11px] ${proj!.overBudget ? "text-red-400" : "text-muted"}`}>
+          {t("budget.projected")}: {formatMoney(proj!.projectedUsd, "USD")}
         </p>
       )}
     </div>

@@ -444,9 +444,16 @@ export function demoBudget() {
   const dailyUsd = 15;
   const monthlyUsd = 300;
   const gauge = (spentUsd: number, budgetUsd: number) => ({ budgetUsd, spentUsd, pct: spentUsd / budgetUsd });
+  const proj = (spentUsd: number, budgetUsd: number, fraction: number) => {
+    const projectedUsd = spentUsd / fraction;
+    return { projectedUsd, budgetUsd, projectedPct: projectedUsd / budgetUsd, overBudget: projectedUsd > budgetUsd };
+  };
+  const now = new Date();
+  const dayFrac = Math.max(0.05, (now.getHours() * 60 + now.getMinutes()) / 1440);
   return {
     budgets: { dailyUsd, monthlyUsd },
     status: { daily: gauge(dSpent, dailyUsd), monthly: gauge(mSpent, monthlyUsd) },
+    projection: { daily: proj(dSpent, dailyUsd, dayFrac), monthly: proj(mSpent, monthlyUsd, 0.5) },
   };
 }
 
