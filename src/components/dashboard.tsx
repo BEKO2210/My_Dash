@@ -35,6 +35,7 @@ import { FacetProvider, useFacets } from "@/components/facets";
 import { CommandPalette } from "@/components/command-palette";
 import { PluginConfigProvider } from "@/components/plugin-config";
 import { SettingsDrawer } from "@/components/settings-drawer";
+import { Notifications } from "@/components/notifications";
 import { useTheme } from "@/components/theme";
 import { ACCENT_PRESETS } from "@/lib/theme";
 import { useT } from "@/lib/i18n";
@@ -530,6 +531,7 @@ function Header({
             <RotateCcw className="h-3.5 w-3.5" />
           </button>
         )}
+        <Notifications />
         <ThemePicker />
         <LangToggle />
         <span className="hidden font-mono tabular-nums sm:inline">{clock}</span>

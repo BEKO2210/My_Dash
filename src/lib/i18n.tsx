@@ -273,6 +273,11 @@ const DE: Record<string, string> = {
   "theme.accent": "Akzentfarbe",
   "theme.custom": "Eigene Farbe",
 
+  "notif.title": "Benachrichtigungen",
+  "notif.empty": "Keine Benachrichtigungen.",
+  "notif.markRead": "Alle gelesen",
+  "notif.new": "Neue Benachrichtigung",
+
   "facets.project": "Projekt-Filter",
   "facets.allProjects": "Alle Projekte",
   "facets.status": "Status-Filter",
@@ -657,6 +662,11 @@ const EN: Record<string, string> = {
   "theme.light": "Light",
   "theme.accent": "Accent color",
   "theme.custom": "Custom color",
+
+  "notif.title": "Notifications",
+  "notif.empty": "No notifications.",
+  "notif.markRead": "Mark all read",
+  "notif.new": "New notification",
 
   "facets.project": "Project filter",
   "facets.allProjects": "All projects",
