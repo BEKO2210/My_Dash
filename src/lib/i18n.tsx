@@ -56,6 +56,7 @@ const DE: Record<string, string> = {
 
   "nav.dashboard": "Dashboard",
   "nav.features": "Funktionen",
+  "nav.docs": "Doku",
   "nav.about": "Über mich",
   "nav.contact": "Kontakt",
   "nav.impressum": "Impressum",
@@ -152,6 +153,7 @@ const DE: Record<string, string> = {
   "common.retry": "Erneut versuchen",
   "common.noResults": "Keine Treffer.",
   "common.loading": "Lädt…",
+  "kpi.title": "Übersicht",
   "kpi.active": "Aktive Sessions",
   "kpi.events": "Events heute",
   "kpi.tools": "Tool-Aufrufe heute",
@@ -583,6 +585,7 @@ const EN: Record<string, string> = {
 
   "nav.dashboard": "Dashboard",
   "nav.features": "Features",
+  "nav.docs": "Docs",
   "nav.about": "About",
   "nav.contact": "Contact",
   "nav.impressum": "Imprint",
@@ -679,6 +682,7 @@ const EN: Record<string, string> = {
   "common.retry": "Retry",
   "common.noResults": "No matches.",
   "common.loading": "Loading…",
+  "kpi.title": "Overview",
   "kpi.active": "Active sessions",
   "kpi.events": "Events today",
   "kpi.tools": "Tool calls today",
