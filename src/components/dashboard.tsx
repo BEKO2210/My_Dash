@@ -43,13 +43,14 @@ import {
   SPAN_PRESETS,
   type SizeMap,
 } from "@/lib/layout";
-import { widgets } from "@/plugins/registry";
+import { widgets, type WidgetCategory } from "@/plugins/registry";
 
 // In the static demo build, start the in-browser engine + patch fetch before any
 // widget mounts. No-op in the real (server-backed) app.
 if (DEMO) installDemoBackend();
 
 const DEFAULT_ORDER = widgets.map((w) => w.id);
+const CATEGORY_ORDER: WidgetCategory[] = ["overview", "sessions", "economy", "activity", "tools", "quality"];
 const ORDER_KEY = "mc-widget-order";
 const SIZE_KEY = "mc-widget-sizes";
 const HIDDEN_KEY = "mc-widget-hidden";
@@ -782,30 +783,48 @@ function WidgetGallery({
           </button>
         </header>
         <p className="px-4 pt-3 text-xs text-muted">{t("gallery.info")}</p>
-        <ul className="min-h-0 flex-1 overflow-auto p-2">
-          {items.map((w) => {
-            const isHidden = hidden.includes(w.id);
+        <div className="min-h-0 flex-1 overflow-auto p-2">
+          {CATEGORY_ORDER.map((cat) => {
+            const group = items.filter((w) => w.category === cat);
+            if (group.length === 0) return null;
             return (
-              <li key={w.id}>
-                <button
-                  type="button"
-                  onClick={() => onToggle(w.id)}
-                  aria-pressed={!isHidden}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-white/[0.04]"
-                >
-                  {isHidden ? (
-                    <EyeOff className="h-4 w-4 shrink-0 text-muted" />
-                  ) : (
-                    <Eye className="h-4 w-4 shrink-0 text-accent" />
-                  )}
-                  <span className={`flex-1 truncate ${isHidden ? "text-muted line-through" : "text-foreground"}`}>
-                    {w.title}
-                  </span>
-                </button>
-              </li>
+              <div key={cat} className="mb-1">
+                <p className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                  {t(`cat.${cat}`)}
+                </p>
+                <ul>
+                  {group.map((w) => {
+                    const isHidden = hidden.includes(w.id);
+                    const Icon = w.icon;
+                    return (
+                      <li key={w.id}>
+                        <button
+                          type="button"
+                          onClick={() => onToggle(w.id)}
+                          aria-pressed={!isHidden}
+                          className="flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/[0.04]"
+                        >
+                          {isHidden ? (
+                            <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+                          ) : (
+                            <Eye className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className={`flex items-center gap-1.5 text-sm ${isHidden ? "text-muted line-through" : "text-foreground"}`}>
+                              <Icon className="h-3.5 w-3.5 shrink-0 text-muted" />
+                              <span className="truncate">{w.title}</span>
+                            </span>
+                            <span className="mt-0.5 line-clamp-2 block text-[11px] text-muted">{t(w.description)}</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             );
           })}
-        </ul>
+        </div>
         <footer className="flex justify-end gap-2 border-t border-panel-border px-4 py-3">
           <button type="button" onClick={onShowAll} className="rounded-md border border-panel-border px-3 py-1.5 text-xs text-muted transition-colors hover:text-foreground">
             {t("gallery.showAll")}

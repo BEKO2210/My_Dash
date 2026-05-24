@@ -86,6 +86,7 @@ const DE: Record<string, string> = {
   "kpi.tools": "Tool-Aufrufe heute",
   "kpi.errors": "Fehlerquote heute",
   "kpi.cost": "Kosten heute",
+  "kpi.info": "Kennzahlen von heute: aktive Sessions, Events, Tool-Aufrufe, Fehlerquote und Kosten.",
   "heatmap.title": "Aktivität",
   "heatmap.info": "Aktivität nach Wochentag und Stunde (lokale Zeit), aus dem Event-Verlauf.",
   "heatmap.empty": "Noch keine Aktivität.",
@@ -279,6 +280,13 @@ const DE: Record<string, string> = {
   "gallery.done": "Fertig",
   "gallery.allHidden": "Alle Widgets ausgeblendet. Öffne die Galerie, um welche einzublenden.",
 
+  "cat.overview": "Übersicht",
+  "cat.sessions": "Sessions",
+  "cat.economy": "Ökonomie",
+  "cat.activity": "Aktivität",
+  "cat.tools": "Tools",
+  "cat.quality": "Qualität",
+
   "views.title": "Gespeicherte Ansichten",
   "views.save": "Ansicht speichern",
   "views.namePlaceholder": "Name der Ansicht…",
@@ -451,6 +459,7 @@ const EN: Record<string, string> = {
   "kpi.tools": "Tool calls today",
   "kpi.errors": "Error rate today",
   "kpi.cost": "Cost today",
+  "kpi.info": "Today's headline metrics: active sessions, events, tool calls, error rate and cost.",
   "heatmap.title": "Activity",
   "heatmap.info": "Activity by weekday and hour (local time), from the event history.",
   "heatmap.empty": "No activity yet.",
@@ -643,6 +652,13 @@ const EN: Record<string, string> = {
   "gallery.showAll": "Show all",
   "gallery.done": "Done",
   "gallery.allHidden": "All widgets hidden. Open the gallery to show some.",
+
+  "cat.overview": "Overview",
+  "cat.sessions": "Sessions",
+  "cat.economy": "Economy",
+  "cat.activity": "Activity",
+  "cat.tools": "Tools",
+  "cat.quality": "Quality",
 
   "views.title": "Saved views",
   "views.save": "Save view",
