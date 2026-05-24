@@ -87,6 +87,25 @@ const listeners = new Set<(m: StreamMessage) => void>();
 let eid = 1;
 let started = false;
 
+// Z-Demo-2 — calm, persistent demo. At most MAX_LIVE active/waiting sessions (the
+// dashboard stays calm); ended sessions persist as history and never rotate out
+// during a realistic visit — only beyond MAX_ENDED (a generous safety valve so a
+// tab left open for hours can't leak memory) does the very oldest ended one drop.
+// The 3D graph renders only the most recent GRAPH_WINDOW sessions so it stays
+// legible/epic even as the history list grows long.
+const MAX_LIVE = 5;
+const MAX_ENDED = 300;
+const GRAPH_WINDOW = 14;
+
+// Live economy — strictly monotonic. Each completed tool call accrues a small,
+// always-positive amount of tokens/cost, so the demo's figures only ever climb in
+// small steps and never jump up and down between polls. A dedicated seeded stream
+// keeps this independent of the tool-selection sequence.
+let liveInput = 0;
+let liveOutput = 0;
+let liveCache = 0;
+let liveCostUsd = 0;
+
 // Seeded PRNG (mulberry32) so the demo is fully deterministic — a fixed seed gives
 // the same curated picture on every reload, which keeps screenshots/GIFs
 // reproducible. Nothing here calls Math.random() anymore.
@@ -103,6 +122,9 @@ const SEED = 0x5eed01;
 // One advancing sequence for the live engine (reset in startDemo) → identical live
 // evolution every reload.
 let liveRng = mulberry32(SEED);
+// Economy stream — drives the monotonic token/cost accrual, kept separate from
+// liveRng so adding it doesn't shift the tool-selection sequence (reset in startDemo).
+let econRng = mulberry32((SEED ^ 0xec04) >>> 0);
 // Snapshot getters re-seed this to a per-getter constant on entry (see seedSnap),
 // so each returns identical data on every call (no per-poll jitter) and reload.
 let snapRng = mulberry32(SEED);
@@ -206,10 +228,38 @@ function newSession() {
     prompts: [],
   };
   sessions.push(s);
-  while (sessions.length > 7) sessions.shift();
+  // Z-Demo-2: ended sessions must never disappear (history persists). We cap only
+  // the *live* (active/waiting) set so the dashboard stays calm; ended sessions
+  // are kept indefinitely. To bound a long-open tab we keep at most the newest
+  // MAX_ENDED ended sessions, dropping only the very oldest ended ones.
+  const liveCount = sessions.filter((x) => x.status !== "ended").length;
+  if (liveCount > MAX_LIVE) {
+    const oldestLive = sessions.find((x) => x.status !== "ended");
+    if (oldestLive) {
+      oldestLive.status = "ended";
+      oldestLive.ended_at = dbNow();
+    }
+  }
+  const ended = sessions.filter((x) => x.status === "ended");
+  if (ended.length > MAX_ENDED) {
+    const drop = new Set(ended.slice(0, ended.length - MAX_ENDED));
+    for (let i = sessions.length - 1; i >= 0; i--) if (drop.has(sessions[i])) sessions.splice(i, 1);
+  }
   emit(s, "SessionStart", null, "Session started (demo)");
   s.prompts.push({ text: title, created_at: now });
   emit(s, "UserPromptSubmit", null, "Prompt: " + clip(title, 70));
+}
+
+// Accrue a small, always-positive amount of tokens/cost for one tool call, so the
+// live economy only ever climbs (monotonic, small steps — never jumps down).
+function accrue() {
+  const dIn = 280 + Math.floor(econRng() * 520);
+  const dOut = 90 + Math.floor(econRng() * 240);
+  const dCache = 600 + Math.floor(econRng() * 1400);
+  liveInput += dIn;
+  liveOutput += dOut;
+  liveCache += dCache;
+  liveCostUsd += dIn * 3e-6 + dOut * 1.5e-5 + dCache * 3e-7;
 }
 
 function step() {
@@ -221,6 +271,7 @@ function step() {
   const s = pick(live);
   const r = liveRng();
   if (r < 0.68) {
+    accrue();
     const tool = pick(TOOLS);
     if (tool === "Task") {
       const text = "Subagent: " + pick(PROMPTS);
@@ -254,6 +305,9 @@ export function startDemo() {
   started = true;
   // Deterministic start: same seed → same live evolution every reload.
   liveRng = mulberry32(SEED);
+  econRng = mulberry32((SEED ^ 0xec04) >>> 0);
+  liveInput = liveOutput = liveCache = 0;
+  liveCostUsd = 0;
   sidCounter = 0;
   for (let i = 0; i < 4; i++) newSession();
   for (let i = 0; i < 30; i++) step(); // pre-warm so the graph isn't empty
@@ -363,7 +417,7 @@ export function demoGraph() {
     } else nodes.set(id, { id, label, type, val: 1, meta: { ...meta, calls: 1 } });
   };
 
-  for (const s of sessions) {
+  for (const s of sessions.slice(-GRAPH_WINDOW)) {
     const sid = `s:${s.id}`;
     nodes.set(sid, {
       id: sid,
@@ -413,9 +467,27 @@ export function demoUsage() {
   const d = (off: number) => new Date(today.getTime() - off * 86400000).toISOString().slice(0, 10);
   const days = [day(d(2), 0.7), day(d(1), 1), day(d(0), 1.3)];
 
+  // Z-Demo-2: fold the live, monotonic accruals into "today" so the cost/token
+  // figures only ever climb in small steps as the demo runs (never jump down).
+  const tdy = days[days.length - 1];
+  tdy.inputTokens += liveInput;
+  tdy.outputTokens += liveOutput;
+  tdy.cacheTokens += liveCache;
+  tdy.totalTokens = tdy.inputTokens + tdy.outputTokens + tdy.cacheTokens;
+  tdy.costUsd = +(tdy.costUsd + liveCostUsd).toFixed(2);
+  tdy.costEur = +(tdy.costUsd * rate).toFixed(2);
+
   const blocks = [0, 1, 2, 3].map((i) => {
     const start = new Date(today.getTime() - (3 - i) * 5 * 3600000).toISOString();
     const base = day("", 0.4 + i * 0.4);
+    if (i === 3) {
+      base.inputTokens += liveInput;
+      base.outputTokens += liveOutput;
+      base.cacheTokens += liveCache;
+      base.totalTokens = base.inputTokens + base.outputTokens + base.cacheTokens;
+      base.costUsd = +(base.costUsd + liveCostUsd).toFixed(2);
+      base.costEur = +(base.costUsd * rate).toFixed(2);
+    }
     return {
       start,
       isActive: i === 3,
