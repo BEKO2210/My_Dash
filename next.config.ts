@@ -25,7 +25,7 @@ const nextConfig: NextConfig = isDemo
       assetPrefix: basePath,
       trailingSlash: true,
       images: { unoptimized: true },
-      env: { NEXT_PUBLIC_MC_DEMO: "1" },
+      env: { NEXT_PUBLIC_MC_DEMO: "1", NEXT_PUBLIC_MC_BASE_PATH: basePath ?? "" },
     }
   : {
       // Standalone output bundles a minimal server (.next/standalone/server.js) so the

@@ -15,6 +15,7 @@
 /test-results
 /playwright-report
 /.playwright
+/.gallery-video
 
 # mission-control local database
 /data
