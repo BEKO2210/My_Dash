@@ -239,6 +239,9 @@ const DE: Record<string, string> = {
   "search.clear": "Suche löschen",
   "search.results": "Volltext-Treffer",
 
+  "deeplink.copy": "Link zu dieser Ansicht kopieren",
+  "deeplink.copied": "Link kopiert!",
+
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
   "layout.width": "Breite ändern",
@@ -588,6 +591,9 @@ const EN: Record<string, string> = {
   "search.placeholder": "Search…",
   "search.clear": "Clear search",
   "search.results": "Full-text matches",
+
+  "deeplink.copy": "Copy link to this view",
+  "deeplink.copied": "Link copied!",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",

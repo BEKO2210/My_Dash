@@ -6,10 +6,12 @@ import {
   Activity,
   Bookmark,
   BookmarkPlus,
+  Check,
   Eye,
   EyeOff,
   GripHorizontal,
   LayoutGrid,
+  Link2,
   MessageSquare,
   MoveHorizontal,
   MoveVertical,
@@ -456,6 +458,7 @@ function Header({
         <FacetBar />
         <TimeRangePicker />
         <ViewsMenu order={order} sizes={sizes} hidden={hidden} onApplyLayout={onApplyLayout} />
+        <CopyLinkButton />
         <button
           type="button"
           onClick={onOpenGallery}
@@ -672,6 +675,31 @@ function FacetBar() {
         </button>
       )}
     </>
+  );
+}
+
+function CopyLinkButton() {
+  const { t } = useT();
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    try {
+      void navigator.clipboard?.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={t("deeplink.copy")}
+      title={copied ? t("deeplink.copied") : t("deeplink.copy")}
+      className="hidden items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground sm:flex"
+    >
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Link2 className="h-3.5 w-3.5" />}
+    </button>
   );
 }
 
