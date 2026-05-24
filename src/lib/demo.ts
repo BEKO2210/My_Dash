@@ -96,6 +96,10 @@ let started = false;
 const MAX_LIVE = 5;
 const MAX_ENDED = 300;
 const GRAPH_WINDOW = 14;
+// Z-Demo-3 — calmer cadence. A slower tick (was 1100ms) so the dashboard breathes
+// instead of flickering; values are carried forward in small increments rather
+// than re-rolled, so nothing jumps.
+export const TICK_MS = 2400;
 
 // Live economy — strictly monotonic. Each completed tool call accrues a small,
 // always-positive amount of tokens/cost, so the demo's figures only ever climb in
@@ -264,13 +268,16 @@ function accrue() {
 
 function step() {
   const live = sessions.filter((s) => s.status !== "ended");
-  if (live.length < 3 || chance(0.14)) {
+  // Spawn new sessions sparingly so the picture evolves gently (was 0.14).
+  if (live.length < 3 || chance(0.07)) {
     newSession();
     return;
   }
   const s = pick(live);
   const r = liveRng();
-  if (r < 0.68) {
+  // Bias toward smooth tool-call progression over lifecycle flips: most ticks
+  // just advance existing work (was 0.68 / 0.80 / 0.87).
+  if (r < 0.75) {
     accrue();
     const tool = pick(TOOLS);
     if (tool === "Task") {
@@ -285,10 +292,10 @@ function step() {
       s.tools.push(target);
     }
     s.status = "active";
-  } else if (r < 0.8) {
+  } else if (r < 0.85) {
     emit(s, "Stop", null, "Response complete — waiting for input");
     s.status = "waiting";
-  } else if (r < 0.87) {
+  } else if (r < 0.9) {
     emit(s, "SessionEnd", null, "Session ended (clear)");
     s.status = "ended";
     s.ended_at = dbNow();
@@ -311,7 +318,7 @@ export function startDemo() {
   sidCounter = 0;
   for (let i = 0; i < 4; i++) newSession();
   for (let i = 0; i < 30; i++) step(); // pre-warm so the graph isn't empty
-  setInterval(step, 1100);
+  setInterval(step, TICK_MS);
 }
 
 // ── API-shaped getters ───────────────────────────────────────────────────────
