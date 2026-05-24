@@ -105,6 +105,9 @@ export function ToolGraph() {
   const threeRef = useRef<any>(null);
   const [threeReady, setThreeReady] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
+  // False until the first /api/graph fetch settles, so initial paint shows a
+  // loading state instead of a misleading "no tool calls yet" empty flash.
+  const [loaded, setLoaded] = useState(false);
   const sig = useRef("");
 
   // WebGL support is only knowable on the client; assume ok during SSR/first paint
@@ -146,7 +149,8 @@ export function ToolGraph() {
           setData(d);
           setSelected((cur) => (cur ? d.nodes.find((n) => n.id === cur.id) ?? null : null));
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setLoaded(true));
     }, delay);
     return () => clearTimeout(t);
   }, [tick]);
@@ -403,6 +407,8 @@ export function ToolGraph() {
         <div ref={wrapRef} className="relative h-full w-full">
           {!webglOk ? (
             <WidgetState icon={Boxes} title={t("graph.noWebgl")} />
+          ) : !loaded ? (
+            <WidgetState icon={Boxes} title={t("common.loading")} loading />
           ) : data.nodes.length === 0 ? (
             <WidgetState icon={Boxes} title={t("graph.empty")} />
           ) : dims.w > 0 ? (
