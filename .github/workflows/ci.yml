@@ -63,8 +63,9 @@ jobs:
       # Playwright boots `npm run start` (see playwright.config.ts), seeds via the
       # ingest API and asserts the dashboard renders, connects and populates. Also
       # runs the axe-core accessibility audit (e2e/a11y.spec.ts) and the Phase Z
-      # layout audit (e2e/layout.spec.ts) as CI gates.
-      - name: Smoke + a11y + layout E2E
+      # layout (e2e/layout.spec.ts) and tool-graph (e2e/tool-graph.spec.ts) audits
+      # as CI gates.
+      - name: Smoke + a11y + layout + tool-graph E2E
         run: npm run test:e2e
 
       # Always collect the layout-audit screenshots (Phase Z) for visual review.
@@ -73,6 +74,14 @@ jobs:
         with:
           name: layout-screenshots
           path: test-results/layout-shots
+          if-no-files-found: ignore
+
+      # Always collect the tool-graph audit screenshots (Phase Z, Run 107).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tool-graph-screenshots
+          path: test-results/tool-graph-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
