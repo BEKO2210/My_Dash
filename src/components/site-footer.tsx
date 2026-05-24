@@ -128,7 +128,7 @@ export function SiteFooter() {
           <span>
             © <span suppressHydrationWarning>{year}</span> {CONTACT.name}. {t("footer.rights")}
           </span>
-          <span className="text-muted/80">{t("footer.text")}</span>
+          <span className="text-muted">{t("footer.text")}</span>
         </div>
       </div>
     </footer>

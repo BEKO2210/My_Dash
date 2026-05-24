@@ -46,7 +46,7 @@ const DE: Record<string, string> = {
   "footer.text": "read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie",
 
   // ── Website-Chrome: Footer + eigenständige Seiten (Z-Web) ───────────────────
-  "footer.tagline": "Read-only Live-Observability für Claude Code.",
+  "footer.tagline": "Lokales, read-only Dashboard für Claude Code.",
   "footer.product": "Produkt",
   "footer.resources": "Ressourcen",
   "footer.legal": "Rechtliches",
@@ -573,7 +573,7 @@ const EN: Record<string, string> = {
   "footer.text": "read-only · data from hooks → SQLite → UI · the AI never renders this dashboard",
 
   // ── Website chrome: footer + standalone pages (Z-Web) ───────────────────────
-  "footer.tagline": "Read-only live observability for Claude Code.",
+  "footer.tagline": "Local, read-only dashboard for Claude Code.",
   "footer.product": "Product",
   "footer.resources": "Resources",
   "footer.legal": "Legal",

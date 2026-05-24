@@ -81,13 +81,15 @@ test("language toggle switches the whole UI (de ↔ en)", async ({ page }) => {
   await prime(page, "dark", "de");
   await gotoDashboard(page);
 
+  // Witness the language switch on the footer tagline: it's unique, language-specific
+  // and always rendered (the header subtitle truncates when the bar is crowded).
   const langGroup = page.getByRole("group", { name: "Language" });
   await expect(langGroup.getByRole("button", { name: "de" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Live-Observability für Claude Code")).toBeVisible();
+  await expect(page.getByText("Lokales, read-only Dashboard für Claude Code.")).toBeVisible();
 
   await langGroup.getByRole("button", { name: "en" }).click();
   await expect(langGroup.getByRole("button", { name: "en" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Live observability for Claude Code")).toBeVisible();
+  await expect(page.getByText("Local, read-only dashboard for Claude Code.")).toBeVisible();
 
   expect(errors, `console errors:\n${errors.join("\n")}`).toEqual([]);
 });
