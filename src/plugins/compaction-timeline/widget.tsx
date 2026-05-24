@@ -71,7 +71,7 @@ export function CompactionTimeline() {
             </div>
           </div>
 
-          <ul className="min-h-0 flex-1 space-y-1.5 overflow-auto">
+          <ul tabIndex={0} className="min-h-0 flex-1 space-y-1.5 overflow-auto outline-none">
             {compactions.slice(0, 30).map((c) => (
               <li key={c.id} className="mc-stream-in flex items-center gap-2 text-sm">
                 <Layers className="h-3.5 w-3.5 shrink-0 text-orange-400" />

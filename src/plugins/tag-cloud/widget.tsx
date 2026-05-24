@@ -48,7 +48,7 @@ export function TagCloud() {
       ) : filtered.length === 0 ? (
         <WidgetState icon={Hash} title={t("common.noResults")} />
       ) : (
-        <div className="flex h-full flex-wrap content-start items-baseline gap-x-3 gap-y-1.5 overflow-auto p-4 leading-tight">
+        <div tabIndex={0} className="flex h-full flex-wrap content-start items-baseline gap-x-3 gap-y-1.5 overflow-auto p-4 leading-tight outline-none">
           {filtered.map((tc) => {
             const s = scale(tc.count);
             return (
