@@ -70,7 +70,10 @@ test("seeded activity flows into the live stream and kanban", async ({ page }) =
   await page.goto("/");
 
   // Live stream shows the backlog (delivered via /api/events then SSE).
-  await expect(page.getByRole("log").getByRole("listitem").first()).toBeVisible({ timeout: 15_000 });
+  const newest = page.getByRole("log").getByRole("listitem").first();
+  await expect(newest).toBeVisible({ timeout: 15_000 });
+  // The newest row carries the slide-in animation (regression guard for Run 105).
+  await expect(newest).toHaveClass(/mc-stream-in/);
 
   // Kanban shows the seeded session card by its prompt-derived title, with the
   // project name on it. Scope to the card button so we don't match the project

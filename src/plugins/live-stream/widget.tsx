@@ -126,14 +126,17 @@ export function LiveStream() {
         <div ref={scrollRef} onScroll={onScroll} tabIndex={0} className="h-full overflow-auto outline-none">
           <div role="log" aria-live="polite" aria-label={t("stream.title")}>
             <ul className="divide-y divide-panel-border/60" style={{ paddingTop: win.padTop, paddingBottom: win.padBottom }}>
-              {visible.map((e) => {
+              {visible.map((e, i) => {
                 const kind = eventKind(e.event_type);
                 const Icon = ICONS[kind];
+                // Slide-in only the newest row (global index 0) so a fresh event
+                // animates in at the top without every row re-animating on scroll.
+                const newest = win.start + i === 0;
                 return (
                   <li
                     key={e.id}
                     style={{ height: ROW_H }}
-                    className="flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
+                    className={`flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03] ${newest ? "mc-stream-in" : ""}`}
                   >
                     <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
                     <div className="min-w-0 flex-1">
