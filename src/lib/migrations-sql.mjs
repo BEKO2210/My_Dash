@@ -251,4 +251,10 @@ export const MIGRATIONS = [
   ALTER TABLE sessions ADD COLUMN machine TEXT;
   CREATE INDEX IF NOT EXISTS idx_sessions_machine ON sessions(machine);
   `,
+
+  // v19 — performance: time-windowed tool_calls queries (anomaly, velocity, errors,
+  // token-burn) filtered/grouped on created_at with no covering index, forcing scans.
+  `
+  CREATE INDEX IF NOT EXISTS idx_tool_calls_created ON tool_calls(created_at);
+  `,
 ];
