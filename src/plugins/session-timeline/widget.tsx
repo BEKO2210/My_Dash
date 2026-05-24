@@ -74,6 +74,7 @@ export function SessionTimeline() {
             <button
               key={r}
               onClick={() => setRange(r)}
+              aria-pressed={range === r}
               className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
             >
               {t(RANGE_LABEL[r])}
