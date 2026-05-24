@@ -174,6 +174,10 @@ const insertPrompt = db.prepare<[string, number, string, number]>(`
   VALUES (?, ?, ?, ?)
 `);
 
+const insertSearch = db.prepare<[string, string, number, string]>(`
+  INSERT INTO search_fts (text, kind, ref_id, session_id) VALUES (?, ?, ?, ?)
+`);
+
 const bumpActivity = db.prepare<[string, string]>(`
   INSERT INTO activity_buckets (bucket, event_type, count) VALUES (?, ?, 1)
   ON CONFLICT(bucket, event_type) DO UPDATE SET count = count + 1
@@ -347,8 +351,11 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       JSON.stringify(stored),
     ) as EventRow;
 
+    if (summary) insertSearch.run(summary, "event", event.id, sessionId);
+
     if (prepared) {
-      insertPrompt.run(sessionId, event.id, prepared.capped, prepared.tokenEstimate);
+      const p = insertPrompt.run(sessionId, event.id, prepared.capped, prepared.tokenEstimate);
+      insertSearch.run(prepared.capped, "prompt", Number(p.lastInsertRowid), sessionId);
     }
 
     bumpActivity.run(hourBucket(event.created_at), eventType);

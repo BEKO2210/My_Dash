@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Activity,
   Eye,
   EyeOff,
   GripHorizontal,
   LayoutGrid,
+  MessageSquare,
   MoveHorizontal,
   MoveVertical,
   RotateCcw,
@@ -24,6 +26,7 @@ import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { FacetProvider, useFacets } from "@/components/facets";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
+import type { SearchHit } from "@/lib/search-index";
 import { DEMO, installDemoBackend } from "@/lib/demo";
 import {
   HEIGHT_PRESETS,
@@ -331,6 +334,7 @@ function Header({
   const { t, lang } = useT();
   const { query, setQuery } = useSearch();
   const [clock, setClock] = useState("");
+  const [hits, setHits] = useState<SearchHit[]>([]);
 
   useEffect(() => {
     const update = () => setClock(new Date().toLocaleTimeString(lang === "en" ? "en-GB" : "de-DE"));
@@ -338,6 +342,27 @@ function Header({
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, [lang]);
+
+  // Debounced full-text search across the whole DB (FTS5) for the results dropdown.
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) return;
+    let cancelled = false;
+    const id = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(term)}`)
+        .then((r) => r.json())
+        .then((d: { hits: SearchHit[] }) => {
+          if (!cancelled) setHits(d.hits ?? []);
+        })
+        .catch(() => {});
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+  }, [query]);
+
+  const shownHits = query.trim().length >= 2 ? hits : [];
 
   return (
     <header className="mc-fade-in flex items-center justify-between gap-3 rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
@@ -374,6 +399,31 @@ function Header({
             >
               <X className="h-3.5 w-3.5" />
             </button>
+          )}
+          {shownHits.length > 0 && (
+            <div className="absolute right-0 top-9 z-50 max-h-80 w-72 overflow-auto rounded-lg border border-panel-border bg-panel shadow-2xl shadow-black/50 lg:w-80">
+              <p className="border-b border-panel-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted">
+                {t("search.results")}
+              </p>
+              <ul>
+                {shownHits.map((h) => (
+                  <li key={`${h.kind}-${h.ref_id}-${h.session_id}`}>
+                    <Link
+                      href={`/session?id=${encodeURIComponent(h.session_id)}`}
+                      onMouseDown={() => setQuery("")}
+                      className="flex items-start gap-2 px-3 py-2 transition-colors hover:bg-white/[0.04]"
+                    >
+                      {h.kind === "prompt" ? (
+                        <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-400" />
+                      ) : (
+                        <Activity className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                      )}
+                      <span className="line-clamp-2 text-xs text-foreground">{h.text}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </label>
         <FacetBar />

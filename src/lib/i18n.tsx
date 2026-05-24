@@ -237,6 +237,7 @@ const DE: Record<string, string> = {
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
+  "search.results": "Volltext-Treffer",
 
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
@@ -580,6 +581,7 @@ const EN: Record<string, string> = {
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",
   "search.clear": "Clear search",
+  "search.results": "Full-text matches",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",
