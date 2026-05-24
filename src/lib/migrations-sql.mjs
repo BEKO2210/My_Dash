@@ -144,4 +144,10 @@ export const MIGRATIONS = [
     value TEXT
   );
   `,
+
+  // v12 — transcript file path per session, so the read-only transcript viewer can
+  // re-read Claude Code's JSONL on demand (path only; contents stay on disk).
+  `
+  ALTER TABLE sessions ADD COLUMN transcript_path TEXT;
+  `,
 ];

@@ -15,6 +15,7 @@ import type { ToolTokenBurn } from "./token-burn";
 import type { ToolCallDetail } from "./errors";
 import type { ProjectReliability } from "./reliability";
 import type { SessionDetail } from "./session-detail";
+import type { TranscriptBlock, TranscriptMessage } from "./transcript";
 import { durationStats } from "./session-duration";
 import type { VelocityDay } from "./velocity";
 import type { SubagentGroup } from "./subagents";
@@ -133,6 +134,7 @@ function toRow(s: DSession): SessionRow {
     cost_usd: +(s.events.length * 0.02).toFixed(3),
     branch: null,
     git_commit: null,
+    transcript_path: null,
   };
 }
 
@@ -235,6 +237,34 @@ export function demoSessions() {
       tool_count: s.tools.length,
       stale: false,
     }));
+}
+
+export function demoTranscript(id: string): { messages: TranscriptMessage[]; available: boolean } {
+  const s = sessions.find((x) => x.id === id);
+  if (!s) return { messages: [], available: false };
+  const messages: TranscriptMessage[] = [];
+  s.prompts.forEach((p, i) => {
+    messages.push({ role: "user", blocks: [{ type: "text", text: p.text }] });
+    const tool = s.tools[i % Math.max(1, s.tools.length)];
+    const blocks: TranscriptBlock[] = [
+      { type: "thinking", text: "Analysiere die Anfrage und plane die nächsten Schritte …" },
+      { type: "text", text: "Alles klar — ich kümmere mich darum." },
+    ];
+    if (tool) {
+      blocks.push({ type: "tool_use", name: tool.tool, input: { target: tool.full } });
+      messages.push({ role: "assistant", blocks });
+      messages.push({ role: "user", blocks: [{ type: "tool_result", output: "✓ ok", isError: false }] });
+    } else {
+      messages.push({ role: "assistant", blocks });
+    }
+  });
+  if (messages.length === 0) {
+    messages.push(
+      { role: "user", blocks: [{ type: "text", text: "Hallo" }] },
+      { role: "assistant", blocks: [{ type: "text", text: "Hi! Womit kann ich helfen?" }] },
+    );
+  }
+  return { messages, available: true };
 }
 
 export function demoSessionDetail(id: string): SessionDetail | null {
@@ -840,6 +870,11 @@ export function installDemoBackend() {
       path = new URL(raw, window.location.href).pathname;
     } catch {
       /* keep raw */
+    }
+    if (path.includes("/api/sessions/") && path.includes("/transcript")) {
+      const seg = path.split("/api/sessions/")[1] ?? "";
+      const id = decodeURIComponent(seg.replace(/\/transcript\/?$/, ""));
+      return json(demoTranscript(id));
     }
     if (path.includes("/api/sessions/")) {
       const id = decodeURIComponent(path.split("/api/sessions/")[1] ?? "");

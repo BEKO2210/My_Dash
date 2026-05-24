@@ -7,6 +7,8 @@ import {
   Activity,
   ArrowLeft,
   Bell,
+  Bot,
+  Brain,
   CheckCircle2,
   ChevronRight,
   CircleDot,
@@ -20,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WidgetState } from "@/components/widget-state";
+import { JsonTree } from "@/components/json-tree";
 import { DEMO, installDemoBackend } from "@/lib/demo";
 import { useT } from "@/lib/i18n";
 import {
@@ -34,6 +37,7 @@ import {
   type EventKind,
 } from "@/lib/format";
 import type { SessionDetail } from "@/lib/session-detail";
+import type { TranscriptMessage } from "@/lib/transcript";
 
 if (DEMO) installDemoBackend();
 
@@ -227,7 +231,114 @@ function SessionView({
           </Section>
         </div>
       </div>
+
+      <TranscriptSection id={s.id} />
     </>
+  );
+}
+
+type TranscriptState = "idle" | "loading" | "error" | TranscriptMessage[];
+
+function TranscriptSection({ id }: { id: string }) {
+  const { t } = useT();
+  const [state, setState] = useState<TranscriptState>("idle");
+
+  const load = () => {
+    setState("loading");
+    fetch(`/api/sessions/${encodeURIComponent(id)}/transcript`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { messages: TranscriptMessage[] }) => setState(d.messages ?? []))
+      .catch(() => setState("error"));
+  };
+
+  return (
+    <section className="flex flex-col overflow-hidden rounded-xl border border-panel-border bg-panel/80">
+      <header className="flex items-center justify-between border-b border-panel-border px-4 py-2.5 text-sm font-semibold text-foreground">
+        <span>{t("transcript.title")}</span>
+        {state === "idle" && (
+          <button
+            type="button"
+            onClick={load}
+            className="rounded-md border border-panel-border px-2.5 py-1 text-xs font-normal text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+          >
+            {t("transcript.load")}
+          </button>
+        )}
+      </header>
+      <div className="max-h-[70vh] min-h-0 flex-1 overflow-auto">
+        {state === "idle" ? (
+          <p className="px-4 py-6 text-center text-xs text-muted">{t("transcript.hint")}</p>
+        ) : state === "loading" ? (
+          <WidgetState icon={MessageSquare} title={t("common.loading")} loading />
+        ) : state === "error" ? (
+          <p className="px-4 py-6 text-center text-xs text-muted">{t("transcript.error")}</p>
+        ) : state.length === 0 ? (
+          <p className="px-4 py-6 text-center text-xs text-muted">{t("transcript.empty")}</p>
+        ) : (
+          <ol className="space-y-3 p-4">
+            {state.map((m, i) => (
+              <TranscriptMessageView key={i} message={m} t={t} />
+            ))}
+          </ol>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TranscriptMessageView({ message, t }: { message: TranscriptMessage; t: (k: string) => string }) {
+  const isUser = message.role === "user";
+  const Icon = isUser ? MessageSquare : Bot;
+  return (
+    <li className="flex gap-2.5">
+      <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isUser ? "text-sky-400" : "text-accent"}`} />
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="text-[10px] uppercase tracking-wide text-muted">
+          {isUser ? t("transcript.user") : t("transcript.assistant")}
+        </p>
+        {message.blocks.map((b, i) => {
+          if (b.type === "text") {
+            return (
+              <p key={i} className="whitespace-pre-wrap break-words text-sm text-foreground">
+                {b.text}
+              </p>
+            );
+          }
+          if (b.type === "thinking") {
+            return (
+              <p key={i} className="flex gap-1.5 whitespace-pre-wrap break-words text-xs italic text-muted">
+                <Brain className="mt-0.5 h-3 w-3 shrink-0" />
+                {b.text}
+              </p>
+            );
+          }
+          if (b.type === "tool_use") {
+            return (
+              <div key={i} className="rounded border border-panel-border/60 bg-black/20 p-2">
+                <p className="mb-1 flex items-center gap-1.5 font-mono text-[11px] text-amber-400">
+                  <Wrench className="h-3 w-3" />
+                  {b.name}
+                </p>
+                {b.input != null && typeof b.input === "object" ? (
+                  <JsonTree data={b.input} defaultDepth={0} />
+                ) : (
+                  <span className="font-mono text-[11px] text-muted">{String(b.input ?? "—")}</span>
+                )}
+              </div>
+            );
+          }
+          // tool_result
+          return (
+            <pre
+              key={i}
+              className={`max-h-32 overflow-auto whitespace-pre-wrap break-words rounded bg-black/20 p-2 font-mono text-[11px] ${b.isError ? "text-red-400/90" : "text-muted"}`}
+            >
+              {typeof b.output === "string" ? b.output : JSON.stringify(b.output, null, 2)}
+            </pre>
+          );
+        })}
+      </div>
+    </li>
   );
 }
 
