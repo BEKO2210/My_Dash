@@ -439,7 +439,7 @@ function Header({
   const shownHits = query.trim().length >= 2 ? hits : [];
 
   return (
-    <header className="mc-fade-in flex items-center justify-between gap-3 rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
+    <header className="mc-fade-in relative z-40 flex items-center justify-between gap-3 rounded-xl border border-panel-border bg-panel/60 px-5 py-3 backdrop-blur">
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-background/80 ring-1 ring-accent/25">
           <RadarLogo className="h-7 w-7" />
