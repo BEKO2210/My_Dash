@@ -29,6 +29,7 @@ import { LangToggle } from "@/components/lang-toggle";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { Landing } from "@/components/landing";
+import { SiteFooter } from "@/components/site-footer";
 import { SearchProvider, useSearch } from "@/components/search";
 import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { FacetProvider, useFacets } from "@/components/facets";
@@ -303,10 +304,8 @@ export function Dashboard() {
               );
             })}
           </div>
-          <footer className="pt-2 text-center text-[11px] text-muted">
-            {t("footer.text")} · <span className="text-muted">by Belkis Aslani</span>
-          </footer>
         </div>
+        <SiteFooter />
         {galleryOpen && (
           <WidgetGallery
             order={order}

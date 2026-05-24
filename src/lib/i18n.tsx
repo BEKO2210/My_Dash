@@ -45,6 +45,77 @@ const DE: Record<string, string> = {
     "Events im Live-Puffer dieses Browsers (zuletzt empfangene, max. 300) — kein Gesamtzähler. Die Zahl wächst mit neuen Events und startet beim Neuladen frisch aus den letzten ~100.",
   "footer.text": "read-only · Daten aus Hooks → SQLite → UI · die KI rendert dieses Dashboard nie",
 
+  // ── Website-Chrome: Footer + eigenständige Seiten (Z-Web) ───────────────────
+  "footer.tagline": "Read-only Live-Observability für Claude Code.",
+  "footer.product": "Produkt",
+  "footer.resources": "Ressourcen",
+  "footer.legal": "Rechtliches",
+  "footer.openToWork": "Offen für Angebote",
+  "footer.builtBy": "Entwickelt von",
+  "footer.rights": "Alle Rechte vorbehalten.",
+
+  "nav.dashboard": "Dashboard",
+  "nav.features": "Funktionen",
+  "nav.about": "Über mich",
+  "nav.contact": "Kontakt",
+  "nav.impressum": "Impressum",
+  "nav.privacy": "Datenschutz",
+  "nav.download": "Download",
+  "nav.github": "GitHub",
+  "nav.demo": "Live-Demo",
+  "nav.backHome": "Zurück zum Dashboard",
+
+  "about.title": "Über mich",
+  "about.lead":
+    "Hi, ich bin Belkis Aslani – Entwickler aus Freiberg am Neckar. Ich baue durchdachte, performante Web-Anwendungen mit Fokus auf saubere Architektur, gutes Design und Liebe zum Detail.",
+  "about.statusTitle": "Status",
+  "about.status": "Aktuell arbeitssuchend – offen für neue Herausforderungen und Angebote.",
+  "about.skillsTitle": "Skills & Technologien",
+  "about.backgroundTitle": "Hintergrund",
+  "about.backgroundBody":
+    "Am liebsten arbeite ich an Produkten, die echte Probleme lösen – von der Datenschicht bis zur letzten Animation. Claude Mission Control ist mein aktuelles Schaufenster: ein lokales, read-only Observability-Dashboard für Claude Code mit Live-Event-Stream, Session-Kanban, Token-/Kosten-Charts und einem animierten 3D-Tool-Graph.",
+  "about.projectTitle": "Dieses Projekt",
+  "about.projectBody":
+    "Gebaut mit Next.js 16, React 19, TypeScript, Tailwind CSS 4 und Three.js, vollständig getestet (Vitest + Playwright) und über eine Plugin-Registry erweiterbar. Die Demo läuft komplett im Browser – ohne Server.",
+  "about.ctaContact": "Kontakt aufnehmen",
+  "about.ctaProject": "Projekt ansehen",
+
+  "features.title": "Funktionen",
+  "features.lead":
+    "Alles, um jede Aktion von Claude Code in Echtzeit zu verstehen – in einem kuratierten, schnellen Dashboard.",
+  "features.shotComing": "Screenshot folgt",
+  "features.galleryTitle": "Einblicke",
+  "features.galleryLead": "Ein paar Eindrücke aus dem Dashboard. Die Bilder werden automatisch erzeugt.",
+  "features.f5t": "Latenz & Performance",
+  "features.f5d": "Antwort- und Tool-Laufzeiten als Verteilung – Ausreißer sofort sichtbar.",
+  "features.f6t": "Fehler & Anomalien",
+  "features.f6d": "Fehlerraten, Incidents und automatische Anomalie-Erkennung.",
+  "features.ctaDemo": "Live-Demo öffnen",
+
+  "contact.title": "Kontakt",
+  "contact.lead": "Du möchtest zusammenarbeiten oder hast eine Frage? Ich freue mich, von dir zu hören.",
+  "contact.emailLabel": "E-Mail",
+  "contact.phoneLabel": "Telefon",
+  "contact.locationLabel": "Standort",
+  "contact.githubLabel": "GitHub",
+  "contact.statusLabel": "Status",
+  "contact.note": "Antwort meist innerhalb von 24 Stunden.",
+
+  "legal.title": "Impressum & Datenschutz",
+  "legal.impressumTitle": "Impressum",
+  "legal.impressumIntro": "Angaben gemäß § 5 DDG.",
+  "legal.responsible": "Verantwortlich für den Inhalt",
+  "legal.contactTitle": "Kontakt",
+  "legal.privacyTitle": "Datenschutz",
+  "legal.privacyIntro": "Der Schutz deiner Daten ist mir wichtig. Diese Website ist bewusst minimal gehalten.",
+  "legal.privacyClient":
+    "Die Demo läuft vollständig in deinem Browser. Es werden keine personenbezogenen Daten erhoben, keine Cookies gesetzt und kein Tracking eingesetzt. Alle angezeigten Daten sind synthetisch und werden lokal erzeugt.",
+  "legal.privacyHosting":
+    "Gehostet über GitHub Pages (GitHub Inc.). Beim Aufruf kann der Anbieter technisch notwendige Server-Logs (z. B. IP-Adresse) verarbeiten – siehe GitHub-Datenschutzerklärung.",
+  "legal.disclaimerTitle": "Haftungsausschluss",
+  "legal.disclaimerBody":
+    "Inhalte wurden mit größter Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität wird keine Gewähr übernommen. Für Inhalte externer Links sind ausschließlich deren Betreiber verantwortlich.",
+
   "landing.badge": "Live-Demo",
   "landing.tagline": "Live-Observability für Claude Code",
   "landing.lead":
@@ -500,6 +571,77 @@ const EN: Record<string, string> = {
   "header.eventsInfo":
     "Events in this browser's live buffer (most recent, max 300) — not a total counter. It grows with new events and re-seeds from the latest ~100 on reload.",
   "footer.text": "read-only · data from hooks → SQLite → UI · the AI never renders this dashboard",
+
+  // ── Website chrome: footer + standalone pages (Z-Web) ───────────────────────
+  "footer.tagline": "Read-only live observability for Claude Code.",
+  "footer.product": "Product",
+  "footer.resources": "Resources",
+  "footer.legal": "Legal",
+  "footer.openToWork": "Open to work",
+  "footer.builtBy": "Built by",
+  "footer.rights": "All rights reserved.",
+
+  "nav.dashboard": "Dashboard",
+  "nav.features": "Features",
+  "nav.about": "About",
+  "nav.contact": "Contact",
+  "nav.impressum": "Imprint",
+  "nav.privacy": "Privacy",
+  "nav.download": "Download",
+  "nav.github": "GitHub",
+  "nav.demo": "Live demo",
+  "nav.backHome": "Back to dashboard",
+
+  "about.title": "About me",
+  "about.lead":
+    "Hi, I'm Belkis Aslani – a developer based in Freiberg am Neckar, Germany. I build thoughtful, performant web apps with a focus on clean architecture, good design and attention to detail.",
+  "about.statusTitle": "Status",
+  "about.status": "Currently open to work – available for new challenges and opportunities.",
+  "about.skillsTitle": "Skills & tech",
+  "about.backgroundTitle": "Background",
+  "about.backgroundBody":
+    "I love working on products that solve real problems – from the data layer to the last animation. Claude Mission Control is my current showcase: a local, read-only observability dashboard for Claude Code with a live event stream, session kanban, token/cost charts and an animated 3D tool-call graph.",
+  "about.projectTitle": "This project",
+  "about.projectBody":
+    "Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4 and Three.js, fully tested (Vitest + Playwright) and extensible via a plugin registry. The demo runs entirely in the browser – no server.",
+  "about.ctaContact": "Get in touch",
+  "about.ctaProject": "View the project",
+
+  "features.title": "Features",
+  "features.lead":
+    "Everything you need to understand every Claude Code action in real time – in one curated, fast dashboard.",
+  "features.shotComing": "Screenshot coming",
+  "features.galleryTitle": "A look inside",
+  "features.galleryLead": "A few impressions from the dashboard. Images are generated automatically.",
+  "features.f5t": "Latency & performance",
+  "features.f5d": "Response and tool runtimes as a distribution – outliers visible at a glance.",
+  "features.f6t": "Errors & anomalies",
+  "features.f6d": "Error rates, incidents and automatic anomaly detection.",
+  "features.ctaDemo": "Open the live demo",
+
+  "contact.title": "Contact",
+  "contact.lead": "Want to work together or have a question? I'd love to hear from you.",
+  "contact.emailLabel": "Email",
+  "contact.phoneLabel": "Phone",
+  "contact.locationLabel": "Location",
+  "contact.githubLabel": "GitHub",
+  "contact.statusLabel": "Status",
+  "contact.note": "Usually replies within 24 hours.",
+
+  "legal.title": "Imprint & Privacy",
+  "legal.impressumTitle": "Imprint",
+  "legal.impressumIntro": "Information pursuant to § 5 DDG (German law).",
+  "legal.responsible": "Responsible for content",
+  "legal.contactTitle": "Contact",
+  "legal.privacyTitle": "Privacy",
+  "legal.privacyIntro": "Your privacy matters. This site is intentionally kept minimal.",
+  "legal.privacyClient":
+    "The demo runs entirely in your browser. No personal data is collected, no cookies are set and no tracking is used. All displayed data is synthetic and generated locally.",
+  "legal.privacyHosting":
+    "Hosted via GitHub Pages (GitHub Inc.). On access, the provider may process technically necessary server logs (e.g. IP address) – see GitHub's privacy statement.",
+  "legal.disclaimerTitle": "Disclaimer",
+  "legal.disclaimerBody":
+    "Content has been created with the greatest care. No guarantee is given for accuracy, completeness or timeliness. The operators of external links are solely responsible for their content.",
 
   "landing.badge": "Live demo",
   "landing.tagline": "Live observability for Claude Code",

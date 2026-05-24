@@ -180,6 +180,27 @@ body {
   animation: mc-stream-in 0.35s ease both;
 }
 
+/* Footer: a slow accent sheen sweeping across the top hairline. */
+@keyframes mc-sheen {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+.mc-footer-sheen {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 70%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: mc-sheen 7s linear infinite;
+}
+
 /* Respect users who prefer less motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
