@@ -220,6 +220,13 @@ const DE: Record<string, string> = {
   "reliability.empty": "Noch keine Tool-Aufrufe.",
   "reliability.fail": "Fehler",
 
+  "incidents.title": "Was lief schief",
+  "incidents.info": "Letzte fehlgeschlagene Tool-Aufrufe. Klick öffnet Eingabe und Fehlertext.",
+  "incidents.empty": "Keine Fehler – alles grün. 🎉",
+  "incidents.input": "Eingabe",
+  "incidents.error": "Fehler",
+  "incidents.loadError": "Detail konnte nicht geladen werden.",
+
   "search.label": "Sessions und Events durchsuchen",
   "search.placeholder": "Suchen…",
   "search.clear": "Suche löschen",
@@ -501,6 +508,13 @@ const EN: Record<string, string> = {
   "reliability.info": "Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red.",
   "reliability.empty": "No tool calls yet.",
   "reliability.fail": "fail",
+
+  "incidents.title": "What went wrong",
+  "incidents.info": "Latest failed tool calls. Click to reveal the input and error text.",
+  "incidents.empty": "No errors — all green. 🎉",
+  "incidents.input": "Input",
+  "incidents.error": "Error",
+  "incidents.loadError": "Could not load the detail.",
 
   "search.label": "Search sessions and events",
   "search.placeholder": "Search…",

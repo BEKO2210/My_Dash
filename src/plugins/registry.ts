@@ -26,6 +26,7 @@ import { CalendarHeatmap } from "./calendar-heatmap/widget";
 import { Velocity } from "./velocity/widget";
 import { SessionDuration } from "./session-duration/widget";
 import { Reliability } from "./reliability/widget";
+import { Incidents } from "./incidents/widget";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PLUGIN REGISTRY
@@ -236,5 +237,12 @@ export const widgets: Widget[] = [
     span: "lg:col-span-3",
     height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
     component: Reliability,
+  },
+  {
+    id: "incidents",
+    title: "Was lief schief",
+    span: "lg:col-span-3",
+    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
+    component: Incidents,
   },
 ];

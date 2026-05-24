@@ -12,6 +12,7 @@ import type { McpServerUsage } from "./mcp-servers";
 import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
+import type { ToolCallDetail } from "./errors";
 import type { ProjectReliability } from "./reliability";
 import { durationStats } from "./session-duration";
 import type { VelocityDay } from "./velocity";
@@ -470,6 +471,29 @@ export function demoLatency() {
   return { stats: latencyStats(values), tools: ["Read", "Edit", "Bash", "Grep", "WebFetch"] };
 }
 
+const DEMO_ERRORS = [
+  { id: 9001, tool_name: "Bash", target: "npm test", error_text: "exit code 1: 2 failing tests", input: { command: "npm test" } },
+  { id: 9002, tool_name: "Edit", target: "src/app/page.tsx", error_text: "String to replace not found in file.", input: { file_path: "src/app/page.tsx", old_string: "<Foo />" } },
+  { id: 9003, tool_name: "WebFetch", target: "api.example.com", error_text: "fetch failed: ETIMEDOUT after 30000ms", input: { url: "https://api.example.com/v1/data" } },
+  { id: 9004, tool_name: "Read", target: "missing.ts", error_text: "ENOENT: no such file or directory", input: { file_path: "src/missing.ts" } },
+];
+
+export function demoToolCallDetail(id: number): ToolCallDetail | null {
+  const e = DEMO_ERRORS.find((x) => x.id === id);
+  if (!e) return null;
+  return {
+    id: e.id,
+    session_id: "demo-incident",
+    tool_name: e.tool_name,
+    target: e.target,
+    success: 0,
+    created_at: dbNow(),
+    input: e.input,
+    output: null,
+    error_text: e.error_text,
+  };
+}
+
 export function demoErrors() {
   const today = Date.now();
   const series = Array.from({ length: 14 }, (_, i) => {
@@ -487,7 +511,14 @@ export function demoErrors() {
       { tool: "WebFetch", failures: 3, total: 11, rate: 3 / 11 },
       { tool: "Edit", failures: 2, total: 98, rate: 2 / 98 },
     ],
-    recent: [],
+    recent: DEMO_ERRORS.map((e, i) => ({
+      id: e.id,
+      session_id: "demo-incident",
+      tool_name: e.tool_name,
+      target: e.target,
+      error_text: e.error_text,
+      created_at: new Date(today - i * 1_800_000).toISOString().slice(0, 19).replace("T", " "),
+    })),
   };
 }
 
@@ -779,6 +810,11 @@ export function installDemoBackend() {
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
+    if (path.includes("/api/tool-calls/")) {
+      const id = Number(path.split("/api/tool-calls/")[1]);
+      const detail = demoToolCallDetail(id);
+      return detail ? json({ detail }) : new Response("{}", { status: 404 });
+    }
     if (path.endsWith("/api/budget")) return json(demoBudget());
     if (path.endsWith("/api/stats")) return json(demoStats());
     if (path.endsWith("/api/activity")) return json(demoActivity());
