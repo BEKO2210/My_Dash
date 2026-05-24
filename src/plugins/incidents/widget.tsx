@@ -4,23 +4,15 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
+import { JsonTree } from "@/components/json-tree";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
+import { isExpandable } from "@/lib/json-tree";
 import type { ErrorItem, ToolCallDetail } from "@/lib/errors";
 
 type Detail = ToolCallDetail | "loading" | "error";
-
-function pretty(value: unknown): string {
-  if (value == null) return "—";
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
 
 export function Incidents() {
   const { tick } = useLive();
@@ -114,10 +106,19 @@ export function Incidents() {
                       <p className="text-muted">{t("incidents.loadError")}</p>
                     ) : (
                       <>
-                        <Field label={t("incidents.input")} value={pretty(detail.input)} />
+                        <div>
+                          <p className="mb-0.5 uppercase tracking-wide text-muted">{t("incidents.input")}</p>
+                          <div className="max-h-40 overflow-auto rounded bg-black/30 p-2">
+                            {isExpandable(detail.input) ? (
+                              <JsonTree data={detail.input} />
+                            ) : (
+                              <span className="font-mono text-foreground">{String(detail.input ?? "—")}</span>
+                            )}
+                          </div>
+                        </div>
                         <Field
                           label={t("incidents.error")}
-                          value={detail.error_text ?? pretty(detail.output)}
+                          value={detail.error_text ?? toText(detail.output)}
                           tone="text-red-400/90"
                         />
                         <p className="font-mono text-[10px] text-muted">{detail.session_id}</p>
@@ -132,6 +133,16 @@ export function Incidents() {
       )}
     </Panel>
   );
+}
+
+function toText(value: unknown): string {
+  if (value == null) return "—";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 }
 
 function Field({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
