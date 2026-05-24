@@ -79,7 +79,10 @@ function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
   );
 }
 
-const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i];
+// The full dashboard renders here, so tolerate noise from other widgets: 3D-graph
+// WebGL info, the React DevTools nudge, and recharts' transient "reading 'tick'"
+// while a chart's ResponsiveContainer settles on first paint (as layout.spec does).
+const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i, /reading 'tick'/];
 
 function watchConsole(page: Page, errors: string[]) {
   page.on("console", (m) => {
