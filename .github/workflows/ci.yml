@@ -74,8 +74,8 @@ jobs:
       # (e2e/project-leaderboard.spec.ts), streak/subagent-tree
       # (e2e/streak.spec.ts), velocity/session-duration (e2e/velocity.spec.ts),
       # prompt-history (e2e/prompt-history.spec.ts), mcp-servers/compaction-timeline
-      # (e2e/mcp-servers.spec.ts) and anomaly/calendar-heatmap
-      # (e2e/anomaly.spec.ts) audits as CI gates.
+      # (e2e/mcp-servers.spec.ts), anomaly/calendar-heatmap (e2e/anomaly.spec.ts)
+      # and the global interactions sweep (e2e/global.spec.ts) audits as CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -277,6 +277,15 @@ jobs:
         with:
           name: calendar-heatmap-screenshots
           path: test-results/calendar-heatmap-shots
+          if-no-files-found: ignore
+
+      # Always collect the global interactions / full-dashboard overview screenshots
+      # (Phase Z, Run 119c — the "Abschluss-Sammlung").
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: global-screenshots
+          path: test-results/global-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
