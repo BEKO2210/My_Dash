@@ -54,8 +54,8 @@ describe("processAlerts (dedup)", () => {
     const db = (open = new Database(":memory:"));
     migrate(db); // seeds default rules incl. cost_session @ 5
     const c = ctx({ eventType: "Stop", sessionCostUsd: 9 });
-    expect(processAlerts(db, c)).toBeGreaterThan(0);
-    expect(processAlerts(db, c)).toBe(0); // same session → deduped
+    expect(processAlerts(db, c).length).toBeGreaterThan(0);
+    expect(processAlerts(db, c)).toHaveLength(0); // same session → deduped
     const alerts = recentAlerts(db, 10);
     expect(alerts.some((a) => a.type === "cost_session")).toBe(true);
   });

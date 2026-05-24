@@ -11,6 +11,7 @@ import { parseMcpTool } from "./mcp";
 import { preparePrompt, type PreparedPrompt } from "./prompt";
 import { pruneAll } from "./retention";
 import { scheduleTranscriptUpdate } from "./transcript-sync";
+import { getWebhookConfig, sendAlertWebhook } from "./webhook";
 import type { EventRow, HookPayload, SessionRow, SessionStatus } from "./types";
 
 // Which session status each event implies. Crucially: Stop != "done" (it fires after every
@@ -391,7 +392,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       eventType === "PostToolUse"
         ? ((recentErrorRateStmt.get() as { r: number | null }).r ?? 0)
         : 0;
-    processAlerts(db, {
+    const fired = processAlerts(db, {
       eventType,
       toolName,
       toolSource: alertToolSource,
@@ -402,6 +403,15 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       recentErrorRate,
       hourBucket: hourBucket(result.event.created_at),
     });
+    // Optional outbound webhook (Slack/Discord), off by default. Fire-and-forget.
+    if (fired.length > 0) {
+      const wh = getWebhookConfig(db);
+      if (wh.enabled && wh.url) {
+        for (const f of fired) {
+          void sendAlertWebhook(wh.url, f.message).catch((err) => log.error("webhook failed", err));
+        }
+      }
+    }
   } catch (err) {
     log.error("alert processing failed", err);
   }
