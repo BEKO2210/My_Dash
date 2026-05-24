@@ -30,6 +30,16 @@ export function nextPreset(list: string[], current: string): string {
   return list[(i + 1) % list.length] ?? list[0];
 }
 
+// Keep only known string ids (deduped), e.g. the hidden-widget list.
+export function sanitizeIdList(raw: unknown, validIds: string[]): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  for (const id of raw) {
+    if (typeof id === "string" && validIds.includes(id)) seen.add(id);
+  }
+  return [...seen];
+}
+
 // Keep only overrides for known widgets that carry a valid span + height.
 export function sanitizeSizes(raw: unknown, validIds: string[]): SizeMap {
   if (!raw || typeof raw !== "object") return {};
