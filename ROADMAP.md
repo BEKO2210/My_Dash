@@ -308,6 +308,11 @@ sein.
 > Gegencheck zu den automatisierten Assertions. Run 120 ist erst freigegeben,
 > wenn die Galerie aller `*-screenshots` einmal durchgesehen wurde.
 
+> **Test-Kadenz (ab Run 119):** Pro Teil-Run laufen lokal nur Lint, Unit-Tests
+> und der **jeweilige** E2E-Spec; CI fährt ohnehin die volle Suite je PR. Die
+> **komplette lokale E2E-Suite** wird **einmal ganz am Ende** gefahren — direkt
+> **vor Run 120** (dem Installer-/Release-Run) — als finaler Gesamt-Gate.
+
 > **Vollständigkeit (unverhandelbar):** Diese Abnahme deckt **jedes** Widget der
 > Registry (`src/plugins/registry.ts`) ab — keine Karte bleibt ungeprüft. Die
 > Runs 100–102 prüfen alle Widgets gemeinsam (Layout, Farbe/Kontrast, Typografie);
@@ -368,13 +373,17 @@ sein.
      `session-duration`.
    - **118c — Prompt-Verlauf.** Chronologische, durchsuchbare Liste; Klick/Drilldown,
      Token-Schätzung, Leer-/Kein-Treffer-Zustand (`prompt-history`).
-119. 🔌 **MCP-Server, Kompaktierungen, Anomalien, Jahres-Kalender + globale
-     Interaktionen.** MCP-Zeilen/Balken; **+ Kompaktierungs-Timeline**
-     (`compaction-timeline`), **+ Anomalie-Erkennung** (`anomaly`),
-     **+ Jahres-Kalender** (`calendar-heatmap`). Global: Sprach- &
-     Theme-Umschalter, Suche filtert alle Widgets, Layout-Reset/Drag, Info-
-     Hints überall; alle `/api/*`-Routen antworten; Demo-Modus zeigt alle
-     Widgets. Abschluss-Sammlung aller Screenshots.
+119. 🔌 **Aufgefächert** — vier Widgets plus die globale Abnahme waren zu viel für
+     einen Run; jeder Teil ist ein eigener, PR-großer Schritt:
+   - **119a — MCP-Server & Kompaktierungs-Timeline.** MCP-Zeilen/Balken
+     (Aufrufe, Fehlerrate, Latenz) + Kompaktierungs-Timeline (`mcp-servers`,
+     `compaction-timeline`).
+   - **119b — Anomalie-Erkennung & Jahres-Kalender.** Anomalie-Signale/Vergleich
+     + Kalender-Heatmap (Punchcard fürs Jahr) — `anomaly`, `calendar-heatmap`.
+   - **119c — Globale Interaktionen & Abschluss.** Sprach- & Theme-Umschalter,
+     Suche filtert alle Widgets, Layout-Reset/Drag, Info-Hints überall; alle
+     `/api/*`-Routen antworten; Demo-Modus zeigt alle Widgets. Abschluss-Sammlung
+     aller Screenshots.
 
 ### Z-Cover. ✅ Widget-Abdeckungs-Matrix
 
@@ -402,7 +411,9 @@ abnimmt — zusätzlich zu den Quer-Runs 100–102 (Layout, Farbe/Kontrast, Typo
 | 118a | `streak`, `subagent-tree` |
 | 118b | `velocity`, `session-duration` |
 | 118c | `prompt-history` |
-| 119 | `mcp-servers`, `compaction-timeline`, `anomaly`, `calendar-heatmap` |
+| 119a | `mcp-servers`, `compaction-timeline` |
+| 119b | `anomaly`, `calendar-heatmap` |
+| 119c | *(globale Interaktionen — kein einzelnes Widget)* |
 
 Das sind alle **30** Registry-Widgets. Externe Plugins aus `plugins.local/` werden
 über den Demo-/Galerie-Pfad (Run 119) mitgeprüft. **Regel:** Kommt ein neues Widget
@@ -418,21 +429,23 @@ v1.0 (Run 120) freigegeben wird.
 > spezifiziert und wird vor Freigabe verifiziert.
 
 Die öffentliche Demo (läuft idealerweise **nur** auf der Website) wirkt aktuell
-**zu hektisch und inkonsistent**. Ruhiger, glaubwürdiger und stabil machen:
+**zu hektisch und inkonsistent**. Die Webseite muss **perfekt** werden — sie ist
+das Aushängeschild. Deshalb **aufgefächert** in mehrere PR-große Teil-Runs (der
+Reihe nach abzuarbeiten, jeder mit De/En × Light/Dark-Screenshots der Demo):
 
-- **Sessions bleiben bestehen.** Mehrere offene Sessions sind ok, aber eine
-  **beendete Session verschwindet nie wieder** — sie bleibt in der „Beendet"-
-  Spalte (kein Wegrotieren/Abschneiden der Historie wie heute).
-- **Geld steigt realistisch & monoton.** Kosten/Tokens nur **aufwärts**, in
-  kleinen, plausiblen Schritten — **kein Hoch-/Runter-Springen**.
-- **Weniger Hektik.** Ereignis-Takt entschleunigen, keine sprunghaften
+- **Z-Demo-1 — Seedbare, konsistente Demo-Daten.** Fundament: die In-Browser-
+  Engine (`src/lib/demo.ts`) deterministisch/seedbar machen, sodass über Reloads
+  hinweg ein stimmiges, kuratiertes Bild entsteht und Screenshots/GIFs
+  reproduzierbar sind. → Voraussetzung für Z-Demo-2…4.
+- **Z-Demo-2 — Persistente Sessions & monotone Ökonomie.** Eine **beendete
+  Session verschwindet nie wieder** (bleibt in „Beendet", kein Wegrotieren der
+  Historie); **Kosten/Tokens steigen monoton** — nur aufwärts, in kleinen,
+  plausiblen Schritten, **kein Hoch-/Runter-Springen**.
+- **Z-Demo-3 — Ruhigerer Takt.** Ereignis-Takt entschleunigen, keine sprunghaften
   Zahlensprünge; Werte sanft fortschreiben statt neu zu würfeln.
-- **3D-Graph: episch statt zappelig.** Optik ist gut, aber er soll **nicht
-  springen** — eine **langsame, gleichmäßige (epische) Auto-Rotation**. Bei
-  **manueller** Bewegung nicht sofort weiterdrehen, sondern **15 s warten**,
-  dann sanft wieder die Auto-Rotation aufnehmen.
-- **Konsistenz.** Über Reloads hinweg ein stimmiges, kuratiertes Bild (seedbare
-  Demo-Daten), damit Screenshots/GIFs reproduzierbar sind.
+- **Z-Demo-4 — Epischer 3D-Graph.** Optik bleibt, aber **nicht springen**: eine
+  **langsame, gleichmäßige (epische) Auto-Rotation**. Bei **manueller** Bewegung
+  nicht sofort weiterdrehen, sondern **15 s warten**, dann sanft wieder aufnehmen.
 
 ### Z-Shots. 📸 Automatische Widget-Galerie (Playwright, **vor dem Beta-Release**)
 
