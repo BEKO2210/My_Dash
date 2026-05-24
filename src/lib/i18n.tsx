@@ -243,6 +243,13 @@ const DE: Record<string, string> = {
   "layout.width": "Breite ändern",
   "layout.height": "Höhe ändern",
 
+  "range.label": "Zeitbereich",
+  "range.24h": "24 Std.",
+  "range.7d": "7 Tage",
+  "range.30d": "30 Tage",
+  "range.90d": "90 Tage",
+  "range.all": "Gesamt",
+
   "gallery.title": "Widget-Galerie",
   "gallery.info": "Widgets ein- oder ausblenden. Reihenfolge und Größe änderst du direkt am Widget.",
   "gallery.close": "Schließen",
@@ -572,6 +579,13 @@ const EN: Record<string, string> = {
   "layout.reset": "Reset layout",
   "layout.width": "Change width",
   "layout.height": "Change height",
+
+  "range.label": "Time range",
+  "range.24h": "24h",
+  "range.7d": "7 days",
+  "range.30d": "30 days",
+  "range.90d": "90 days",
+  "range.all": "All time",
 
   "gallery.title": "Widget gallery",
   "gallery.info": "Show or hide widgets. Reorder and resize directly on the widget.",
