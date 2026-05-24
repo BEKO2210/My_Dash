@@ -13,6 +13,7 @@ import { streakStats, peakHour, type DayCount } from "./streak";
 import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
 import type { ToolCallDetail } from "./errors";
+import type { AlertItem } from "./alerts";
 import type { ProjectReliability } from "./reliability";
 import type { SearchHit } from "./search-index";
 import type { SessionDetail } from "./session-detail";
@@ -871,6 +872,17 @@ export function demoSearch(q: string): { hits: SearchHit[] } {
   return { hits: hits.slice(0, 20) };
 }
 
+export function demoAlerts() {
+  const now = Date.now();
+  const at = (ms: number) => new Date(now - ms).toISOString().slice(0, 19).replace("T", " ");
+  const alerts: AlertItem[] = [
+    { id: 3, rule_id: 2, type: "error_spike", message: "Error rate 33% (≥ 25%)", session_id: "demo-incident", read: 0, created_at: at(120_000) },
+    { id: 2, rule_id: 1, type: "mcp_error", message: "MCP tool failed: mcp__github__create_pr", session_id: "demo-incident", read: 0, created_at: at(3_600_000) },
+    { id: 1, rule_id: 4, type: "cost_session", message: "Session cost $6.20 (≥ $5)", session_id: "demo-bot", read: 1, created_at: at(7_200_000) },
+  ];
+  return { alerts, unread: alerts.filter((a) => !a.read).length };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -919,6 +931,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
     if (path.endsWith("/api/plugins/config")) return json({ config: {} });
+    if (path.endsWith("/api/alerts")) return json(demoAlerts());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/search")) {
       const u = new URL(raw, window.location.href);

@@ -1,8 +1,10 @@
 import path from "node:path";
 import { db } from "./db";
 import { hourBucket } from "./activity";
+import { processAlerts } from "./alerts";
 import { publish } from "./bus";
 import { describeFileEdit } from "./file-edit";
+import { parseDbTime } from "./format";
 import { scheduleGitUpdate } from "./git-sync";
 import { log } from "./log";
 import { parseMcpTool } from "./mcp";
@@ -185,6 +187,12 @@ const bumpActivity = db.prepare<[string, string]>(`
 
 const getSession = db.prepare<[string]>(`SELECT * FROM sessions WHERE id = ?`);
 
+// Error rate over the most recent tool calls — feeds the error-spike alert rule.
+const recentErrorRateStmt = db.prepare(
+  `SELECT AVG(CASE WHEN success = 0 THEN 1.0 ELSE 0 END) AS r
+   FROM (SELECT success FROM tool_calls ORDER BY id DESC LIMIT 50)`,
+);
+
 const lastPreToolTime = db.prepare<[string, string]>(`
   SELECT created_at FROM events
   WHERE session_id = ? AND event_type = 'PreToolUse' AND tool_name = ?
@@ -252,6 +260,10 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   const toolName = typeof payload.tool_name === "string" ? payload.tool_name : null;
   const model = extractModel(payload);
 
+  // Captured in the PostToolUse branch for the alert engine (after the tx).
+  let alertToolSource: string | null = null;
+  let alertToolSuccess: number | null = null;
+
   // Redact secrets in the prompt before it's persisted anywhere (payload_json,
   // title, summary, prompts table all use the redacted text).
   let prepared: PreparedPrompt | null = null;
@@ -305,6 +317,8 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       }
       const { isError, errorText } = describeToolResult(payload.tool_response);
       const mcp = parseMcpTool(toolName);
+      alertToolSource = mcp.isMcp ? "mcp" : "builtin";
+      alertToolSuccess = isError ? 0 : 1;
       const info = insertToolCall.run(
         sessionId,
         toolName,
@@ -367,6 +381,30 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   const result = tx();
   maybePrune();
   publish(result);
+
+  // Read-only alerting: evaluate the rule engine against this event. Never blocks
+  // or fails ingest.
+  try {
+    const startMs = parseDbTime(result.session.first_seen)?.getTime();
+    const durationMin = startMs ? Math.max(0, (Date.now() - startMs) / 60_000) : 0;
+    const recentErrorRate =
+      eventType === "PostToolUse"
+        ? ((recentErrorRateStmt.get() as { r: number | null }).r ?? 0)
+        : 0;
+    processAlerts(db, {
+      eventType,
+      toolName,
+      toolSource: alertToolSource,
+      toolSuccess: alertToolSuccess,
+      sessionId,
+      sessionCostUsd: result.session.cost_usd ?? 0,
+      sessionDurationMin: durationMin,
+      recentErrorRate,
+      hourBucket: hourBucket(result.event.created_at),
+    });
+  } catch (err) {
+    log.error("alert processing failed", err);
+  }
 
   // Capture the git branch/commit of the project once, at session start.
   if (eventType === "SessionStart" && cwd) {
