@@ -6,6 +6,7 @@ import { FileCode2 } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
+import { useSearch } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import type { FileHotspot } from "@/lib/files";
 
@@ -21,6 +22,16 @@ function clip(s: string, n: number): string {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
+// Solid tile colour: the accent blue pre-blended over the dark chart base by
+// intensity. A semi-transparent blue would blend over the panel, turning pale and
+// unreadable on the light theme's white panel; this keeps the treemap dark-on-dark
+// in both themes (identical to the old look on the dark panel #0e1219).
+function heatFill(intensity: number): string {
+  const a = 0.22 + 0.68 * Math.max(0, Math.min(1, intensity));
+  const mix = (c: number, base: number) => Math.round(c * a + base * (1 - a));
+  return `rgb(${mix(79, 14)}, ${mix(140, 18)}, ${mix(255, 25)})`;
+}
+
 function FileCell({
   x = 0,
   y = 0,
@@ -29,6 +40,7 @@ function FileCell({
   name = "",
   value = 0,
   max = 1,
+  onPick,
 }: {
   x?: number;
   y?: number;
@@ -37,12 +49,17 @@ function FileCell({
   name?: string;
   value?: number;
   max?: number;
+  onPick?: (name: string) => void;
 }) {
   const intensity = max > 0 ? value / max : 0;
-  const fill = `rgba(79,140,255,${0.22 + 0.68 * intensity})`;
+  const fill = heatFill(intensity);
   const showLabel = width > 56 && height > 18;
+  const clickable = !!onPick && !!name;
   return (
-    <g>
+    <g
+      onClick={clickable ? () => onPick!(name) : undefined}
+      style={clickable ? { cursor: "pointer" } : undefined}
+    >
       <rect x={x} y={y} width={width} height={height} fill={fill} stroke="#0e1219" strokeWidth={1} rx={2} />
       {showLabel && (
         <text x={x + 5} y={y + 14} fill="#e5e7eb" fontSize={11}>
@@ -82,6 +99,7 @@ function HotspotTooltip({
 export function FileHotspots() {
   const { t } = useT();
   const { tick } = useLive();
+  const { setQuery } = useSearch();
   const [range, setRange] = useState<Range>("30");
   const [files, setFiles] = useState<FileHotspot[] | null>(null);
 
@@ -116,6 +134,7 @@ export function FileHotspots() {
             <button
               key={r}
               onClick={() => setRange(r)}
+              aria-pressed={range === r}
               className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
             >
               {t(RANGE_LABEL[r])}
@@ -131,7 +150,7 @@ export function FileHotspots() {
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
-            <Treemap data={data} dataKey="size" stroke="#0e1219" content={<FileCell max={max} />}>
+            <Treemap data={data} dataKey="size" stroke="#0e1219" content={<FileCell max={max} onPick={setQuery} />}>
               <Tooltip content={<HotspotTooltip />} />
             </Treemap>
           </ResponsiveContainer>
