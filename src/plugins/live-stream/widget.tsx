@@ -83,29 +83,32 @@ export function LiveStream() {
       ) : filtered.length === 0 ? (
         <WidgetState icon={Activity} title={t("common.noResults")} />
       ) : (
-        <ul role="log" aria-live="polite" aria-label={t("stream.title")} className="divide-y divide-panel-border/60">
-          {filtered.map((e) => {
-            const kind = eventKind(e.event_type);
-            const Icon = ICONS[kind];
-            return (
-              <li
-                key={e.id}
-                className="mc-stream-in flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
-              >
-                <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>
-                  <p className="truncate font-mono text-[11px] text-muted">
-                    {e.event_type} · {e.session_id.slice(0, 8)}
-                  </p>
-                </div>
-                <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
-                  {relativeTime(e.created_at, lang)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        // role="log" lives on a wrapper so the inner <ul>/<li> keep their list semantics.
+        <div role="log" aria-live="polite" aria-label={t("stream.title")}>
+          <ul className="divide-y divide-panel-border/60">
+            {filtered.map((e) => {
+              const kind = eventKind(e.event_type);
+              const Icon = ICONS[kind];
+              return (
+                <li
+                  key={e.id}
+                  className="mc-stream-in flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
+                >
+                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>
+                    <p className="truncate font-mono text-[11px] text-muted">
+                      {e.event_type} · {e.session_id.slice(0, 8)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
+                    {relativeTime(e.created_at, lang)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </Panel>
   );

@@ -61,8 +61,9 @@ jobs:
         run: npm run build
 
       # Playwright boots `npm run start` (see playwright.config.ts), seeds via the
-      # ingest API and asserts the dashboard renders, connects and populates.
-      - name: Smoke E2E
+      # ingest API and asserts the dashboard renders, connects and populates. Also
+      # runs the axe-core accessibility audit (e2e/a11y.spec.ts) as a CI gate.
+      - name: Smoke + a11y E2E
         run: npm run test:e2e
 
       - uses: actions/upload-artifact@v4

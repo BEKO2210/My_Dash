@@ -102,7 +102,7 @@ export function SessionTimeline() {
               ))}
             </div>
           </div>
-          <ul className="flex flex-1 flex-col gap-1 overflow-auto">
+          <ul tabIndex={0} className="flex flex-1 flex-col gap-1 overflow-auto outline-none">
             {bars.map((b) => (
               <li key={b.id} className="flex items-center gap-2">
                 <span className="w-24 shrink-0 truncate text-[11px] text-foreground" title={b.title}>

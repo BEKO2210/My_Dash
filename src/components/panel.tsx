@@ -32,7 +32,11 @@ export function Panel({
         </div>
         {right}
       </header>
-      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+      {/* tabIndex makes the scroll region keyboard-reachable (WCAG 2.1.1) for panels
+          whose content has no other focusable element. */}
+      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto outline-none">
+        {children}
+      </div>
     </section>
   );
 }

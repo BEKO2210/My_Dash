@@ -76,7 +76,7 @@ export function Landing() {
 
         <p className="mx-auto mt-9 max-w-2xl text-xs leading-relaxed text-muted/80">{t("landing.how")}</p>
         <p className="mt-2 text-xs text-accent">{t("landing.demoNote")}</p>
-        <p className="mt-7 text-[11px] uppercase tracking-[0.3em] text-muted/60">{t("landing.scroll")}</p>
+        <p className="mt-7 text-[11px] uppercase tracking-[0.3em] text-muted/80">{t("landing.scroll")}</p>
       </div>
     </section>
   );
