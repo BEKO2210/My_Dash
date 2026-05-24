@@ -48,9 +48,10 @@ function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
   );
 }
 
-// Headless WebGL (SwiftShader) and three.js can emit benign info/warnings, and the
-// React DevTools nudge is noise. None are real errors for this audit.
-const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i];
+// The full dashboard renders here, so tolerate benign noise from other widgets:
+// headless-WebGL/three.js info, the React DevTools nudge, and recharts' transient
+// "reading 'tick'" while a chart's ResponsiveContainer settles (as layout.spec does).
+const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i, /reading 'tick'/];
 
 function watchConsole(page: Page, errors: string[]) {
   page.on("console", (m) => {
