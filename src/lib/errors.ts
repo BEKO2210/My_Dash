@@ -106,3 +106,60 @@ export function recentErrors(db: Database.Database, limit: number): ErrorItem[] 
     )
     .all(limit) as ErrorItem[];
 }
+
+// One tool call with its parsed I/O — the read path behind the error drill-down.
+export interface ToolCallDetail {
+  id: number;
+  session_id: string;
+  tool_name: string;
+  target: string | null;
+  success: number | null;
+  created_at: string;
+  input: unknown;
+  output: unknown;
+  error_text: string | null;
+}
+
+export function toolCallDetail(db: Database.Database, id: number): ToolCallDetail | null {
+  const row = db
+    .prepare(
+      `SELECT tc.id, tc.session_id, tc.tool_name, tc.target, tc.success, tc.created_at,
+              io.input_json, io.output_json, io.error_text
+       FROM tool_calls tc
+       LEFT JOIN tool_io io ON io.tool_call_id = tc.id
+       WHERE tc.id = ?`,
+    )
+    .get(id) as
+    | {
+        id: number;
+        session_id: string;
+        tool_name: string;
+        target: string | null;
+        success: number | null;
+        created_at: string;
+        input_json: string | null;
+        output_json: string | null;
+        error_text: string | null;
+      }
+    | undefined;
+  if (!row) return null;
+  const parse = (s: string | null): unknown => {
+    if (!s) return null;
+    try {
+      return JSON.parse(s);
+    } catch {
+      return s;
+    }
+  };
+  return {
+    id: row.id,
+    session_id: row.session_id,
+    tool_name: row.tool_name,
+    target: row.target,
+    success: row.success,
+    created_at: row.created_at,
+    input: parse(row.input_json),
+    output: parse(row.output_json),
+    error_text: row.error_text,
+  };
+}

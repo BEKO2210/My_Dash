@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
-import { errorSeries, errorStats, recentErrors, topFailingTools } from "@/lib/errors";
+import { errorSeries, errorStats, recentErrors, toolCallDetail, topFailingTools } from "@/lib/errors";
 import { migrate } from "@/lib/migrations";
 
 let open: Database.Database | null = null;
@@ -92,5 +92,37 @@ describe("topFailingTools", () => {
   it("respects the since window", () => {
     const rows = topFailingTools(dated(), 6, "2026-05-23 00:00:00");
     expect(rows.map((r) => r.tool)).toEqual(["Bash"]); // only the 05-23 failure remains
+  });
+});
+
+describe("toolCallDetail", () => {
+  let open: Database.Database | null = null;
+  afterEach(() => {
+    open?.close();
+    open = null;
+  });
+
+  it("returns the call with parsed I/O", () => {
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    const info = db
+      .prepare(`INSERT INTO tool_calls (session_id, tool_name, target, success) VALUES (?, ?, ?, 0)`)
+      .run("s1", "Bash", "npm test");
+    const id = Number(info.lastInsertRowid);
+    db.prepare(
+      `INSERT INTO tool_io (tool_call_id, input_json, output_json, is_error, error_text) VALUES (?, ?, ?, 1, ?)`,
+    ).run(id, '{"command":"npm test"}', '{"code":1}', "exit 1");
+
+    const detail = toolCallDetail(db, id)!;
+    expect(detail.tool_name).toBe("Bash");
+    expect(detail.input).toEqual({ command: "npm test" });
+    expect(detail.output).toEqual({ code: 1 });
+    expect(detail.error_text).toBe("exit 1");
+  });
+
+  it("returns null for an unknown id", () => {
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    expect(toolCallDetail(db, 999)).toBeNull();
   });
 });
