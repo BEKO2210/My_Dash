@@ -1,11 +1,19 @@
 "use client";
 
-import { Activity, KanbanSquare, Coins, Boxes, Timer, AlertTriangle, ImageIcon, ArrowRight, type LucideIcon } from "lucide-react";
+import { Activity, KanbanSquare, Coins, Boxes, Timer, AlertTriangle, ArrowRight, type LucideIcon } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { useT } from "@/lib/i18n";
+import { asset } from "@/lib/asset";
 import { CONTACT } from "@/lib/contact";
 
 type Feat = { icon: LucideIcon; t: string; d: string };
+
+const GALLERY: { id: string; t: string }[] = [
+  { id: "tool-graph", t: "landing.f4t" },
+  { id: "token-chart", t: "landing.f3t" },
+  { id: "kanban", t: "landing.f2t" },
+  { id: "latency", t: "features.f5t" },
+];
 
 export default function FeaturesPage() {
   const { t } = useT();
@@ -41,21 +49,35 @@ export default function FeaturesPage() {
           ))}
         </section>
 
-        {/* Gallery — placeholders now; the CI gallery pipeline (Z-Shots) fills these. */}
+        {/* Gallery — real screenshots from the deterministic demo (Z-Shots). */}
         <section>
           <h2 className="text-lg font-semibold text-foreground">{t("features.galleryTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("features.galleryLead")}</p>
+
+          <figure className="mt-4 overflow-hidden rounded-xl border border-panel-border bg-panel/30">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={asset("/shots/dashboard-dark.png")}
+              alt={t("landing.tagline")}
+              width={1500}
+              height={1000}
+              className="w-full"
+              loading="lazy"
+            />
+          </figure>
+
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="flex aspect-video items-center justify-center rounded-xl border border-dashed border-panel-border bg-panel/30 text-muted"
-              >
-                <span className="flex flex-col items-center gap-2 text-xs">
-                  <ImageIcon className="h-6 w-6 opacity-60" />
-                  {t("features.shotComing")}
-                </span>
-              </div>
+            {GALLERY.map((g) => (
+              <figure key={g.id} className="overflow-hidden rounded-xl border border-panel-border bg-panel/30">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={asset(`/shots/widgets/${g.id}-dark.png`)}
+                  alt={t(g.t)}
+                  className="w-full"
+                  loading="lazy"
+                />
+                <figcaption className="border-t border-panel-border px-3 py-2 text-xs text-muted">{t(g.t)}</figcaption>
+              </figure>
             ))}
           </div>
         </section>

@@ -48,10 +48,26 @@ tasks, so the full dashboard — live stream, kanban, token/cost charts and the 
 graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 (enable repo → Settings → Pages → Source: **GitHub Actions**).
 
-> **📸 Screenshots are being regenerated for the beta.** A Playwright pass captures
-> every widget across both themes and all accent colours just before the v1.0.0-beta
-> release (see [ROADMAP](ROADMAP.md), Phase Z). The fastest way to see it now is the
-> live demo link above, or `npm run dev` locally.
+### Screenshots
+
+<p align="center">
+  <img src="public/shots/dashboard-dark.png" alt="Claude Mission Control — full dashboard" width="900">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="public/shots/widgets/tool-graph-dark.png" alt="3D tool-call graph"><br><sub><b>3D tool-call graph</b> — session → tool → file/command/URL, active paths glow</sub></td>
+    <td width="50%"><img src="public/shots/widgets/token-chart-dark.png" alt="Tokens & cost"><br><sub><b>Tokens &amp; cost</b> — daily and 24h usage with cost</sub></td>
+  </tr>
+  <tr>
+    <td><img src="public/shots/widgets/kanban-dark.png" alt="Session kanban"><br><sub><b>Session kanban</b> — every session by status</sub></td>
+    <td><img src="public/shots/widgets/latency-dark.png" alt="Latency distribution"><br><sub><b>Latency</b> — response/tool runtimes, outliers visible</sub></td>
+  </tr>
+</table>
+
+<sub>Screenshots are generated deterministically from the demo by
+<a href="scripts/gallery.mjs"><code>scripts/gallery.mjs</code></a> (every widget in light &amp; dark lives under
+<a href="public/shots/"><code>public/shots/</code></a>); the <a href="https://beko2210.github.io/My_Dash/">live demo</a> shows it all animated.</sub>
 
 ---
 

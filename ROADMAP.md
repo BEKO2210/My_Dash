@@ -464,22 +464,23 @@ Reihe nach abzuarbeiten, jeder mit De/En × Light/Dark-Screenshots der Demo):
 - **Z-Web-2 — Foto.** Echtes Profilbild unter `public/profile.jpg` einsetzen
   (der `Avatar` zeigt es automatisch statt des Platzhalters).
 
-### Z-Shots. 📸 Automatische Bild-Galerie + GIFs (Playwright, **vor dem Beta-Release**)
+### Z-Shots. 📸 Automatische Bild-Galerie + GIFs (Playwright) — *Erstausgabe erledigt*
 
-Die alten Platzhalter-Bilder wurden in Run 99 entfernt. **Direkt vor dem
-Beta-Release** wird eine frische, vollständige Galerie automatisch erzeugt:
+Die alten Platzhalter-Bilder wurden in Run 99 entfernt. Ersetzt durch eine
+deterministische, reproduzierbare Galerie aus dem Demo-Build:
 
-- **Jedes Widget einzeln** (alle Einträge der Registry) als eigener Screenshot.
-- **Beide Themes** (Light **und** Dark) **× jede Akzentfarbe** der Palette
-  (`ACCENT_PRESETS`: Blau, Cyan, Grün, Violett, Pink, Amber) → pro Widget die
-  volle Theme-Matrix.
-- **Mit Playwright** erzeugt (eigener Spec/Script über dem Seed-/Demo-Backend),
-  deterministisch und reproduzierbar; Ausgabe nach `assets/widgets/<widget>/
-  <mode>-<accent>.png` und als CI-Artefakt gesammelt.
-- **GIFs** (Live-Stream, 3D-Graph-Rotation) per Playwright-Video → ffmpeg/gifski
-  **in CI** (lokal fehlt das Tooling), professionell und schlank.
-- **README-Galerie + Funktionen-Seite + Demo-Sektion** werden mit den neuen
-  Bildern bestückt (ersetzt die in Run 99 entfernten Platzhalter).
+- ✅ **Jedes Widget einzeln** (alle 30 Registry-Einträge) in **Light & Dark** →
+  `public/shots/widgets/<id>-<mode>.png`, plus Dashboard-Hero
+  (`public/shots/dashboard-<mode>.png`).
+- ✅ **Mit Playwright** über das seedbare Demo-Backend erzeugt
+  (`scripts/gallery.mjs`), deterministisch und reproduzierbar.
+- ✅ **README-Galerie + Funktionen-Seite** mit echten Bildern bestückt.
+- ✅ **CI-Workflow** `gallery.yml` (manuell auslösbar) baut die Demo, erzeugt die
+  Galerie und lädt sie als Artefakt hoch.
+- ⏳ **GIFs** (Live-Stream, 3D-Graph-Rotation): per Playwright-Video → ffmpeg
+  **in CI** (lokal fehlt der GIF-Muxer); der Workflow installiert volles ffmpeg.
+- ⏳ **Optional:** Akzentfarben-Matrix (`ACCENT_PRESETS`) pro Widget, falls für
+  die Doku gewünscht.
 
 ## Phase Ω — Beta-Release (Run 120, **letzter Schritt**)
 
