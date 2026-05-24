@@ -2,4 +2,6 @@
 // Refresh with `npm run plugins:scan` (also runs automatically before build).
 import type { Widget } from "./registry";
 
-export const externalWidgets: Widget[] = [];
+import { plugin as ext_reference } from "../../plugins.local/reference/plugin";
+
+export const externalWidgets: Widget[] = [ext_reference];
