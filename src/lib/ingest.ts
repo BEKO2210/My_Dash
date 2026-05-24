@@ -11,6 +11,7 @@ import { parseMcpTool } from "./mcp";
 import { preparePrompt, type PreparedPrompt } from "./prompt";
 import { pruneAll } from "./retention";
 import { scheduleTranscriptUpdate } from "./transcript-sync";
+import { getQuietConfig, isSuppressed } from "./quiet";
 import { getWebhookConfig, sendAlertWebhook } from "./webhook";
 import type { EventRow, HookPayload, SessionRow, SessionStatus } from "./types";
 
@@ -407,7 +408,10 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
     if (fired.length > 0) {
       const wh = getWebhookConfig(db);
       if (wh.enabled && wh.url) {
+        const quiet = getQuietConfig(db);
+        const at = new Date();
         for (const f of fired) {
+          if (isSuppressed(f.type, quiet, at)) continue; // quiet hours: skip non-critical
           void sendAlertWebhook(wh.url, f.message).catch((err) => log.error("webhook failed", err));
         }
       }
