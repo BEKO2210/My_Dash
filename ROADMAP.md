@@ -433,24 +433,41 @@ Die öffentliche Demo (läuft idealerweise **nur** auf der Website) wirkt aktuel
 das Aushängeschild. Deshalb **aufgefächert** in mehrere PR-große Teil-Runs (der
 Reihe nach abzuarbeiten, jeder mit De/En × Light/Dark-Screenshots der Demo):
 
-- **Z-Demo-1 — Seedbare, konsistente Demo-Daten.** Fundament: die In-Browser-
-  Engine (`src/lib/demo.ts`) deterministisch/seedbar machen, sodass über Reloads
-  hinweg ein stimmiges, kuratiertes Bild entsteht und Screenshots/GIFs
-  reproduzierbar sind. → Voraussetzung für Z-Demo-2…4.
-- **Z-Demo-2 — Persistente Sessions & monotone Ökonomie.** Eine **beendete
-  Session verschwindet nie wieder** (bleibt in „Beendet", kein Wegrotieren der
-  Historie); **Kosten/Tokens steigen monoton** — nur aufwärts, in kleinen,
-  plausiblen Schritten, **kein Hoch-/Runter-Springen**.
-- **Z-Demo-3 — Ruhigerer Takt.** Ereignis-Takt entschleunigen, keine sprunghaften
-  Zahlensprünge; Werte sanft fortschreiben statt neu zu würfeln.
-- **Z-Demo-4 — Epischer 3D-Graph.** Optik bleibt, aber **nicht springen**: eine
-  **langsame, gleichmäßige (epische) Auto-Rotation**. Bei **manueller** Bewegung
-  nicht sofort weiterdrehen, sondern **15 s warten**, dann sanft wieder aufnehmen.
+- ✅ **Z-Demo-1 — Seedbare, konsistente Demo-Daten** *(erledigt, #151)*. Fundament:
+  die In-Browser-Engine (`src/lib/demo.ts`) deterministisch/seedbar (mulberry32),
+  sodass über Reloads hinweg ein stimmiges, kuratiertes Bild entsteht und
+  Screenshots/GIFs reproduzierbar sind. → Voraussetzung für Z-Demo-2…4.
+- ✅ **Z-Demo-2 — Persistente Sessions & monotone Ökonomie** *(erledigt, #152)*. Eine
+  **beendete Session verschwindet nie wieder** (Live-Set begrenzt, Historie bleibt);
+  **Kosten/Tokens steigen monoton** — nur aufwärts, in kleinen Schritten, **kein
+  Hoch-/Runter-Springen**.
+- ✅ **Z-Demo-3 — Ruhigerer Takt** *(erledigt, #153)*. Ereignis-Takt entschleunigt
+  (1100 → 2400 ms), seltener neue Sessions; Werte sanft fortschreiben statt neu zu
+  würfeln (Pro-Tick-Deltas eng begrenzt).
+- ✅ **Z-Demo-4 — Epischer 3D-Graph** *(erledigt, #154)*. Optik bleibt; **langsame,
+  gleichmäßige Auto-Rotation** (~75 s/Umdrehung). Bei **manueller** Bewegung
+  pausiert sie und nimmt **15 s** später über eine Rampe sanft wieder auf.
 
-### Z-Shots. 📸 Automatische Widget-Galerie (Playwright, **vor dem Beta-Release**)
+### Z-Web. 🪪 Professionelle Website-Seiten + Footer (Aushängeschild)
+
+> Die Demo soll so professionell wirken wie Obsidian & Co.: vollständige Seiten,
+> ein kompakter, technisch/animatorisch hochwertiger Footer, und überall Bilder
+> vom Programm. **Release-relevant** (erster Eindruck).
+
+- **Z-Web-1 — Footer & Seiten** *(in Arbeit)*. Kompakter, animierter `SiteFooter`
+  (Sheen-Hairline, Hover-Underlines, Open-to-work-Badge, Foto-Platzhalter) auf
+  Dashboard **und** allen Seiten. Vier eigenständige, statisch exportierte Seiten
+  über ein gemeinsames `PageShell`: **Über mich** (Portfolio/Status arbeitssuchend),
+  **Funktionen**, **Kontakt**, **Impressum & Datenschutz** (DE-konform, Hinweis:
+  Demo rein clientseitig, keine Datenerhebung). Voll i18n (DE/EN). Kontaktdaten:
+  Name, Ort (Freiberg am Neckar), Telefon, E-Mail, GitHub — **ohne Straße**.
+- **Z-Web-2 — Foto.** Echtes Profilbild unter `public/profile.jpg` einsetzen
+  (der `Avatar` zeigt es automatisch statt des Platzhalters).
+
+### Z-Shots. 📸 Automatische Bild-Galerie + GIFs (Playwright, **vor dem Beta-Release**)
 
 Die alten Platzhalter-Bilder wurden in Run 99 entfernt. **Direkt vor dem
-Beta-Release** wird eine frische, vollständige Bild-Galerie automatisch erzeugt:
+Beta-Release** wird eine frische, vollständige Galerie automatisch erzeugt:
 
 - **Jedes Widget einzeln** (alle Einträge der Registry) als eigener Screenshot.
 - **Beide Themes** (Light **und** Dark) **× jede Akzentfarbe** der Palette
@@ -459,8 +476,10 @@ Beta-Release** wird eine frische, vollständige Bild-Galerie automatisch erzeugt
 - **Mit Playwright** erzeugt (eigener Spec/Script über dem Seed-/Demo-Backend),
   deterministisch und reproduzierbar; Ausgabe nach `assets/widgets/<widget>/
   <mode>-<accent>.png` und als CI-Artefakt gesammelt.
-- README/Doku-Galerie + Demo-Sektion werden mit den neuen Bildern bestückt
-  (ersetzt die in Run 99 entfernten Platzhalter).
+- **GIFs** (Live-Stream, 3D-Graph-Rotation) per Playwright-Video → ffmpeg/gifski
+  **in CI** (lokal fehlt das Tooling), professionell und schlank.
+- **README-Galerie + Funktionen-Seite + Demo-Sektion** werden mit den neuen
+  Bildern bestückt (ersetzt die in Run 99 entfernten Platzhalter).
 
 ## Phase Ω — Beta-Release (Run 120, **letzter Schritt**)
 
