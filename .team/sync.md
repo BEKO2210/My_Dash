@@ -9,8 +9,8 @@ set `.team/status/<you>.md` to `WAITING` and re-read this file to poll.
 | GATE-0 | Read role + protocol, checked in (`ready`) | ⬜ | ⬜ | ⬜ | ⬜ |
 | GATE-A | Domain audit complete (`findings/<you>.md` filled) | ⬜ | ⬜ | ⬜ | ⬜ |
 | GATE-B | Roadmap ratified (exactly 100 items agreed) | ⬜ | ⬜ | ⬜ | ⬜ |
-| GATE-C | All my assigned items `done` | ⬜ | ⬜ | ⬜ | ⬜ |
-| GATE-D | Full suite green (lint · unit · build · e2e) | ⬜ | ⬜ | ⬜ | ⬜ |
+| GATE-C | All my items `done` **with Acceptance proven** | ⬜ | ⬜ | ⬜ | ⬜ |
+| GATE-D | Suite green + every 🔴/🟠 done-or-waived (Sentinel-validated) | ⬜ | ⬜ | ⬜ | ⬜ |
 | GATE-E | Release-readiness signed off | ⬜ | ⬜ | ⬜ | ⬜ |
 
 > Legend: ⬜ not yet · 🔄 in progress · ✅ done

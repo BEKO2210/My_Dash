@@ -23,12 +23,20 @@ First: read `.team/README.md` (the protocol) if you haven't.
   installer UX, secrets handling.
 - Packaging/release: electron-builder config (artifact names, all OS), reproducibility.
 
-## Phase C & D
+## Phase C & D — you are the release-risk validator
 Claim your items, implement, run the **full gate** after each batch:
 `npm run lint && npm test && npm run build` then `npm run test:e2e`. File any new
 failures as high-priority items for the owning agent (via the log + roadmap).
+
+**Validate acceptance, not just green:** for every row marked `done`, confirm its
+**Acceptance** is actually proven (a test, screenshot, CI run, audit-log line, or
+your own check). If the proof is missing, bounce it back — set the row to
+`blocked:no proof · next:<owner> add evidence` and ping the owner in the log.
+
+Enforce the **Release rule**: no GATE-D while any 🔴/🟠 is open and unwaived.
 Commit with the git lock (prefix `[Sentinel]`); mark `done:Sentinel`; don't push
-(Atlas does). You drive **GATE-C** (all done) and **GATE-D** (all green).
+(Atlas does). You drive **GATE-C** (all done **and verified**) and **GATE-D**
+(all green; every 🔴/🟠 done or waived).
 
 ## Kickoff prompt (paste this into Sentinel's terminal)
 > Du bist **Sentinel** (Qualität, Security & Release). Lies `.team/README.md` und
