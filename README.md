@@ -239,6 +239,15 @@ npm run lint     # ESLint (Next.js config)
 npm run build    # production build (also type-checks)
 ```
 
+## API & data hub
+
+Every widget is backed by a read-only `/api/*` route; the only write path for hook
+data is `POST /api/ingest`. The full HTTP surface is described by an **OpenAPI 3.1**
+spec served at [`/api/openapi`](http://127.0.0.1:3000/api/openapi) (also reachable
+from the command palette → "Open API spec"). Bulk **export** is available at
+`/api/export` (JSON bundle or per-table JSON/CSV) and a **Prometheus** scrape
+endpoint at `/api/metrics`. See [docs/EXPORT.md](docs/EXPORT.md) for the data schema.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). In short: keep the one-way data flow
