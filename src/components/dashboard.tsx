@@ -701,7 +701,7 @@ function FacetBar() {
   }, [tick]);
 
   const cls =
-    "hidden rounded-full border border-panel-border bg-background/40 px-2.5 py-1 text-xs text-muted outline-none transition-colors hover:border-accent/50 focus:border-accent sm:block";
+    "hidden max-w-[10rem] truncate rounded-full border border-panel-border bg-background/40 px-2.5 py-1 text-xs text-muted outline-none transition-colors hover:border-accent/50 focus:border-accent sm:block";
 
   return (
     <>

@@ -86,7 +86,7 @@ export function ToolFrequency() {
       ) : tools.length === 0 ? (
         <WidgetState icon={Hammer} title={t("tools.empty")} />
       ) : (
-        <ul className="flex h-full flex-col justify-center gap-2 overflow-auto p-4">
+        <ul tabIndex={0} className="flex h-full flex-col justify-center gap-2 overflow-auto p-4 outline-none">
           {tools.map((tool) => (
             <li key={tool.tool} title={tool.avgDurationMs != null ? `⌀ ${tool.avgDurationMs} ms` : undefined}>
               <div className="mb-1 flex items-center justify-between gap-2 text-xs">

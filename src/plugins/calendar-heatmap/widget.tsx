@@ -68,7 +68,7 @@ export function CalendarHeatmap() {
       ) : cal.total === 0 ? (
         <WidgetState icon={CalendarRange} title={t("calendar.empty")} />
       ) : (
-        <div className="flex h-full flex-col justify-center gap-2 overflow-auto p-4">
+        <div tabIndex={0} className="flex h-full flex-col justify-center gap-2 overflow-auto p-4 outline-none">
           <div className="inline-flex min-w-min flex-col gap-1">
             <div className="flex text-[9px] text-muted">
               {segments.map((s, i) => (

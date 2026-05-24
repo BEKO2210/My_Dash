@@ -103,7 +103,7 @@ export function ModelDonut() {
             </div>
           </div>
 
-          <ul className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 overflow-auto text-xs">
+          <ul tabIndex={0} className="flex min-w-0 flex-1 flex-col justify-center gap-1.5 overflow-auto text-xs outline-none">
             {slices.map((s, i) => (
               <li key={s.full} className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-1.5">

@@ -32,7 +32,7 @@ export function Reliability() {
       ) : filtered.length === 0 ? (
         <WidgetState icon={ShieldCheck} title={t("common.noResults")} />
       ) : (
-        <ul className="flex h-full flex-col justify-center gap-2.5 overflow-auto p-4">
+        <ul tabIndex={0} className="flex h-full flex-col justify-center gap-2.5 overflow-auto p-4 outline-none">
           {filtered.map((p) => {
             const c = rateColor(p.successRate);
             return (
