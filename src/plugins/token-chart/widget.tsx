@@ -7,6 +7,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -21,6 +22,8 @@ import { formatCompact, formatMoney } from "@/lib/format";
 
 type Mode = "tokens" | "cost";
 type Range = "24h" | "daily" | "monthly";
+type Currency = "EUR" | "USD";
+const SYMBOL: Record<Currency, string> = { EUR: "€", USD: "$" };
 
 const RANGE_LABELS: Record<Range, string> = {
   "24h": "tokens.range24h",
@@ -38,6 +41,7 @@ export function TokenChart() {
   const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("tokens");
   const [range, setRange] = useState<Range>("daily");
+  const [currency, setCurrency] = useState<Currency>("EUR");
 
   useEffect(() => {
     let cancelled = false;
@@ -63,18 +67,21 @@ export function TokenChart() {
           input: b.inputTokens,
           output: b.outputTokens,
           cache: b.cacheTokens,
-          cost: Number(b.costEur.toFixed(2)),
+          costEur: Number(b.costEur.toFixed(2)),
+          costUsd: Number(b.costUsd.toFixed(2)),
         }))
       : (range === "monthly" ? (usage?.months ?? []) : (usage?.days ?? [])).map((d) => ({
           date: range === "monthly" ? d.date : d.date.slice(5), // YYYY-MM vs MM-DD
           input: d.inputTokens,
           output: d.outputTokens,
           cache: d.cacheTokens,
-          cost: Number(d.costEur.toFixed(2)),
+          costEur: Number(d.costEur.toFixed(2)),
+          costUsd: Number(d.costUsd.toFixed(2)),
         }));
 
-  // Totals reflect the selected range.
-  const shownCost = data.reduce((a, d) => a + d.cost, 0);
+  const costKey = currency === "EUR" ? "costEur" : "costUsd";
+  // Totals reflect the selected range + currency.
+  const shownCost = data.reduce((a, d) => a + d[costKey], 0);
   const shownTokens = data.reduce((a, d) => a + d.input + d.output + d.cache, 0);
 
   return (
@@ -85,7 +92,7 @@ export function TokenChart() {
       right={
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-muted lg:inline">
-            {formatMoney(shownCost, "EUR")} · {formatCompact(shownTokens)} {t("tokens.tok")}
+            {formatMoney(shownCost, currency)} · {formatCompact(shownTokens)} {t("tokens.tok")}
           </span>
           <div className="flex rounded-md border border-panel-border text-xs">
             {(["24h", "daily", "monthly"] as Range[]).map((r) => (
@@ -109,6 +116,20 @@ export function TokenChart() {
               </button>
             ))}
           </div>
+          {mode === "cost" && (
+            <div className="flex rounded-md border border-panel-border text-xs">
+              {(["EUR", "USD"] as Currency[]).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCurrency(c)}
+                  aria-pressed={currency === c}
+                  className={`px-2 py-1 ${currency === c ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       }
     >
@@ -148,6 +169,11 @@ export function TokenChart() {
                   contentStyle={tooltipStyle}
                   formatter={(value, name) => [formatCompact(Number(value)), t(`tokens.${String(name)}`)]}
                 />
+                <Legend
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
+                  formatter={(value) => <span className="text-muted">{t(`tokens.${String(value)}`)}</span>}
+                />
                 <Area type="monotone" dataKey="cache" stackId="1" stroke="#a78bfa" fill="url(#gCache)" />
                 <Area type="monotone" dataKey="input" stackId="1" stroke="#38bdf8" fill="url(#gIn)" />
                 <Area type="monotone" dataKey="output" stackId="1" stroke="#34d399" fill="url(#gOut)" />
@@ -160,14 +186,14 @@ export function TokenChart() {
                   stroke="#8b94a7"
                   fontSize={11}
                   tickLine={false}
-                  tickFormatter={(v) => "€" + v}
+                  tickFormatter={(v) => SYMBOL[currency] + v}
                   width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value) => [formatMoney(Number(value), "EUR"), t("tokens.cost")]}
+                  formatter={(value) => [formatMoney(Number(value), currency), t("tokens.cost")]}
                 />
-                <Bar dataKey="cost" fill="#4f8cff" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={costKey} fill="#4f8cff" radius={[4, 4, 0, 0]} />
               </BarChart>
             )}
           </ResponsiveContainer>
