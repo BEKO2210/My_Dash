@@ -210,12 +210,15 @@ const DE: Record<string, string> = {
   "velocity.empty": "Noch keine Daten.",
   "velocity.toolsPerMin": "Tools / Minute",
   "velocity.eventsPerSession": "Events / Session",
+  "velocity.day": "Pro Tag",
+  "velocity.avg": "Ø 7 Tage",
 
   "sessionDur.title": "Session-Dauer",
   "sessionDur.info": "Verteilung der Session-Längen (Spanne erster bis letzter Event), plus Median und p95.",
   "sessionDur.empty": "Noch keine abgeschlossenen Sessions.",
   "sessionDur.median": "Median",
   "sessionDur.max": "Max",
+  "sessionDur.sessions": "Sessions",
 
   "reliability.title": "Zuverlässigkeit je Projekt",
   "reliability.info": "Anteil erfolgreicher Tool-Aufrufe pro Projekt. Grün ≥95 %, Gelb ≥85 %, sonst Rot.",
@@ -663,12 +666,15 @@ const EN: Record<string, string> = {
   "velocity.empty": "No data yet.",
   "velocity.toolsPerMin": "Tools / minute",
   "velocity.eventsPerSession": "Events / session",
+  "velocity.day": "per day",
+  "velocity.avg": "7-day avg",
 
   "sessionDur.title": "Session duration",
   "sessionDur.info": "Distribution of session lengths (first to last event span), plus median and p95.",
   "sessionDur.empty": "No completed sessions yet.",
   "sessionDur.median": "Median",
   "sessionDur.max": "Max",
+  "sessionDur.sessions": "sessions",
 
   "reliability.title": "Reliability per project",
   "reliability.info": "Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red.",

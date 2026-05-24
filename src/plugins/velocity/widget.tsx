@@ -45,6 +45,7 @@ function Trend({
   delta: number;
   format: (n: number) => string;
 }) {
+  const { t } = useT();
   return (
     <div className="min-h-0 flex-1">
       <div className="mb-0.5 flex items-baseline justify-between">
@@ -55,7 +56,10 @@ function Trend({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <YAxis hide domain={[0, "dataMax"]} />
-            <Tooltip {...TOOLTIP} formatter={(val) => format(Number(val))} />
+            <Tooltip
+              {...TOOLTIP}
+              formatter={(val, name) => [format(Number(val)), name === "avg" ? t("velocity.avg") : t("velocity.day")]}
+            />
             <Line type="monotone" dataKey="v" stroke="#475569" strokeWidth={1} dot={false} isAnimationActive={false} />
             <Line type="monotone" dataKey="avg" stroke="#4f8cff" strokeWidth={2} dot={false} isAnimationActive={false} />
           </LineChart>
