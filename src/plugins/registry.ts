@@ -1,4 +1,35 @@
 import type { ComponentType } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Boxes,
+  CalendarClock,
+  CalendarRange,
+  Clock,
+  Coins,
+  FileText,
+  Flame,
+  Fuel,
+  Gauge,
+  GitBranch,
+  Hash,
+  Hourglass,
+  KanbanSquare,
+  Layers,
+  LayoutDashboard,
+  MessageSquare,
+  PieChart,
+  Plug,
+  Radio,
+  ShieldAlert,
+  ShieldCheck,
+  Timer,
+  TrendingUp,
+  Trophy,
+  Waypoints,
+  type LucideIcon,
+} from "lucide-react";
 import { LiveStream } from "./live-stream/widget";
 import { Kanban } from "./kanban/widget";
 import { TokenChart } from "./token-chart/widget";
@@ -33,216 +64,65 @@ import { Incidents } from "./incidents/widget";
 // Add a feature in three steps:
 //   1. create  src/plugins/<your-plugin>/widget.tsx  exporting a React component
 //   2. (optional) add a read-only route under  src/app/api/<your-plugin>/route.ts
-//   3. register it below — the dashboard grid renders it automatically.
-// Nothing else needs to change. This is the seam for the future Obsidian
-// knowledge-graph / semantic-search plugins.
+//   3. register it below with its manifest — the dashboard grid renders it
+//      automatically and the gallery groups it by category.
+// Nothing else needs to change. This is the seam for future third-party plugins.
 // ─────────────────────────────────────────────────────────────────────────────
+
+export type WidgetCategory =
+  | "overview"
+  | "sessions"
+  | "economy"
+  | "activity"
+  | "tools"
+  | "quality";
 
 export interface Widget {
   id: string;
   title: string;
-  /** Tailwind grid-column span on the 6-col desktop grid. */
+  /** Tailwind grid-column span on the 6-col desktop grid (also the default size). */
   span: string;
-  /** Tailwind row-height utility for the panel. */
+  /** Tailwind row-height utility for the panel (also the default size). */
   height: string;
+  /** Manifest metadata — icon, grouping category and an i18n description key. */
+  icon: LucideIcon;
+  category: WidgetCategory;
+  /** i18n key for a short description (reuses each widget's existing info copy). */
+  description: string;
   component: ComponentType;
 }
 
+// Standard panel height (most widgets). KPI bar + calendar use h-auto.
+const H = "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]";
+const H_TALL = "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]";
+
 export const widgets: Widget[] = [
-  {
-    id: "kpi-bar",
-    title: "Übersicht",
-    span: "lg:col-span-6",
-    height: "h-auto",
-    component: KpiBar,
-  },
-  {
-    id: "kanban",
-    title: "Sessions",
-    span: "lg:col-span-4",
-    height: "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]",
-    component: Kanban,
-  },
-  {
-    id: "live-stream",
-    title: "Live Stream",
-    span: "lg:col-span-2",
-    height: "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]",
-    component: LiveStream,
-  },
-  {
-    id: "token-chart",
-    title: "Tokens & Kosten",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: TokenChart,
-  },
-  {
-    id: "tool-graph",
-    title: "Tool-Graph (3D)",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: ToolGraph,
-  },
-  {
-    id: "budget-gauge",
-    title: "Budget",
-    span: "lg:col-span-2",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: BudgetGauge,
-  },
-  {
-    id: "heatmap",
-    title: "Aktivität",
-    span: "lg:col-span-4",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Heatmap,
-  },
-  {
-    id: "tool-frequency",
-    title: "Top-Tools",
-    span: "lg:col-span-2",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: ToolFrequency,
-  },
-  {
-    id: "file-hotspots",
-    title: "Datei-Hotspots",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: FileHotspots,
-  },
-  {
-    id: "session-timeline",
-    title: "Session-Timeline",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: SessionTimeline,
-  },
-  {
-    id: "latency",
-    title: "Tool-Latenz",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Latency,
-  },
-  {
-    id: "error-rate",
-    title: "Fehlerrate",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: ErrorRate,
-  },
-  {
-    id: "model-donut",
-    title: "Modelle",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: ModelDonut,
-  },
-  {
-    id: "sankey-flow",
-    title: "Fluss",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: SankeyFlow,
-  },
-  {
-    id: "project-leaderboard",
-    title: "Projekt-Rangliste",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: ProjectLeaderboard,
-  },
-  {
-    id: "live-now",
-    title: "Jetzt live",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: LiveNow,
-  },
-  {
-    id: "prompt-history",
-    title: "Prompt-Verlauf",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: PromptHistory,
-  },
-  {
-    id: "streak",
-    title: "Streak & Produktivität",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Streak,
-  },
-  {
-    id: "subagent-tree",
-    title: "Subagent-Baum",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: SubagentTree,
-  },
-  {
-    id: "mcp-servers",
-    title: "MCP-Server",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: McpServers,
-  },
-  {
-    id: "compaction-timeline",
-    title: "Kompaktierungen",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: CompactionTimeline,
-  },
-  {
-    id: "tag-cloud",
-    title: "Themen-Cloud",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: TagCloud,
-  },
-  {
-    id: "token-burn",
-    title: "Token-Verbrauch je Tool",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: TokenBurn,
-  },
-  {
-    id: "calendar-heatmap",
-    title: "Jahres-Kalender",
-    span: "lg:col-span-6",
-    height: "h-auto",
-    component: CalendarHeatmap,
-  },
-  {
-    id: "velocity",
-    title: "Geschwindigkeits-Trend",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Velocity,
-  },
-  {
-    id: "session-duration",
-    title: "Session-Dauer",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: SessionDuration,
-  },
-  {
-    id: "reliability",
-    title: "Zuverlässigkeit je Projekt",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Reliability,
-  },
-  {
-    id: "incidents",
-    title: "Was lief schief",
-    span: "lg:col-span-3",
-    height: "h-[360px] min-[2560px]:h-[480px] min-[3840px]:h-[660px]",
-    component: Incidents,
-  },
+  { id: "kpi-bar", title: "Übersicht", span: "lg:col-span-6", height: "h-auto", icon: LayoutDashboard, category: "overview", description: "kpi.info", component: KpiBar },
+  { id: "kanban", title: "Sessions", span: "lg:col-span-4", height: H_TALL, icon: KanbanSquare, category: "sessions", description: "kanban.info", component: Kanban },
+  { id: "live-stream", title: "Live Stream", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", component: LiveStream },
+  { id: "token-chart", title: "Tokens & Kosten", span: "lg:col-span-3", height: H, icon: Coins, category: "economy", description: "tokens.info", component: TokenChart },
+  { id: "tool-graph", title: "Tool-Graph (3D)", span: "lg:col-span-3", height: H, icon: Boxes, category: "tools", description: "graph.info", component: ToolGraph },
+  { id: "budget-gauge", title: "Budget", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },
+  { id: "heatmap", title: "Aktivität", span: "lg:col-span-4", height: H, icon: CalendarClock, category: "activity", description: "heatmap.info", component: Heatmap },
+  { id: "tool-frequency", title: "Top-Tools", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", component: ToolFrequency },
+  { id: "file-hotspots", title: "Datei-Hotspots", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
+  { id: "session-timeline", title: "Session-Timeline", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
+  { id: "latency", title: "Tool-Latenz", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", component: Latency },
+  { id: "error-rate", title: "Fehlerrate", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", component: ErrorRate },
+  { id: "model-donut", title: "Modelle", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", component: ModelDonut },
+  { id: "sankey-flow", title: "Fluss", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
+  { id: "project-leaderboard", title: "Projekt-Rangliste", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", component: ProjectLeaderboard },
+  { id: "live-now", title: "Jetzt live", span: "lg:col-span-3", height: H, icon: Radio, category: "sessions", description: "now.info", component: LiveNow },
+  { id: "prompt-history", title: "Prompt-Verlauf", span: "lg:col-span-3", height: H, icon: MessageSquare, category: "sessions", description: "prompts.info", component: PromptHistory },
+  { id: "streak", title: "Streak & Produktivität", span: "lg:col-span-3", height: H, icon: Flame, category: "activity", description: "streak.info", component: Streak },
+  { id: "subagent-tree", title: "Subagent-Baum", span: "lg:col-span-3", height: H, icon: GitBranch, category: "sessions", description: "subagents.info", component: SubagentTree },
+  { id: "mcp-servers", title: "MCP-Server", span: "lg:col-span-3", height: H, icon: Plug, category: "tools", description: "mcp.info", component: McpServers },
+  { id: "compaction-timeline", title: "Kompaktierungen", span: "lg:col-span-3", height: H, icon: Layers, category: "quality", description: "compaction.info", component: CompactionTimeline },
+  { id: "tag-cloud", title: "Themen-Cloud", span: "lg:col-span-3", height: H, icon: Hash, category: "tools", description: "tags.info", component: TagCloud },
+  { id: "token-burn", title: "Token-Verbrauch je Tool", span: "lg:col-span-3", height: H, icon: Fuel, category: "economy", description: "burn.info", component: TokenBurn },
+  { id: "calendar-heatmap", title: "Jahres-Kalender", span: "lg:col-span-6", height: "h-auto", icon: CalendarRange, category: "activity", description: "calendar.info", component: CalendarHeatmap },
+  { id: "velocity", title: "Geschwindigkeits-Trend", span: "lg:col-span-3", height: H, icon: TrendingUp, category: "activity", description: "velocity.info", component: Velocity },
+  { id: "session-duration", title: "Session-Dauer", span: "lg:col-span-3", height: H, icon: Hourglass, category: "sessions", description: "sessionDur.info", component: SessionDuration },
+  { id: "reliability", title: "Zuverlässigkeit je Projekt", span: "lg:col-span-3", height: H, icon: ShieldCheck, category: "quality", description: "reliability.info", component: Reliability },
+  { id: "incidents", title: "Was lief schief", span: "lg:col-span-3", height: H, icon: AlertTriangle, category: "quality", description: "incidents.info", component: Incidents },
 ];
