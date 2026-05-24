@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
@@ -52,22 +53,27 @@ export function PromptHistory() {
           {filtered.map((p) => (
             <li key={p.id} className="mc-stream-in relative py-2 pl-5">
               <span className="absolute -left-[5px] top-3.5 h-2.5 w-2.5 rounded-full border-2 border-panel bg-accent" />
-              <p className="whitespace-pre-wrap break-words text-sm text-foreground">{p.text}</p>
-              <div className="mt-1 flex items-center gap-2 text-[11px] text-muted">
-                <span className="truncate font-mono" title={p.project}>
-                  {p.project}
-                </span>
-                <span aria-hidden>·</span>
-                <span className="whitespace-nowrap">{relativeTime(p.created_at, lang)}</span>
-                {p.token_estimate > 0 && (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span className="whitespace-nowrap tabular-nums">
-                      ~{formatCompact(p.token_estimate)} {t("prompts.tokens")}
-                    </span>
-                  </>
-                )}
-              </div>
+              <Link
+                href={`/session?id=${encodeURIComponent(p.session_id)}`}
+                className="-mx-1 block rounded-md px-1 py-0.5 transition-colors hover:bg-white/[0.03]"
+              >
+                <p className="whitespace-pre-wrap break-words text-sm text-foreground">{p.text}</p>
+                <div className="mt-1 flex items-center gap-2 text-[11px] text-muted">
+                  <span className="truncate font-mono" title={p.project}>
+                    {p.project}
+                  </span>
+                  <span aria-hidden>·</span>
+                  <span className="whitespace-nowrap">{relativeTime(p.created_at, lang)}</span>
+                  {p.token_estimate > 0 && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="whitespace-nowrap tabular-nums">
+                        ~{formatCompact(p.token_estimate)} {t("prompts.tokens")}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </Link>
             </li>
           ))}
         </ol>
