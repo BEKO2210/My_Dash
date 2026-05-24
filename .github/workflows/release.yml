@@ -1,8 +1,9 @@
 name: Build desktop installers
 
-# Builds unsigned alpha installers for Windows, macOS and Linux and attaches them
-# to the GitHub Release for the pushed tag. Trigger by pushing a tag like v0.1.0,
-# or run manually (workflow_dispatch) to produce downloadable artifacts.
+# Builds unsigned beta installers for Windows, macOS and Linux and attaches them
+# to the GitHub Release for the pushed tag (marked as a pre-release). Trigger by
+# pushing a tag like v1.0.0-beta, or run manually (workflow_dispatch) to produce
+# downloadable artifacts.
 
 on:
   push:
@@ -50,6 +51,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          # Beta: mark every tagged release as a pre-release and auto-generate notes.
+          prerelease: true
+          generate_release_notes: true
           files: |
             dist/*.exe
             dist/*.dmg
