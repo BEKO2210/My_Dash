@@ -72,8 +72,9 @@ jobs:
       # (e2e/model-donut.spec.ts), sankey-flow/tag-cloud (e2e/sankey-flow.spec.ts),
       # project-leaderboard/reliability/git-correlation
       # (e2e/project-leaderboard.spec.ts), streak/subagent-tree
-      # (e2e/streak.spec.ts), velocity/session-duration (e2e/velocity.spec.ts)
-      # and prompt-history (e2e/prompt-history.spec.ts) audits as CI gates.
+      # (e2e/streak.spec.ts), velocity/session-duration (e2e/velocity.spec.ts),
+      # prompt-history (e2e/prompt-history.spec.ts) and mcp-servers/compaction-timeline
+      # (e2e/mcp-servers.spec.ts) audits as CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -245,6 +246,21 @@ jobs:
         with:
           name: prompt-history-screenshots
           path: test-results/prompt-history-shots
+          if-no-files-found: ignore
+
+      # Always collect the mcp-servers + compaction-timeline audit screenshots (Phase Z, Run 119a).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mcp-servers-screenshots
+          path: test-results/mcp-servers-shots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compaction-timeline-screenshots
+          path: test-results/compaction-timeline-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
