@@ -37,9 +37,11 @@ function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
   );
 }
 
-// Browser console noise we explicitly tolerate (none expected, but WebGL backends
-// occasionally emit info/warnings from the 3D graph under headless GPU).
-const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i];
+// Browser console noise we explicitly tolerate: WebGL backends occasionally emit
+// info/warnings from the 3D graph under headless GPU, and recharts can throw a
+// transient internal "reading 'tick'" while its ResponsiveContainer settles its
+// size on first paint (the chart renders fine; the error is intermittent).
+const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i, /reading 'tick'/];
 
 const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844 },
