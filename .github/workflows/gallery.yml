@@ -1,0 +1,50 @@
+name: Gallery (screenshots + GIF)
+
+# Z-Shots — regenerate the widget/dashboard screenshot gallery (and the live GIF)
+# from the deterministic demo build. Manual trigger; publishes the result as an
+# artifact for review (commit the refreshed public/shots/ from the artifact when
+# they look good). Kept off the per-PR path so it never slows the green gate.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gallery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright (chromium) + ffmpeg
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Strip server API for static export
+        run: rm -rf src/app/api
+
+      - name: Build static demo
+        run: npm run build
+        env:
+          MC_DEMO: "1"
+          NEXT_PUBLIC_MC_DEMO: "1"
+          MC_BASE_PATH: "/My_Dash"
+
+      - name: Capture gallery
+        run: node scripts/gallery.mjs
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gallery-shots
+          path: public/shots
+          if-no-files-found: warn
