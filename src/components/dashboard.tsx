@@ -34,6 +34,7 @@ import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
 import { FacetProvider, useFacets } from "@/components/facets";
 import { CommandPalette } from "@/components/command-palette";
 import { PluginConfigProvider } from "@/components/plugin-config";
+import { Onboarding } from "@/components/onboarding";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { Notifications } from "@/components/notifications";
 import { useTheme } from "@/components/theme";
@@ -319,6 +320,7 @@ export function Dashboard() {
         )}
         <CommandPalette onResetLayout={resetLayout} onOpenGallery={() => setGalleryOpen(true)} />
         {settingsFor && <SettingsDrawer widgetId={settingsFor} onClose={() => setSettingsFor(null)} />}
+        <Onboarding />
         </PluginConfigProvider>
         </FacetProvider>
         </TimeRangeProvider>

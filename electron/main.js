@@ -114,6 +114,15 @@ function showWindow() {
   }
 }
 
+// Open the window straight onto the first-run setup wizard (force-opened via the
+// ?onboarding=1 query the Onboarding component checks for).
+function showOnboarding() {
+  if (!win) createWindow();
+  win.loadURL(`${BASE_URL}/?onboarding=1`);
+  win.show();
+  win.focus();
+}
+
 function connectClaude() {
   // Reuse the CLI wiring via Electron's bundled Node so no system Node is needed.
   const res = spawnSync(process.execPath, [installHooksScript], {
@@ -158,6 +167,7 @@ function buildTray() {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Open dashboard", click: showWindow },
+      { label: "Setup guide", click: showOnboarding },
       { label: "Connect Claude Code (install hooks)", click: connectClaude },
       { label: "Open in browser", click: () => shell.openExternal(BASE_URL) },
       { type: "separator" },

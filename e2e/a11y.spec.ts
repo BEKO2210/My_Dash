@@ -39,7 +39,19 @@ function report(violations: { id: string; impact?: string | null; nodes: unknown
   );
 }
 
+// Returning-user state: keep the first-run wizard out of these scans.
+function suppressOnboarding(page: Page) {
+  return page.addInitScript(() => {
+    try {
+      localStorage.setItem("mc-onboarded", "1");
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
 test("dashboard has no serious or critical accessibility violations", async ({ page }) => {
+  await suppressOnboarding(page);
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
@@ -49,8 +61,18 @@ test("dashboard has no serious or critical accessibility violations", async ({ p
 });
 
 test("session detail page has no serious or critical accessibility violations", async ({ page }) => {
+  await suppressOnboarding(page);
   await page.goto(`/session?id=${SESSION_ID}`);
   await expect(page.getByRole("heading", { name: "Accessibility audit prompt" })).toBeVisible({ timeout: 15_000 });
+
+  const violations = await scan(page);
+  expect(violations, report(violations)).toEqual([]);
+});
+
+test("first-run onboarding wizard has no serious or critical accessibility violations", async ({ page }) => {
+  // Fresh visitor (no suppression) → the wizard auto-opens.
+  await page.goto("/");
+  await expect(page.getByRole("dialog").first()).toBeVisible({ timeout: 15_000 });
 
   const violations = await scan(page);
   expect(violations, report(violations)).toEqual([]);

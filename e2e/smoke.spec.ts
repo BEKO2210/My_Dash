@@ -34,6 +34,17 @@ test.beforeAll(async () => {
   await ctx.dispose();
 });
 
+// Suppress the first-run onboarding wizard so it doesn't overlay interactions.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("mc-onboarded", "1");
+    } catch {
+      /* ignore */
+    }
+  });
+});
+
 test("dashboard renders all four widgets and connects", async ({ page }) => {
   const response = await page.goto("/");
 

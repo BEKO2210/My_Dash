@@ -121,6 +121,16 @@ export function CommandPalette({
         close();
       },
     });
+    list.push({
+      id: "onboarding",
+      group: t("cmd.actions"),
+      label: t("cmd.onboarding"),
+      keywords: "onboarding setup guide wizard tour help getting started",
+      run: () => {
+        window.dispatchEvent(new Event("mc:open-onboarding"));
+        close();
+      },
+    });
     list.push({ id: "reset", group: t("cmd.actions"), label: t("layout.reset"), run: () => { onResetLayout(); close(); } });
     list.push({ id: "gallery", group: t("cmd.actions"), label: t("gallery.title"), run: () => { onOpenGallery(); close(); } });
     list.push({
