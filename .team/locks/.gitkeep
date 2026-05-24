@@ -1,0 +1,3 @@
+# Runtime locks live here (gitignored at runtime). Keeps the folder in git.
+# - git.lock        : held briefly while an agent runs git add/commit
+# - <itemId>.lock   : a claim on roadmap item #<itemId> (content = agent name)
