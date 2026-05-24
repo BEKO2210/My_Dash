@@ -71,7 +71,7 @@ export function Heatmap() {
             {/* hour axis */}
             <span />
             {Array.from({ length: 24 }, (_, h) => (
-              <span key={h} className="text-center text-[9px] text-muted/70">
+              <span key={h} className="text-center text-[9px] text-muted">
                 {HOUR_LABELS.includes(h) ? h : ""}
               </span>
             ))}

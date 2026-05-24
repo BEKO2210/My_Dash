@@ -17,6 +17,41 @@
   --panel-border: #e2e6ee;
   --foreground: #1a2230;
   --muted: #586074;
+  /* Default accent darkened for WCAG-AA text contrast on white (the bright preset
+     is fine on dark), incl. text on the accent/20 tint. A custom accent is set
+     inline and wins over this. */
+  --accent: #1e40af;
+}
+
+/* The bright -300/-400 semantic hues are tuned for dark panels and fail WCAG-AA on
+   the light theme's white panels. Remap them to darker shades that pass as text.
+   Unlayered so they override Tailwind's (layered) color utilities. */
+[data-theme="light"] .text-emerald-400,
+[data-theme="light"] .text-emerald-300 {
+  color: #047857;
+}
+[data-theme="light"] .text-amber-400 {
+  color: #b45309;
+}
+[data-theme="light"] .text-sky-400 {
+  color: #0369a1;
+}
+[data-theme="light"] .text-violet-400,
+[data-theme="light"] .text-violet-300 {
+  color: #6d28d9;
+}
+[data-theme="light"] .text-fuchsia-400 {
+  color: #a21caf;
+}
+[data-theme="light"] .text-orange-400 {
+  color: #c2410c;
+}
+[data-theme="light"] .text-zinc-400 {
+  color: #52525b;
+}
+[data-theme="light"] .text-red-400,
+[data-theme="light"] .text-red-300 {
+  color: #b91c1c;
 }
 
 @theme inline {

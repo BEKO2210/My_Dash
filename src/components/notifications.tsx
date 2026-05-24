@@ -313,7 +313,7 @@ function QuietConfig({ t }: { t: (k: string) => string }) {
           >
             {saved ? t("quiet.saved") : t("quiet.save")}
           </button>
-          <p className="text-[10px] text-muted/70">{t("quiet.hint")}</p>
+          <p className="text-[10px] text-muted">{t("quiet.hint")}</p>
         </div>
       )}
     </div>
@@ -383,7 +383,7 @@ function WebhookConfig({ t }: { t: (k: string) => string }) {
           >
             {saved ? t("webhook.saved") : t("webhook.save")}
           </button>
-          <p className="text-[10px] text-muted/70">{t("webhook.hint")}</p>
+          <p className="text-[10px] text-muted">{t("webhook.hint")}</p>
         </div>
       )}
     </div>

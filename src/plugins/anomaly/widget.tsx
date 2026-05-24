@@ -59,7 +59,7 @@ export function Anomaly() {
         <div className="flex h-full flex-col justify-center gap-3 p-4">
           <Row label={t("anomaly.latency")} cmp={data.latencyMs} format={(n) => formatMs(Math.round(n))} t={t} />
           <Row label={t("anomaly.errorRate")} cmp={data.errorRate} format={(n) => `${Math.round(n * 100)}%`} t={t} />
-          <p className="text-center text-[10px] text-muted/70">
+          <p className="text-center text-[10px] text-muted">
             {t("anomaly.window")} · n={data.recentSamples}/{data.baselineSamples}
           </p>
         </div>

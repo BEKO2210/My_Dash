@@ -303,7 +303,7 @@ export function Dashboard() {
               );
             })}
           </div>
-          <footer className="pt-2 text-center text-[11px] text-muted/80">
+          <footer className="pt-2 text-center text-[11px] text-muted">
             {t("footer.text")} · <span className="text-muted">by Belkis Aslani</span>
           </footer>
         </div>
@@ -454,7 +454,7 @@ function Header({
       </div>
       <div className="flex items-center gap-2 text-xs text-muted sm:gap-2.5">
         <label className="relative hidden items-center sm:flex">
-          <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-muted/70" />
+          <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-muted" />
           <input
             type="search"
             value={query}
@@ -921,7 +921,7 @@ function WidgetGallery({
                           </span>
                           {timings[w.id] !== undefined && (
                             <span
-                              className="shrink-0 font-mono text-[10px] tabular-nums text-muted/70"
+                              className="shrink-0 font-mono text-[10px] tabular-nums text-muted"
                               title={t("telemetry.renderTime")}
                             >
                               {Math.round(timings[w.id])}ms

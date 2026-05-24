@@ -462,7 +462,7 @@ export function ToolGraph() {
                 cooldownTicks={120}
               />
               {selected && <DetailCard node={selected} neighbours={neighbours} onClose={() => setSelected(null)} />}
-              <div className="pointer-events-none absolute bottom-2 left-3 flex max-w-[78%] flex-wrap gap-x-2.5 gap-y-1 text-[10px] text-muted/80">
+              <div className="pointer-events-none absolute bottom-2 left-3 flex max-w-[78%] flex-wrap gap-x-2.5 gap-y-1 text-[10px] text-muted">
                 {legend.map((l) => (
                   <span key={l.label} className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full" style={{ background: l.c }} />

@@ -20,7 +20,7 @@ export function InfoHint({
       <button
         type="button"
         aria-label="Info"
-        className="text-muted/80 outline-none transition-colors hover:text-muted focus-visible:text-accent"
+        className="text-muted outline-none transition-colors hover:text-muted focus-visible:text-accent"
       >
         <Info className="h-3.5 w-3.5" />
       </button>
