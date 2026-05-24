@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Bell, BellRing, Clock, Coins, Plug, Webhook } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, Clock, Coins, MoonStar, Plug, Webhook } from "lucide-react";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
+import { inQuietHours, isCritical, type QuietConfig } from "@/lib/quiet";
 import type { AlertItem } from "@/lib/alerts";
 
 const DESKTOP_KEY = "mc-desktop-notif";
@@ -27,6 +28,16 @@ export function Notifications() {
   const [desktop, setDesktop] = useState(false);
   const seenMaxId = useRef<number | null>(null);
   const desktopRef = useRef(false);
+  const quietRef = useRef<QuietConfig>({ enabled: false, start: "22:00", end: "07:00" });
+
+  useEffect(() => {
+    fetch("/api/alerts/quiet")
+      .then((r) => r.json())
+      .then((d: QuietConfig) => {
+        quietRef.current = d;
+      })
+      .catch(() => {});
+  }, [tick]);
 
   useEffect(() => {
     desktopRef.current = desktop;
@@ -63,7 +74,13 @@ export function Notifications() {
             seenMaxId.current = maxId; // first load: don't toast historical alerts
           } else if (maxId > seenMaxId.current) {
             const newest = d.alerts[0];
-            if (newest && !newest.read) {
+            const q = quietRef.current;
+            const suppressed =
+              !!newest &&
+              q.enabled &&
+              !isCritical(newest.type) &&
+              inQuietHours(q.start, q.end, new Date());
+            if (newest && !newest.read && !suppressed) {
               setToast(newest.message);
               setTimeout(() => setToast(null), 5000);
               // Bridge to a native (Electron/OS) notification when enabled.
@@ -199,6 +216,7 @@ export function Notifications() {
                 })}
               </ul>
             )}
+            <QuietConfig t={t} />
             <WebhookConfig t={t} />
           </div>
         )}
@@ -213,6 +231,92 @@ export function Notifications() {
         </div>
       )}
     </>
+  );
+}
+
+function QuietConfig({ t }: { t: (k: string) => string }) {
+  const [open, setOpen] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [start, setStart] = useState("22:00");
+  const [end, setEnd] = useState("07:00");
+  const [saved, setSaved] = useState(false);
+
+  const openConfig = () => {
+    setOpen((o) => !o);
+    if (!open) {
+      fetch("/api/alerts/quiet")
+        .then((r) => r.json())
+        .then((d: QuietConfig) => {
+          setEnabled(Boolean(d.enabled));
+          setStart(d.start ?? "22:00");
+          setEnd(d.end ?? "07:00");
+        })
+        .catch(() => {});
+    }
+  };
+
+  const save = () => {
+    fetch("/api/alerts/quiet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled, start, end }),
+    })
+      .then(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+      })
+      .catch(() => {});
+  };
+
+  return (
+    <div className="border-t border-panel-border">
+      <button
+        type="button"
+        onClick={openConfig}
+        className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[11px] text-muted transition-colors hover:text-foreground"
+      >
+        <MoonStar className="h-3.5 w-3.5" />
+        {t("quiet.title")}
+      </button>
+      {open && (
+        <div className="space-y-2 px-3 pb-3">
+          <label className="flex items-center gap-2 text-[11px] text-foreground">
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-3.5 w-3.5 accent-[var(--color-accent)]" />
+            {t("quiet.enable")}
+          </label>
+          <div className="flex items-center gap-2">
+            <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted">
+              {t("quiet.start")}
+              <input
+                type="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                aria-label={t("quiet.start")}
+                className="w-full rounded-md border border-panel-border bg-background/40 px-2 py-1 text-[11px] text-foreground outline-none focus:border-accent"
+              />
+            </label>
+            <label className="flex flex-1 items-center gap-1.5 text-[11px] text-muted">
+              {t("quiet.end")}
+              <input
+                type="time"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                aria-label={t("quiet.end")}
+                className="w-full rounded-md border border-panel-border bg-background/40 px-2 py-1 text-[11px] text-foreground outline-none focus:border-accent"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={save}
+            className="w-full rounded-md border border-accent/40 bg-accent/10 py-1 text-[11px] text-accent transition-colors hover:bg-accent/20"
+          >
+            {saved ? t("quiet.saved") : t("quiet.save")}
+          </button>
+          <p className="text-[10px] text-muted/70">{t("quiet.hint")}</p>
+        </div>
+      )}
+    </div>
   );
 }
 

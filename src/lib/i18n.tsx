@@ -296,6 +296,14 @@ const DE: Record<string, string> = {
   "webhook.saved": "Gespeichert!",
   "webhook.hint": "Standardmäßig aus. Sendet bei Alarm nur an diese URL.",
 
+  "quiet.title": "Ruhezeiten",
+  "quiet.enable": "Ruhezeiten aktivieren",
+  "quiet.start": "Von",
+  "quiet.end": "Bis",
+  "quiet.save": "Speichern",
+  "quiet.saved": "Gespeichert!",
+  "quiet.hint": "Unterdrückt unkritische Hinweise im Zeitfenster. Fehler-Spitzen und Budget-Alarme kommen immer durch.",
+
   "facets.project": "Projekt-Filter",
   "facets.allProjects": "Alle Projekte",
   "facets.status": "Status-Filter",
@@ -704,6 +712,14 @@ const EN: Record<string, string> = {
   "webhook.save": "Save",
   "webhook.saved": "Saved!",
   "webhook.hint": "Off by default. Only ever posts to this URL on an alert.",
+
+  "quiet.title": "Quiet hours",
+  "quiet.enable": "Enable quiet hours",
+  "quiet.start": "From",
+  "quiet.end": "To",
+  "quiet.save": "Save",
+  "quiet.saved": "Saved!",
+  "quiet.hint": "Mutes non-critical alerts during the window. Error spikes and budget alarms always come through.",
 
   "facets.project": "Project filter",
   "facets.allProjects": "All projects",
