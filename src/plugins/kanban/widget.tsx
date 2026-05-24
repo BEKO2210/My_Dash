@@ -6,7 +6,9 @@ import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, X } from "luc
 import { Panel } from "@/components/panel";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
+import { useFacets } from "@/components/facets";
 import { useT } from "@/lib/i18n";
+import { sessionMatchesFacets } from "@/lib/facets";
 import { formatCompact, formatMoney, relativeTime, STATUS_META } from "@/lib/format";
 import type { EventRow, SessionRow, SessionStatus } from "@/lib/types";
 
@@ -17,9 +19,9 @@ const COLUMNS: SessionStatus[] = ["active", "waiting", "ended"];
 export function Kanban() {
   const { tick, events } = useLive();
   const { query } = useSearch();
+  const facets = useFacets();
   const { t } = useT();
   const [sessions, setSessions] = useState<SessionCard[]>([]);
-  const [project, setProject] = useState<string>("all");
   const [selected, setSelected] = useState<SessionCard | null>(null);
 
   useEffect(() => {
@@ -39,18 +41,12 @@ export function Kanban() {
     };
   }, [tick]);
 
-  const projects = useMemo(() => {
-    const set = new Set<string>();
-    for (const s of sessions) if (s.project_name) set.add(s.project_name);
-    return [...set].sort();
-  }, [sessions]);
-
   const filtered = useMemo(
     () =>
       sessions
-        .filter((s) => project === "all" || s.project_name === project)
+        .filter((s) => sessionMatchesFacets(s, facets))
         .filter((s) => matchesQuery(query, s.title, s.project_name, s.id)),
-    [sessions, project, query],
+    [sessions, facets, query],
   );
 
   // Keep the open detail in sync with refreshed data; close it if the session is gone.
@@ -64,21 +60,6 @@ export function Kanban() {
       title={t("kanban.title")}
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
       info={t("kanban.info")}
-      right={
-        <select
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          aria-label={t("common.allProjects")}
-          className="rounded-md border border-panel-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
-        >
-          <option value="all">{t("common.allProjects")}</option>
-          {projects.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-      }
     >
       <div className="grid h-full grid-cols-3 gap-px bg-panel-border/50">
         {COLUMNS.map((status) => {

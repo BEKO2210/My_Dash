@@ -250,6 +250,12 @@ const DE: Record<string, string> = {
   "range.90d": "90 Tage",
   "range.all": "Gesamt",
 
+  "facets.project": "Projekt-Filter",
+  "facets.allProjects": "Alle Projekte",
+  "facets.status": "Status-Filter",
+  "facets.allStatus": "Alle Status",
+  "facets.clear": "Filter zurücksetzen",
+
   "gallery.title": "Widget-Galerie",
   "gallery.info": "Widgets ein- oder ausblenden. Reihenfolge und Größe änderst du direkt am Widget.",
   "gallery.close": "Schließen",
@@ -586,6 +592,12 @@ const EN: Record<string, string> = {
   "range.30d": "30 days",
   "range.90d": "90 days",
   "range.all": "All time",
+
+  "facets.project": "Project filter",
+  "facets.allProjects": "All projects",
+  "facets.status": "Status filter",
+  "facets.allStatus": "All statuses",
+  "facets.clear": "Clear filters",
 
   "gallery.title": "Widget gallery",
   "gallery.info": "Show or hide widgets. Reorder and resize directly on the widget.",

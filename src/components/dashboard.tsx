@@ -21,6 +21,7 @@ import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { Landing } from "@/components/landing";
 import { SearchProvider, useSearch } from "@/components/search";
 import { TimeRangeProvider, useTimeRange } from "@/components/time-range";
+import { FacetProvider, useFacets } from "@/components/facets";
 import { useT } from "@/lib/i18n";
 import { TIME_RANGES } from "@/lib/time-range";
 import { DEMO, installDemoBackend } from "@/lib/demo";
@@ -196,6 +197,7 @@ export function Dashboard() {
     <LiveProvider>
       <SearchProvider>
         <TimeRangeProvider>
+        <FacetProvider>
         {DEMO && <Landing />}
         <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 p-4 sm:p-6 min-[2560px]:max-w-none min-[2560px]:gap-6 min-[2560px]:p-8 min-[3840px]:gap-8 min-[3840px]:p-12">
           <Header
@@ -262,6 +264,7 @@ export function Dashboard() {
             onClose={() => setGalleryOpen(false)}
           />
         )}
+        </FacetProvider>
         </TimeRangeProvider>
       </SearchProvider>
     </LiveProvider>
@@ -373,6 +376,7 @@ function Header({
             </button>
           )}
         </label>
+        <FacetBar />
         <TimeRangePicker />
         <button
           type="button"
@@ -417,6 +421,59 @@ function Header({
         </span>
       </div>
     </header>
+  );
+}
+
+function FacetBar() {
+  const { t } = useT();
+  const { tick } = useLive();
+  const { project, status, setProject, setStatus, active, clear } = useFacets();
+  const [projects, setProjects] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/usage/projects")
+      .then((r) => r.json())
+      .then((d: { projects: { project: string }[] }) => {
+        if (!cancelled) setProjects((d.projects ?? []).map((p) => p.project).filter((p) => p && p !== "(unknown)"));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [tick]);
+
+  const cls =
+    "hidden rounded-full border border-panel-border bg-background/40 px-2.5 py-1 text-xs text-muted outline-none transition-colors hover:border-accent/50 focus:border-accent sm:block";
+
+  return (
+    <>
+      <select value={project} onChange={(e) => setProject(e.target.value)} aria-label={t("facets.project")} title={t("facets.project")} className={cls}>
+        <option value="">{t("facets.allProjects")}</option>
+        {projects.map((p) => (
+          <option key={p} value={p}>
+            {p}
+          </option>
+        ))}
+      </select>
+      <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t("facets.status")} title={t("facets.status")} className={cls}>
+        <option value="">{t("facets.allStatus")}</option>
+        <option value="active">{t("status.active")}</option>
+        <option value="waiting">{t("status.waiting")}</option>
+        <option value="ended">{t("status.ended")}</option>
+      </select>
+      {active && (
+        <button
+          type="button"
+          onClick={clear}
+          aria-label={t("facets.clear")}
+          title={t("facets.clear")}
+          className="hidden items-center rounded-full border border-accent/40 bg-accent/10 p-1.5 text-accent transition-colors hover:bg-accent/20 sm:flex"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </>
   );
 }
 
