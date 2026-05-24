@@ -345,6 +345,28 @@ sein.
      Pages-Demo mit allen Widgets.
      *Ergebnis:* das beste Claude-Code-Observability-Tool — ausgeliefert.
 
+## Lizenzmodell (dual / source-available)
+
+**Privat & nicht-kommerziell: kostenlos. Firmen & kommerzieller Einsatz:
+kostenpflichtige Lizenz.** Das ist als *source-available* Dual-Lizenz gut
+umsetzbar (kein OSI-„Open Source", aber Quelltext einsehbar):
+
+- **Standardweg:** `LICENSE` = **PolyForm Noncommercial 1.0.0** (erlaubt jede
+  nicht-kommerzielle Nutzung gratis; kommerzielle Nutzung ausdrücklich
+  ausgenommen) **+** eine `COMMERCIAL.md`, die den Erwerb einer kommerziellen
+  Lizenz beschreibt (Kontakt/Preis). Dieselbe Codebasis wird damit doppelt
+  lizenziert.
+- **Alternative:** **Business Source License (BSL 1.1)** mit „Additional Use
+  Grant" (nicht-kommerziell frei) und Change-Date → fällt nach X Jahren auf
+  eine OSS-Lizenz zurück.
+- **Hinweis:** Solche Lizenzen sind durchsetzbar, aber rechtlich verbindliche
+  Beratung gehört vor das Release. Bis dahin keine widersprüchliche Lizenz
+  committen.
+
+Umsetzung erfolgt in der Release-Phase (Run 120): `LICENSE` + `COMMERCIAL.md`
+hinzufügen, Lizenz-Header/`package.json`-`license`-Feld setzen, README-Abschnitt
+„Lizenz" ergänzen.
+
 ---
 
 ## Überblick: Phasen auf einen Blick

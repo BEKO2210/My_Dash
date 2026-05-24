@@ -14,6 +14,7 @@ import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
 import type { ToolCallDetail } from "./errors";
 import type { ProjectReliability } from "./reliability";
+import type { SearchHit } from "./search-index";
 import type { SessionDetail } from "./session-detail";
 import type { TranscriptBlock, TranscriptMessage } from "./transcript";
 import { durationStats } from "./session-duration";
@@ -848,6 +849,28 @@ export function demoReliability() {
   return { projects };
 }
 
+export function demoSearch(q: string): { hits: SearchHit[] } {
+  const terms = q.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  if (terms.length === 0) return { hits: [] };
+  const match = (text: string) => {
+    const lc = text.toLowerCase();
+    return terms.every((t) => lc.includes(t));
+  };
+  const hits: SearchHit[] = [];
+  for (let i = allEvents.length - 1; i >= 0 && hits.length < 20; i--) {
+    const e = allEvents[i];
+    if (e.summary && match(e.summary))
+      hits.push({ kind: "event", ref_id: e.id, session_id: e.session_id, text: e.summary });
+  }
+  for (const s of sessions) {
+    for (const p of s.prompts) {
+      if (hits.length >= 20) break;
+      if (match(p.text)) hits.push({ kind: "prompt", ref_id: 0, session_id: s.id, text: p.text });
+    }
+  }
+  return { hits: hits.slice(0, 20) };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -896,6 +919,10 @@ export function installDemoBackend() {
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
+    if (path.endsWith("/api/search")) {
+      const u = new URL(raw, window.location.href);
+      return json(demoSearch(u.searchParams.get("q") ?? ""));
+    }
     if (path.includes("/api/tool-calls/")) {
       const id = Number(path.split("/api/tool-calls/")[1]);
       const detail = demoToolCallDetail(id);

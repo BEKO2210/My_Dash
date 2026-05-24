@@ -150,4 +150,20 @@ export const MIGRATIONS = [
   `
   ALTER TABLE sessions ADD COLUMN transcript_path TEXT;
   `,
+
+  // v13 — FTS5 full-text index over event summaries + prompt text, kept in sync at
+  // ingest. Standalone (not external-content) so a single MATCH spans both sources.
+  // Backfilled once from existing rows.
+  `
+  CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(
+    text,
+    kind UNINDEXED,
+    ref_id UNINDEXED,
+    session_id UNINDEXED
+  );
+  INSERT INTO search_fts (text, kind, ref_id, session_id)
+    SELECT summary, 'event', id, session_id FROM events WHERE summary IS NOT NULL AND summary <> '';
+  INSERT INTO search_fts (text, kind, ref_id, session_id)
+    SELECT text, 'prompt', id, session_id FROM prompts WHERE text IS NOT NULL AND text <> '';
+  `,
 ];
