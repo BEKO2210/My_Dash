@@ -12,6 +12,13 @@ widget registry.
    merges into `widgets`. The dashboard renders, the gallery groups, and the
    command palette finds your widget automatically — nothing else to wire.
 
+## Reference example
+
+A complete, working example ships in [`reference/plugin.tsx`](./reference/plugin.tsx).
+It renders in the dashboard out of the box and shows the manifest, the read-only
+`usePluginQuery` data API, and the shared `Panel` chrome. Copy that folder as a
+starting point.
+
 ## Authoring a widget
 
 Create `plugins.local/<your-widget>/plugin.tsx`:
