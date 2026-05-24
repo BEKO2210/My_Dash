@@ -293,6 +293,10 @@ const DE: Record<string, string> = {
   "views.empty": "Noch keine Ansichten gespeichert.",
   "views.delete": "Ansicht löschen",
 
+  "settings.title": "Einstellungen",
+  "settings.none": "Dieses Widget hat keine Einstellungen.",
+  "stream.setLimit": "Max. Einträge",
+
   "status.active": "Aktiv",
   "status.waiting": "Wartet",
   "status.ended": "Beendet",
@@ -665,6 +669,10 @@ const EN: Record<string, string> = {
   "views.namePlaceholder": "View name…",
   "views.empty": "No saved views yet.",
   "views.delete": "Delete view",
+
+  "settings.title": "Settings",
+  "settings.none": "This widget has no settings.",
+  "stream.setLimit": "Max items",
 
   "status.active": "Active",
   "status.waiting": "Waiting",

@@ -18,6 +18,7 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
+import { usePluginConfig } from "@/components/plugin-config";
 import { useT } from "@/lib/i18n";
 import { eventKind, KIND_COLOR, relativeTime, type EventKind } from "@/lib/format";
 
@@ -38,6 +39,7 @@ export function LiveStream() {
   const { events, connected } = useLive();
   const { query } = useSearch();
   const { t, lang } = useT();
+  const { values } = usePluginConfig("live-stream");
   const [, setNow] = useState(0);
 
   // Re-render periodically so relative timestamps stay fresh.
@@ -46,9 +48,11 @@ export function LiveStream() {
     return () => clearInterval(t);
   }, []);
 
-  const filtered = events.filter((e) =>
-    matchesQuery(query, e.summary, e.event_type, e.tool_name, e.session_id),
-  );
+  const limit = typeof values.limit === "number" ? values.limit : 100;
+
+  const filtered = events
+    .filter((e) => matchesQuery(query, e.summary, e.event_type, e.tool_name, e.session_id))
+    .slice(0, limit);
 
   return (
     <Panel

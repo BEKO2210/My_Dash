@@ -918,6 +918,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/calendar")) return json(demoCalendar());
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
+    if (path.endsWith("/api/plugins/config")) return json({ config: {} });
     if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/search")) {
       const u = new URL(raw, window.location.href);
