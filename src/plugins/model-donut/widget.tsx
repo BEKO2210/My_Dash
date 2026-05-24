@@ -41,7 +41,9 @@ export function ModelDonut() {
   }, []);
 
   const { slices, total } = modelShare(usage?.models ?? [], mode);
-  const fmt = (n: number) => (mode === "cost" ? formatMoney(n, "EUR") : formatCompact(n));
+  // modelShare uses ccusage's native USD for cost mode, so label it in USD (a € sign
+  // on a USD value would misstate the amount).
+  const fmt = (n: number) => (mode === "cost" ? formatMoney(n, "USD") : formatCompact(n));
   const label = (s: ModelSlice) => (s.full === OTHER ? t("donut.other") : s.name);
 
   return (
@@ -55,6 +57,7 @@ export function ModelDonut() {
             <button
               key={m}
               onClick={() => setMode(m)}
+              aria-pressed={mode === m}
               className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
             >
               {m === "tokens" ? t("tokens.modeTokens") : t("tokens.modeCost")}
