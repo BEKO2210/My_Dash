@@ -68,12 +68,14 @@ export function Kanban() {
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
       info={t("kanban.info")}
     >
-      <div className="grid h-full grid-cols-3 gap-px bg-panel-border/50">
+      {/* On phones the 3 columns become a horizontal swipe with readable widths;
+          from sm up they're an even 3-column grid. */}
+      <div className="flex h-full snap-x gap-px overflow-x-auto bg-panel-border/50 sm:grid sm:grid-cols-3 sm:overflow-x-hidden">
         {COLUMNS.map((status) => {
           const items = byStatus[status];
           const meta = STATUS_META[status];
           return (
-            <div key={status} className="flex min-h-0 flex-col bg-panel">
+            <div key={status} className="flex min-h-0 w-[78%] shrink-0 snap-start flex-col bg-panel sm:w-auto sm:shrink">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className={`flex items-center gap-1.5 text-xs font-semibold ${meta.text}`}>
                   <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
