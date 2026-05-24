@@ -277,6 +277,7 @@ const DE: Record<string, string> = {
   "notif.empty": "Keine Benachrichtigungen.",
   "notif.markRead": "Alle gelesen",
   "notif.new": "Neue Benachrichtigung",
+  "notif.desktop": "Desktop-Benachrichtigungen umschalten",
 
   "facets.project": "Projekt-Filter",
   "facets.allProjects": "Alle Projekte",
@@ -667,6 +668,7 @@ const EN: Record<string, string> = {
   "notif.empty": "No notifications.",
   "notif.markRead": "Mark all read",
   "notif.new": "New notification",
+  "notif.desktop": "Toggle desktop notifications",
 
   "facets.project": "Project filter",
   "facets.allProjects": "All projects",
