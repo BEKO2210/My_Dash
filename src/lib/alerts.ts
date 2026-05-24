@@ -126,10 +126,12 @@ export function recordAlert(db: Database.Database, fire: AlertFire): boolean {
   return info.changes > 0;
 }
 
-export function processAlerts(db: Database.Database, ctx: RuleCtx): number {
-  let recorded = 0;
+// Evaluates rules and records new (non-duplicate) alerts; returns those new fires
+// so callers (ingest) can bridge them onward (desktop/webhook).
+export function processAlerts(db: Database.Database, ctx: RuleCtx): AlertFire[] {
+  const recorded: AlertFire[] = [];
   for (const fire of evaluateRules(ctx, getEnabledRules(db))) {
-    if (recordAlert(db, fire)) recorded += 1;
+    if (recordAlert(db, fire)) recorded.push(fire);
   }
   return recorded;
 }

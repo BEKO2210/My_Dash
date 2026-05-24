@@ -931,6 +931,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/velocity")) return json(demoVelocity());
     if (path.endsWith("/api/session-duration")) return json(demoSessionDuration());
     if (path.endsWith("/api/plugins/config")) return json({ config: {} });
+    if (path.includes("/api/alerts/webhook")) return json({ url: "", enabled: false });
     if (path.endsWith("/api/alerts")) return json(demoAlerts());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/search")) {

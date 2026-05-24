@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Bell, BellRing, Clock, Coins, Plug } from "lucide-react";
+import { AlertTriangle, Bell, BellRing, Clock, Coins, Plug, Webhook } from "lucide-react";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
@@ -199,6 +199,7 @@ export function Notifications() {
                 })}
               </ul>
             )}
+            <WebhookConfig t={t} />
           </div>
         )}
       </div>
@@ -212,5 +213,75 @@ export function Notifications() {
         </div>
       )}
     </>
+  );
+}
+
+function WebhookConfig({ t }: { t: (k: string) => string }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [enabled, setEnabled] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const openConfig = () => {
+    setOpen((o) => !o);
+    if (!open) {
+      fetch("/api/alerts/webhook")
+        .then((r) => r.json())
+        .then((d: { url: string; enabled: boolean }) => {
+          setUrl(d.url ?? "");
+          setEnabled(Boolean(d.enabled));
+        })
+        .catch(() => {});
+    }
+  };
+
+  const save = () => {
+    fetch("/api/alerts/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url.trim(), enabled }),
+    })
+      .then(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 1500);
+      })
+      .catch(() => {});
+  };
+
+  return (
+    <div className="border-t border-panel-border">
+      <button
+        type="button"
+        onClick={openConfig}
+        className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-[11px] text-muted transition-colors hover:text-foreground"
+      >
+        <Webhook className="h-3.5 w-3.5" />
+        {t("webhook.title")}
+      </button>
+      {open && (
+        <div className="space-y-2 px-3 pb-3">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder={t("webhook.placeholder")}
+            aria-label={t("webhook.title")}
+            className="w-full rounded-md border border-panel-border bg-background/40 px-2 py-1 text-[11px] text-foreground outline-none focus:border-accent"
+          />
+          <label className="flex items-center gap-2 text-[11px] text-foreground">
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} className="h-3.5 w-3.5 accent-[var(--color-accent)]" />
+            {t("webhook.enable")}
+          </label>
+          <button
+            type="button"
+            onClick={save}
+            className="w-full rounded-md border border-accent/40 bg-accent/10 py-1 text-[11px] text-accent transition-colors hover:bg-accent/20"
+          >
+            {saved ? t("webhook.saved") : t("webhook.save")}
+          </button>
+          <p className="text-[10px] text-muted/70">{t("webhook.hint")}</p>
+        </div>
+      )}
+    </div>
   );
 }
