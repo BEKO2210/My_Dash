@@ -307,6 +307,68 @@ function step() {
   }
 }
 
+// A spread of past (ended) sessions so time-based widgets — above all the session
+// timeline — render a realistic Gantt instead of every bar piled up at "now".
+// Deterministic (own seeded stream) and added BEFORE the live sessions, banded so
+// the 24h / 7d / 30d ranges are all populated. Synthetic events are NOT pushed to
+// the live stream (allEvents), so the event feed and graph stay "now".
+function seedHistory() {
+  const rng = mulberry32((SEED ^ 0x415c) >>> 0);
+  const nowMs = Date.now();
+  const HOUR = 3_600_000;
+  const fmt = (ms: number) => new Date(ms).toISOString().slice(0, 19).replace("T", " ");
+  const bands = [
+    { count: 8, minH: 0.5, maxH: 24 }, // last 24h
+    { count: 10, minH: 24, maxH: 24 * 7 }, // 1–7 days
+    { count: 8, minH: 24 * 7, maxH: 24 * 30 }, // 7–30 days
+  ];
+  const past: DSession[] = [];
+  for (const band of bands) {
+    for (let i = 0; i < band.count; i++) {
+      const ageH = band.minH + rng() * (band.maxH - band.minH);
+      const startMs = nowMs - ageH * HOUR;
+      const durMs = Math.min((4 + rng() * 150) * 60_000, ageH * HOUR * 0.9); // never end in the future
+      const endMs = startMs + durMs;
+      const project = PROJECTS[Math.floor(rng() * PROJECTS.length)];
+      const title = PROMPTS[Math.floor(rng() * PROMPTS.length)];
+      const evN = 6 + Math.floor(rng() * 40);
+      const events: EventRow[] = Array.from({ length: evN }, (_, k) => ({
+        id: eid++,
+        session_id: "",
+        event_type: "PostToolUse",
+        tool_name: null,
+        model: null,
+        summary: null,
+        payload_json: "{}",
+        created_at: fmt(startMs + (durMs * k) / evN),
+      }));
+      const toolN = 3 + Math.floor(rng() * 14);
+      const tools: DTool[] = Array.from({ length: toolN }, () => {
+        const tn = TOOLS[Math.floor(rng() * (TOOLS.length - 1))]; // skip "Task"
+        const full = FILES[Math.floor(rng() * FILES.length)];
+        const label = full.split("/").slice(-2).join("/");
+        return { tool: tn, key: `f:${full}`, label, kind: "file", full };
+      });
+      const s: DSession = {
+        id: demoId(),
+        project,
+        title,
+        status: "ended",
+        first_seen: fmt(startMs),
+        last_seen: fmt(endMs),
+        ended_at: fmt(endMs),
+        events,
+        tools,
+        prompts: [{ text: title, created_at: fmt(startMs) }],
+      };
+      for (const e of events) e.session_id = s.id;
+      past.push(s);
+    }
+  }
+  past.sort((a, b) => a.first_seen.localeCompare(b.first_seen));
+  sessions.push(...past);
+}
+
 export function startDemo() {
   if (started) return;
   started = true;
@@ -316,6 +378,7 @@ export function startDemo() {
   liveInput = liveOutput = liveCache = 0;
   liveCostUsd = 0;
   sidCounter = 0;
+  seedHistory(); // backdated ended sessions first, so the timeline has real spread
   for (let i = 0; i < 4; i++) newSession();
   for (let i = 0; i < 30; i++) step(); // pre-warm so the graph isn't empty
   setInterval(step, TICK_MS);
