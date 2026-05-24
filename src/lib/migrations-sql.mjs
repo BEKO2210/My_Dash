@@ -176,4 +176,34 @@ export const MIGRATIONS = [
     updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   `,
+
+  // v15 — read-only alerting: rules (conditions over the event stream) evaluated at
+  // ingest, and the alerts they raise. The unique (rule_id, dedup_key) index keeps
+  // a firing condition from spamming. Seeded with sensible default rules.
+  `
+  CREATE TABLE IF NOT EXISTS alert_rules (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    type      TEXT NOT NULL,
+    threshold REAL NOT NULL DEFAULT 0,
+    enabled   INTEGER NOT NULL DEFAULT 1,
+    label     TEXT
+  );
+  CREATE TABLE IF NOT EXISTS alerts (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    rule_id    INTEGER,
+    type       TEXT NOT NULL,
+    message    TEXT NOT NULL,
+    session_id TEXT,
+    dedup_key  TEXT,
+    read       INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_alerts_dedup ON alerts(rule_id, dedup_key);
+  CREATE INDEX IF NOT EXISTS idx_alerts_read ON alerts(read);
+  INSERT INTO alert_rules (type, threshold, enabled, label) VALUES
+    ('mcp_error', 0, 1, 'MCP tool failed'),
+    ('error_spike', 0.25, 1, 'Error-rate spike'),
+    ('session_long', 120, 1, 'Long-running session'),
+    ('cost_session', 5, 1, 'Session cost over budget');
+  `,
 ];

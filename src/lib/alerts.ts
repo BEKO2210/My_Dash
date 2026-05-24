@@ -1,0 +1,148 @@
+import type Database from "better-sqlite3";
+
+// Read-only alerting rule engine. Rules live in the DB and are evaluated at ingest
+// against a small per-event context. Pure evaluateRules so the conditions are
+// unit-testable; the DB helpers add caching + dedup (one alert per rule + key).
+// This NEVER writes back to Claude — it only records alerts for the dashboard.
+
+export type RuleType = "mcp_error" | "error_spike" | "session_long" | "cost_session";
+
+export interface Rule {
+  id: number;
+  type: string;
+  threshold: number;
+  enabled: number;
+  label: string | null;
+}
+
+export interface RuleCtx {
+  eventType: string;
+  toolName: string | null;
+  toolSource: string | null; // "mcp" | "builtin" | null
+  toolSuccess: number | null; // 0 | 1 | null
+  sessionId: string;
+  sessionCostUsd: number;
+  sessionDurationMin: number;
+  recentErrorRate: number; // 0..1 over recent tool calls
+  hourBucket: string; // for spike dedup
+}
+
+export interface AlertFire {
+  ruleId: number;
+  type: string;
+  message: string;
+  sessionId: string;
+  dedupKey: string; // (ruleId, dedupKey) is unique → no flapping/spam
+}
+
+export function evaluateRules(ctx: RuleCtx, rules: Rule[]): AlertFire[] {
+  const fires: AlertFire[] = [];
+  const isPost = ctx.eventType === "PostToolUse";
+  for (const r of rules) {
+    if (!r.enabled) continue;
+    switch (r.type) {
+      case "mcp_error":
+        if (isPost && ctx.toolSource === "mcp" && ctx.toolSuccess === 0) {
+          fires.push({
+            ruleId: r.id,
+            type: r.type,
+            sessionId: ctx.sessionId,
+            dedupKey: `${ctx.sessionId}:${ctx.toolName}:${ctx.hourBucket}`,
+            message: `MCP tool failed: ${ctx.toolName ?? "?"}`,
+          });
+        }
+        break;
+      case "error_spike":
+        if (isPost && ctx.recentErrorRate >= r.threshold && r.threshold > 0) {
+          fires.push({
+            ruleId: r.id,
+            type: r.type,
+            sessionId: ctx.sessionId,
+            dedupKey: ctx.hourBucket,
+            message: `Error rate ${Math.round(ctx.recentErrorRate * 100)}% (≥ ${Math.round(r.threshold * 100)}%)`,
+          });
+        }
+        break;
+      case "session_long":
+        if (ctx.sessionDurationMin >= r.threshold && r.threshold > 0) {
+          fires.push({
+            ruleId: r.id,
+            type: r.type,
+            sessionId: ctx.sessionId,
+            dedupKey: ctx.sessionId,
+            message: `Session running ${Math.round(ctx.sessionDurationMin)} min (≥ ${r.threshold})`,
+          });
+        }
+        break;
+      case "cost_session":
+        if (ctx.sessionCostUsd >= r.threshold && r.threshold > 0) {
+          fires.push({
+            ruleId: r.id,
+            type: r.type,
+            sessionId: ctx.sessionId,
+            dedupKey: ctx.sessionId,
+            message: `Session cost $${ctx.sessionCostUsd.toFixed(2)} (≥ $${r.threshold})`,
+          });
+        }
+        break;
+    }
+  }
+  return fires;
+}
+
+export interface AlertItem {
+  id: number;
+  rule_id: number | null;
+  type: string;
+  message: string;
+  session_id: string | null;
+  read: number;
+  created_at: string;
+}
+
+// Enabled rules, cached briefly so the hot ingest path doesn't re-query per event.
+let rulesCache: Rule[] | null = null;
+let rulesCacheAt = 0;
+
+export function getEnabledRules(db: Database.Database): Rule[] {
+  const now = Date.now();
+  if (rulesCache && now - rulesCacheAt < 60_000) return rulesCache;
+  rulesCache = db
+    .prepare(`SELECT id, type, threshold, enabled, label FROM alert_rules WHERE enabled = 1`)
+    .all() as Rule[];
+  rulesCacheAt = now;
+  return rulesCache;
+}
+
+// Insert an alert, ignoring duplicates (same rule + dedup key). Returns true when
+// a new alert was actually recorded.
+export function recordAlert(db: Database.Database, fire: AlertFire): boolean {
+  const info = db
+    .prepare(
+      `INSERT OR IGNORE INTO alerts (rule_id, type, message, session_id, dedup_key)
+       VALUES (?, ?, ?, ?, ?)`,
+    )
+    .run(fire.ruleId, fire.type, fire.message, fire.sessionId, fire.dedupKey);
+  return info.changes > 0;
+}
+
+export function processAlerts(db: Database.Database, ctx: RuleCtx): number {
+  let recorded = 0;
+  for (const fire of evaluateRules(ctx, getEnabledRules(db))) {
+    if (recordAlert(db, fire)) recorded += 1;
+  }
+  return recorded;
+}
+
+export function recentAlerts(db: Database.Database, limit: number): AlertItem[] {
+  return db
+    .prepare(
+      `SELECT id, rule_id, type, message, session_id, read, created_at
+       FROM alerts ORDER BY id DESC LIMIT ?`,
+    )
+    .all(limit) as AlertItem[];
+}
+
+export function unreadAlertCount(db: Database.Database): number {
+  return (db.prepare(`SELECT COUNT(*) AS n FROM alerts WHERE read = 0`).get() as { n: number }).n;
+}
