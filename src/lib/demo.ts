@@ -87,8 +87,34 @@ const listeners = new Set<(m: StreamMessage) => void>();
 let eid = 1;
 let started = false;
 
-const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
-const chance = (p: number) => Math.random() < p;
+// Seeded PRNG (mulberry32) so the demo is fully deterministic — a fixed seed gives
+// the same curated picture on every reload, which keeps screenshots/GIFs
+// reproducible. Nothing here calls Math.random() anymore.
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SEED = 0x5eed01;
+// One advancing sequence for the live engine (reset in startDemo) → identical live
+// evolution every reload.
+let liveRng = mulberry32(SEED);
+// Snapshot getters re-seed this to a per-getter constant on entry (see seedSnap),
+// so each returns identical data on every call (no per-poll jitter) and reload.
+let snapRng = mulberry32(SEED);
+const srand = () => snapRng();
+const seedSnap = (n: number) => {
+  snapRng = mulberry32((SEED ^ Math.imul(n, 0x9e3779b1)) >>> 0);
+};
+let sidCounter = 0;
+const demoId = () => "demo-" + (sidCounter++).toString(36).padStart(6, "0");
+
+const pick = <T,>(a: T[]): T => a[Math.floor(liveRng() * a.length)];
+const chance = (p: number) => liveRng() < p;
 const dbNow = () => new Date().toISOString().slice(0, 19).replace("T", " ");
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
@@ -168,7 +194,7 @@ function newSession() {
   const title = pick(PROMPTS);
   const now = dbNow();
   const s: DSession = {
-    id: "demo-" + Math.random().toString(36).slice(2, 10),
+    id: demoId(),
     project,
     title,
     status: "active",
@@ -193,7 +219,7 @@ function step() {
     return;
   }
   const s = pick(live);
-  const r = Math.random();
+  const r = liveRng();
   if (r < 0.68) {
     const tool = pick(TOOLS);
     if (tool === "Task") {
@@ -226,6 +252,9 @@ function step() {
 export function startDemo() {
   if (started) return;
   started = true;
+  // Deterministic start: same seed → same live evolution every reload.
+  liveRng = mulberry32(SEED);
+  sidCounter = 0;
   for (let i = 0; i < 4; i++) newSession();
   for (let i = 0; i < 30; i++) step(); // pre-warm so the graph isn't empty
   setInterval(step, 1100);
@@ -274,15 +303,17 @@ export function demoTranscript(id: string): { messages: TranscriptMessage[]; ava
 }
 
 export function demoSessionDetail(id: string): SessionDetail | null {
-  const s = sessions.find((x) => x.id === id);
-  if (!s) return null;
+  const idx = sessions.findIndex((x) => x.id === id);
+  if (idx < 0) return null;
+  seedSnap(101 + idx);
+  const s = sessions[idx];
   const tools: ToolCallRow[] = s.tools
     .map((tc, i) => ({
       id: i + 1,
       session_id: s.id,
       tool_name: tc.tool,
       target: tc.full ?? tc.label,
-      duration_ms: 100 + Math.round(Math.random() * 400),
+      duration_ms: 100 + Math.round(srand() * 400),
       success: 1,
       source: tc.tool.startsWith("mcp__") ? "mcp" : "builtin",
       mcp_server: null,
@@ -368,13 +399,14 @@ export function demoGraph() {
 }
 
 export function demoUsage() {
+  seedSnap(2);
   const rate = 0.92;
   const day = (date: string, scale: number) => {
-    const input = Math.round(20000 * scale + Math.random() * 8000);
-    const output = Math.round(60000 * scale + Math.random() * 20000);
-    const cacheTokens = Math.round(3_000_000 * scale + Math.random() * 2_000_000);
+    const input = Math.round(20000 * scale + srand() * 8000);
+    const output = Math.round(60000 * scale + srand() * 20000);
+    const cacheTokens = Math.round(3_000_000 * scale + srand() * 2_000_000);
     const totalTokens = input + output + cacheTokens;
-    const costUsd = +(2 + scale * 5 + Math.random() * 3).toFixed(2);
+    const costUsd = +(2 + scale * 5 + srand() * 3).toFixed(2);
     return { date, inputTokens: input, outputTokens: output, cacheTokens, totalTokens, costUsd, costEur: +(costUsd * rate).toFixed(2) };
   };
   const today = new Date();
@@ -539,13 +571,14 @@ export function demoFiles() {
 }
 
 export function demoLatency() {
+  seedSnap(3);
   // Long-tailed synthetic durations: mostly fast, a few slow outliers.
   const values: number[] = [];
   for (let i = 0; i < 600; i++) {
-    const r = Math.random();
-    if (r < 0.6) values.push(5 + Math.round(Math.random() * 60));
-    else if (r < 0.9) values.push(60 + Math.round(Math.random() * 400));
-    else values.push(500 + Math.round(Math.random() * 6000));
+    const r = srand();
+    if (r < 0.6) values.push(5 + Math.round(srand() * 60));
+    else if (r < 0.9) values.push(60 + Math.round(srand() * 400));
+    else values.push(500 + Math.round(srand() * 6000));
   }
   return { stats: latencyStats(values), tools: ["Read", "Edit", "Bash", "Grep", "WebFetch"] };
 }
@@ -584,10 +617,11 @@ export function demoToolCallDetail(id: number): ToolCallDetail | null {
 }
 
 export function demoErrors() {
+  seedSnap(4);
   const today = Date.now();
   const series = Array.from({ length: 14 }, (_, i) => {
-    const total = 20 + Math.round(Math.random() * 40);
-    const failures = Math.round(total * (0.02 + Math.random() * 0.08));
+    const total = 20 + Math.round(srand() * 40);
+    const failures = Math.round(total * (0.02 + srand() * 0.08));
     return { date: new Date(today - (13 - i) * 86_400_000).toISOString().slice(0, 10), total, failures };
   });
   const failures = series.reduce((a, p) => a + p.failures, 0);
@@ -612,12 +646,13 @@ export function demoErrors() {
 }
 
 export function demoSankey() {
+  seedSnap(5);
   const projects = ["my_dash", "shopify-bot"];
   const tools = ["Read", "Edit", "Bash", "Grep", "WebFetch"];
   const kinds = ["file", "command", "url", "pattern"];
   const triples: SankeyTriple[] = [];
   for (let i = 0; i < 400; i++) {
-    const tool = tools[Math.floor(Math.random() * tools.length)];
+    const tool = tools[Math.floor(srand() * tools.length)];
     const kind =
       tool === "Bash" ? "command" : tool === "WebFetch" ? "url" : tool === "Grep" ? "pattern" : "file";
     triples.push({ project: projects[i % projects.length], tool, kind: kinds.includes(kind) ? kind : "file" });
@@ -668,6 +703,7 @@ export function demoPrompts() {
 }
 
 export function demoStreak() {
+  seedSnap(6);
   const today = new Date();
   const days: DayCount[] = [];
   for (let i = 29; i >= 0; i--) {
@@ -676,14 +712,14 @@ export function demoStreak() {
     const weekday = date.getDay();
     const weekendDip = weekday === 0 || weekday === 6 ? 0.3 : 1;
     // Keep the last few days active so the demo always shows a live streak.
-    const base = i <= 4 ? 2 : Math.round((1 + Math.random() * 4) * weekendDip);
+    const base = i <= 4 ? 2 : Math.round((1 + srand() * 4) * weekendDip);
     days.push({ date: key, count: Math.max(0, base) });
   }
   const hours = new Array<number>(24).fill(0);
   for (let h = 0; h < 24; h++) {
     const work = h >= 9 && h <= 18 ? 1 : 0.15;
     const peak = h === 11 || h === 15 ? 1.6 : 1;
-    hours[h] = Math.round(20 * work * peak + Math.random() * 6);
+    hours[h] = Math.round(20 * work * peak + srand() * 6);
   }
   return { streak: streakStats(days), days, hours, peakHour: peakHour(hours) };
 }
@@ -744,16 +780,17 @@ export function demoMcp() {
 }
 
 export function demoCompactions() {
+  seedSnap(7);
   const out: Compaction[] = [];
   let id = 1;
   const now = Date.now();
   for (let i = 0; i < 12; i++) {
-    const ago = Math.floor(Math.random() * 13) * 86_400_000 + Math.floor(Math.random() * 86_400_000);
+    const ago = Math.floor(srand() * 13) * 86_400_000 + Math.floor(srand() * 86_400_000);
     const created = new Date(now - ago).toISOString().slice(0, 19).replace("T", " ");
-    const manual = Math.random() < 0.25;
+    const manual = srand() < 0.25;
     out.push({
       id: id++,
-      session_id: "demo-" + Math.random().toString(36).slice(2, 10),
+      session_id: "demo-c" + i,
       trigger: manual ? "manual" : "auto",
       customInstructions: manual ? "keep the roadmap context" : null,
       created_at: created,
@@ -803,6 +840,7 @@ export function demoTokenBurn() {
 }
 
 export function demoCalendar() {
+  seedSnap(8);
   const today = new Date();
   const days: { date: string; count: number }[] = [];
   for (let i = 370; i >= 0; i--) {
@@ -810,35 +848,37 @@ export function demoCalendar() {
     const key = date.toISOString().slice(0, 10);
     const weekday = date.getUTCDay();
     const weekend = weekday === 0 || weekday === 6 ? 0.25 : 1;
-    const burst = Math.random() < 0.12 ? 3 : 1; // occasional heavy days
-    const count = Math.max(0, Math.round((Math.random() * 40 - 6) * weekend * burst));
+    const burst = srand() < 0.12 ? 3 : 1; // occasional heavy days
+    const count = Math.max(0, Math.round((srand() * 40 - 6) * weekend * burst));
     days.push({ date: key, count });
   }
   return { days };
 }
 
 export function demoVelocity() {
+  seedSnap(9);
   const today = new Date();
   const days: VelocityDay[] = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today.getTime() - i * 86_400_000).toISOString().slice(0, 10);
-    const sessions = 1 + Math.floor(Math.random() * 4);
-    const activeMinutes = sessions * (20 + Math.floor(Math.random() * 40));
+    const sessions = 1 + Math.floor(srand() * 4);
+    const activeMinutes = sessions * (20 + Math.floor(srand() * 40));
     // Mild downward drift in throughput over the window (a degradation signal).
-    const ratePerMin = (0.9 - (29 - i) * 0.012) * (0.8 + Math.random() * 0.4);
+    const ratePerMin = (0.9 - (29 - i) * 0.012) * (0.8 + srand() * 0.4);
     const toolCalls = Math.max(0, Math.round(activeMinutes * ratePerMin));
-    const events = toolCalls * 2 + sessions * 3 + Math.floor(Math.random() * 6);
+    const events = toolCalls * 2 + sessions * 3 + Math.floor(srand() * 6);
     days.push({ date, toolCalls, events, sessions, activeMinutes });
   }
   return { days };
 }
 
 export function demoSessionDuration() {
+  seedSnap(10);
   const values: number[] = [];
   for (let i = 0; i < 160; i++) {
     // Right-skewed: most sessions short, a long tail of multi-hour ones.
-    const r = Math.random();
-    const minutes = r < 0.55 ? Math.random() * 15 : r < 0.85 ? 15 + Math.random() * 75 : 90 + Math.random() * 300;
+    const r = srand();
+    const minutes = r < 0.55 ? srand() * 15 : r < 0.85 ? 15 + srand() * 75 : 90 + srand() * 300;
     values.push(Math.round(minutes * 60_000));
   }
   return durationStats(values);
