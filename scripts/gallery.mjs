@@ -42,7 +42,15 @@ function serve() {
     .createServer((req, res) => {
       let url = req.url.split("?")[0];
       if (BASE && url.startsWith(BASE)) url = url.slice(BASE.length);
-      let fp = path.join(ROOT, decodeURIComponent(url));
+      let decoded;
+      try {
+        decoded = decodeURIComponent(url);
+      } catch {
+        res.writeHead(400);
+        res.end("400");
+        return;
+      }
+      let fp = path.join(ROOT, decoded);
       try {
         if (fp.endsWith("/") || fs.statSync(fp).isDirectory()) fp = path.join(fp, "index.html");
       } catch {
@@ -109,23 +117,26 @@ async function captureGif(browser) {
     recordVideo: { dir: tmp, size: { width: 1280, height: 720 } },
   });
   const page = await ctx.newPage();
-  await page.addInitScript(prime("dark"));
-  await gotoDashboard(page);
-  await page.locator("#mc-widget-live-stream").first().scrollIntoViewIfNeeded().catch(() => {});
-  await page.waitForTimeout(8000); // record ~8s of live updates
-  await ctx.close(); // flush the video
-  const webm = fs.readdirSync(tmp).find((f) => f.endsWith(".webm"));
-  if (!webm) return console.log("gif: no video recorded");
-  const out = path.join(SHOTS, "dashboard-live.gif");
-  // Palette filtergraph uses split → must be -filter_complex (not -vf).
-  const fc =
-    "fps=10,scale=860:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=160[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3";
-  const r = spawnSync(FFMPEG, ["-y", "-i", path.join(tmp, webm), "-filter_complex", fc, "-loop", "0", out], {
-    encoding: "utf8",
-  });
-  if (r.status === 0) console.log(`gif: wrote ${out} (${(fs.statSync(out).size / 1024).toFixed(0)} KB)`);
-  else console.log("gif: ffmpeg failed:\n" + (r.stderr || "").split("\n").slice(-4).join("\n"));
-  fs.rmSync(tmp, { recursive: true, force: true });
+  try {
+    await page.addInitScript(prime("dark"));
+    await gotoDashboard(page);
+    await page.locator("#mc-widget-live-stream").first().scrollIntoViewIfNeeded().catch(() => {});
+    await page.waitForTimeout(8000); // record ~8s of live updates
+    await ctx.close(); // flush the video
+    const webm = fs.readdirSync(tmp).find((f) => f.endsWith(".webm"));
+    if (!webm) return console.log("gif: no video recorded");
+    const out = path.join(SHOTS, "dashboard-live.gif");
+    // Palette filtergraph uses split → must be -filter_complex (not -vf).
+    const fc =
+      "fps=10,scale=860:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=160[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3";
+    const r = spawnSync(FFMPEG, ["-y", "-i", path.join(tmp, webm), "-filter_complex", fc, "-loop", "0", out], {
+      encoding: "utf8",
+    });
+    if (r.status === 0) console.log(`gif: wrote ${out} (${(fs.statSync(out).size / 1024).toFixed(0)} KB)`);
+    else console.log("gif: ffmpeg failed:\n" + (r.stderr || "").split("\n").slice(-4).join("\n"));
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true }); // always clean up the temp video dir
+  }
 }
 
 (async () => {

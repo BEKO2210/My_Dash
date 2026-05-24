@@ -126,7 +126,7 @@ export function SiteFooter() {
       <div className="border-t border-panel-border/60">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-1.5 px-5 py-3 text-center text-[11px] text-muted sm:flex-row sm:px-6 sm:text-left">
           <span>
-            © {year} {CONTACT.name}. {t("footer.rights")}
+            © <span suppressHydrationWarning>{year}</span> {CONTACT.name}. {t("footer.rights")}
           </span>
           <span className="text-muted/80">{t("footer.text")}</span>
         </div>
