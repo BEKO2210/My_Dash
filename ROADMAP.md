@@ -301,6 +301,13 @@ jede Zelle, jeder Tooltip). Bilder werden als CI-Artefakte gesammelt; jede
 Abweichung wird als Folge-Fix notiert. Konsole muss frei von Fehlern/Hydration
 sein.
 
+> **CI-Artefakte sind die visuelle Qualitätskontrolle (Release-Schritt):** Die
+> CI (`.github/workflows/ci.yml`) lädt pro Widget einen Screenshot-Satz hoch
+> (`<widget>-screenshots`, De/En × Light/Dark × Mobil/Desktop/QHD/UHD). Diese
+> Artefakte werden **vor dem Release manuell gesichtet** — sie sind der visuelle
+> Gegencheck zu den automatisierten Assertions. Run 120 ist erst freigegeben,
+> wenn die Galerie aller `*-screenshots` einmal durchgesehen wurde.
+
 > **Vollständigkeit (unverhandelbar):** Diese Abnahme deckt **jedes** Widget der
 > Registry (`src/plugins/registry.ts`) ab — keine Karte bleibt ungeprüft. Die
 > Runs 100–102 prüfen alle Widgets gemeinsam (Layout, Farbe/Kontrast, Typografie);
@@ -352,10 +359,15 @@ sein.
      sortierbare Spalten (jede Spalte klicken), Medaillen, Hover-Zeilen.
      **+ Zuverlässigkeit je Projekt** (`reliability`): Quote/Balken-Farben.
      **+ Branches & PRs** (`git-correlation`): Zeilen, Links, Leerzustand.
-118. 🔢 **Streak, Subagent-Baum, Velocity, Session-Dauer & Prompt-Verlauf.**
-     Streak-Kacheln, jeder Balken; Subagent-Baum auf-/zuklappen jedes Knotens.
-     **+ Geschwindigkeits-Trend** (`velocity`), **+ Session-Dauer-Verteilung**
-     (`session-duration`), **+ Prompt-Verlauf** (`prompt-history`, Suche/Klick).
+118. 🔢 **Aufgefächert** — die ursprünglichen fünf Widgets waren zu viel für einen
+     Run; jeder Teil-Run ist ein eigener, PR-großer Schritt:
+   - **118a — Streak/Produktivität & Subagent-Baum.** Streak-Kacheln, jeder Balken;
+     Subagent-Baum auf-/zuklappen jedes Knotens (`streak`, `subagent-tree`).
+   - **118b — Velocity & Session-Dauer.** Geschwindigkeits-Trend (Linie/Balken,
+     Hover) + Session-Dauer-Histogramm (Buckets, p50/Median) — `velocity`,
+     `session-duration`.
+   - **118c — Prompt-Verlauf.** Chronologische, durchsuchbare Liste; Klick/Drilldown,
+     Token-Schätzung, Leer-/Kein-Treffer-Zustand (`prompt-history`).
 119. 🔌 **MCP-Server, Kompaktierungen, Anomalien, Jahres-Kalender + globale
      Interaktionen.** MCP-Zeilen/Balken; **+ Kompaktierungs-Timeline**
      (`compaction-timeline`), **+ Anomalie-Erkennung** (`anomaly`),
@@ -387,7 +399,9 @@ abnimmt — zusätzlich zu den Quer-Runs 100–102 (Layout, Farbe/Kontrast, Typo
 | 115 | `model-donut`, `token-burn` |
 | 116 | `sankey-flow`, `tag-cloud` |
 | 117 | `project-leaderboard`, `reliability`, `git-correlation` |
-| 118 | `streak`, `subagent-tree`, `velocity`, `session-duration`, `prompt-history` |
+| 118a | `streak`, `subagent-tree` |
+| 118b | `velocity`, `session-duration` |
+| 118c | `prompt-history` |
 | 119 | `mcp-servers`, `compaction-timeline`, `anomaly`, `calendar-heatmap` |
 
 Das sind alle **30** Registry-Widgets. Externe Plugins aus `plugins.local/` werden
@@ -396,6 +410,12 @@ in die Registry, muss es hier eingetragen und einem Run zugeordnet werden, bevor
 v1.0 (Run 120) freigegeben wird.
 
 ### Z-Demo. 🌐 Demo-Website-Politur (nur die Pages-Demo, `src/lib/demo.ts`)
+
+> **Priorität — Release-Blocker:** Die Demo ist das **Aushängeschild** auf GitHub
+> Pages und damit der erste Eindruck. Sie muss **vor** dem Beta-Release (Run 120)
+> gehärtet sein. Mindestkriterien: **Kosten/Tokens steigen monoton** (nur aufwärts,
+> kleine Schritte) und **beendete Sessions verschwinden nie** — beides ist unten
+> spezifiziert und wird vor Freigabe verifiziert.
 
 Die öffentliche Demo (läuft idealerweise **nur** auf der Website) wirkt aktuell
 **zu hektisch und inkonsistent**. Ruhiger, glaubwürdiger und stabil machen:
