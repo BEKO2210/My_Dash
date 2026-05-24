@@ -301,6 +301,15 @@ jede Zelle, jeder Tooltip). Bilder werden als CI-Artefakte gesammelt; jede
 Abweichung wird als Folge-Fix notiert. Konsole muss frei von Fehlern/Hydration
 sein.
 
+> **Vollständigkeit (unverhandelbar):** Diese Abnahme deckt **jedes** Widget der
+> Registry (`src/plugins/registry.ts`) ab — keine Karte bleibt ungeprüft. Die
+> Runs 100–102 prüfen alle Widgets gemeinsam (Layout, Farbe/Kontrast, Typografie);
+> die Runs 103–119 prüfen sie einzeln bzw. in thematischen Familien. Welcher Run
+> welches Widget abdeckt, steht in der **Abdeckungs-Matrix** am Ende dieser Phase;
+> jeder Run liefert pro geprüftem Widget einen dedizierten E2E-Audit
+> (`e2e/<widget>.spec.ts`) plus Screenshot-Matrix. Familien-Runs (mehrere Widgets)
+> dürfen sich wie ⚙️-Runs in Pro-Widget-Teilschritte auffächern.
+
 100. 📐 **Layout & Raster.** Abstände, Gutter, Padding, Ausrichtung, gleiche
      Panel-Höhen, kein Überlauf — über alle Breakpoints.
 101. 🎨 **Farbsystem & Kontrast.** Palette, Akzent-/Statusfarben,
@@ -333,16 +342,58 @@ sein.
 113. 📈 **Latenz.** Histogramm-Buckets, p50/p95/p99, jeder Balken, Tooltip.
 114. ❗ **Fehlerrate & Fehler-Panel.** Serie, Top-Fehler-Tools, Fehlerliste,
      Klick.
-115. 🍩 **Modelle-Donut.** Segmente, Legende, Center-Total, Hover jedes Segment.
-116. 🌊 **Sankey-Fluss.** Knoten/Links, Hover, Other-Bucket, Label-Lesbarkeit.
-117. 🏆 **Projekt-Leaderboard.** Sortierbare Spalten (jede Spalte klicken),
-     Medaillen, Hover-Zeilen.
-118. 🔢 **Streak/Produktivität & Subagent-Baum.** Streak-Kacheln, jeder Balken,
-     Auf-/Zuklappen jedes Knotens.
-119. 🔌 **MCP-Server + globale Interaktionen.** MCP-Zeilen/Balken; Sprach- &
+115. 🍩 **Modelle-Donut & Token-Verbrauch.** Donut: Segmente, Legende,
+     Center-Total, Hover jedes Segment. **+ Token-Verbrauch je Tool**
+     (`token-burn`): Balken/Anteile, Hover, Leerzustand.
+116. 🌊 **Sankey-Fluss & Themen-Cloud.** Sankey: Knoten/Links, Hover,
+     Other-Bucket, Label-Lesbarkeit. **+ Themen-Cloud** (`tag-cloud`):
+     Begriffsgrößen, Klick→Suche, Leerzustand.
+117. 🏆 **Projekt-Leaderboard, Zuverlässigkeit & Git-Korrelation.** Leaderboard:
+     sortierbare Spalten (jede Spalte klicken), Medaillen, Hover-Zeilen.
+     **+ Zuverlässigkeit je Projekt** (`reliability`): Quote/Balken-Farben.
+     **+ Branches & PRs** (`git-correlation`): Zeilen, Links, Leerzustand.
+118. 🔢 **Streak, Subagent-Baum, Velocity, Session-Dauer & Prompt-Verlauf.**
+     Streak-Kacheln, jeder Balken; Subagent-Baum auf-/zuklappen jedes Knotens.
+     **+ Geschwindigkeits-Trend** (`velocity`), **+ Session-Dauer-Verteilung**
+     (`session-duration`), **+ Prompt-Verlauf** (`prompt-history`, Suche/Klick).
+119. 🔌 **MCP-Server, Kompaktierungen, Anomalien, Jahres-Kalender + globale
+     Interaktionen.** MCP-Zeilen/Balken; **+ Kompaktierungs-Timeline**
+     (`compaction-timeline`), **+ Anomalie-Erkennung** (`anomaly`),
+     **+ Jahres-Kalender** (`calendar-heatmap`). Global: Sprach- &
      Theme-Umschalter, Suche filtert alle Widgets, Layout-Reset/Drag, Info-
      Hints überall; alle `/api/*`-Routen antworten; Demo-Modus zeigt alle
      Widgets. Abschluss-Sammlung aller Screenshots.
+
+### Z-Cover. ✅ Widget-Abdeckungs-Matrix
+
+Jedes Widget der Registry (`src/plugins/registry.ts`) und der Run, der es einzeln
+abnimmt — zusätzlich zu den Quer-Runs 100–102 (Layout, Farbe/Kontrast, Typografie
+über **alle** Widgets). Erst wenn jede Zeile grün ist, ist Phase Z vollständig.
+
+| Run | Widget(s) |
+|---|---|
+| 103 | `kpi-bar` |
+| 104 | `kanban` |
+| 105 | `live-stream`, `live-now` |
+| 106 | `token-chart` |
+| 107 | `tool-graph` |
+| 108 | `budget-gauge` |
+| 109 | `heatmap` |
+| 110 | `tool-frequency` |
+| 111 | `file-hotspots` |
+| 112 | `session-timeline` |
+| 113 | `latency` |
+| 114 | `error-rate`, `incidents` |
+| 115 | `model-donut`, `token-burn` |
+| 116 | `sankey-flow`, `tag-cloud` |
+| 117 | `project-leaderboard`, `reliability`, `git-correlation` |
+| 118 | `streak`, `subagent-tree`, `velocity`, `session-duration`, `prompt-history` |
+| 119 | `mcp-servers`, `compaction-timeline`, `anomaly`, `calendar-heatmap` |
+
+Das sind alle **30** Registry-Widgets. Externe Plugins aus `plugins.local/` werden
+über den Demo-/Galerie-Pfad (Run 119) mitgeprüft. **Regel:** Kommt ein neues Widget
+in die Registry, muss es hier eingetragen und einem Run zugeordnet werden, bevor
+v1.0 (Run 120) freigegeben wird.
 
 ### Z-Demo. 🌐 Demo-Website-Politur (nur die Pages-Demo, `src/lib/demo.ts`)
 
