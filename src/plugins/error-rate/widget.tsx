@@ -96,7 +96,7 @@ export function ErrorRate() {
                 </defs>
                 <XAxis dataKey="date" stroke="#8b94a7" fontSize={10} tickLine={false} minTickGap={20} />
                 <YAxis stroke="#8b94a7" fontSize={10} tickLine={false} allowDecimals={false} width={28} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [String(value), t("errors.failures")]} />
                 <Area type="monotone" dataKey="failures" stroke="#f87171" fill="url(#gErr)" />
               </AreaChart>
             </ResponsiveContainer>
