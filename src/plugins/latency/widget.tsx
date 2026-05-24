@@ -86,7 +86,11 @@ export function Latency() {
                 <CartesianGrid stroke="#1c2230" vertical={false} />
                 <XAxis dataKey="label" stroke="#8b94a7" fontSize={10} tickLine={false} interval={0} angle={-30} textAnchor="end" height={42} />
                 <YAxis stroke="#8b94a7" fontSize={11} tickLine={false} allowDecimals={false} width={36} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                  formatter={(value) => [String(value), t("latency.calls")]}
+                />
                 <Bar dataKey="count" fill="#4f8cff" radius={[3, 3, 0, 0]} isAnimationActive />
               </BarChart>
             </ResponsiveContainer>
