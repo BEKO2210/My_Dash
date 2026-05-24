@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSessionUsage } from "@/lib/ccusage";
+import { otlpAvailable, otlpCostMap } from "@/lib/otlp-map";
 import { reconcileSessions } from "@/lib/reconcile";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Per-session cost reconciled against ccusage (preferred when available), with the
+// Per-session cost reconciled across sources (ccusage > otlp > transcript), with the
 // transcript estimate and the discrepancy alongside.
 export async function GET() {
   try {
@@ -16,11 +17,12 @@ export async function GET() {
       .all() as { id: string; cost_usd: number }[];
     const usage = await getSessionUsage();
     return NextResponse.json({
-      sessions: reconcileSessions(sessions, usage.sessions),
+      sessions: reconcileSessions(sessions, usage.sessions, otlpCostMap(db)),
       ccusageAvailable: usage.available,
+      otlpAvailable: otlpAvailable(db),
     });
   } catch (err) {
     log.error("/api/usage/reconcile failed", err);
-    return NextResponse.json({ sessions: [], ccusageAvailable: false });
+    return NextResponse.json({ sessions: [], ccusageAvailable: false, otlpAvailable: false });
   }
 }
