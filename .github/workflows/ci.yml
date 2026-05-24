@@ -64,8 +64,9 @@ jobs:
       # ingest API and asserts the dashboard renders, connects and populates. Also
       # runs the axe-core accessibility audit (e2e/a11y.spec.ts) and the Phase Z
       # layout (e2e/layout.spec.ts), tool-graph (e2e/tool-graph.spec.ts),
-      # budget-gauge (e2e/budget-gauge.spec.ts), heatmap (e2e/heatmap.spec.ts) and
-      # tool-frequency (e2e/tool-frequency.spec.ts) audits as CI gates.
+      # budget-gauge (e2e/budget-gauge.spec.ts), heatmap (e2e/heatmap.spec.ts),
+      # tool-frequency (e2e/tool-frequency.spec.ts) and file-hotspots
+      # (e2e/file-hotspots.spec.ts) audits as CI gates.
       - name: Smoke + a11y + Phase Z widget E2E
         run: npm run test:e2e
 
@@ -107,6 +108,14 @@ jobs:
         with:
           name: tool-frequency-screenshots
           path: test-results/tool-frequency-shots
+          if-no-files-found: ignore
+
+      # Always collect the file-hotspots audit screenshots (Phase Z, Run 111).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: file-hotspots-screenshots
+          path: test-results/file-hotspots-shots
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
