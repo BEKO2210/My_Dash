@@ -357,6 +357,21 @@ Die öffentliche Demo (läuft idealerweise **nur** auf der Website) wirkt aktuel
 - **Konsistenz.** Über Reloads hinweg ein stimmiges, kuratiertes Bild (seedbare
   Demo-Daten), damit Screenshots/GIFs reproduzierbar sind.
 
+### Z-Shots. 📸 Automatische Widget-Galerie (Playwright, **vor dem Beta-Release**)
+
+Die alten Platzhalter-Bilder wurden in Run 99 entfernt. **Direkt vor dem
+Beta-Release** wird eine frische, vollständige Bild-Galerie automatisch erzeugt:
+
+- **Jedes Widget einzeln** (alle Einträge der Registry) als eigener Screenshot.
+- **Beide Themes** (Light **und** Dark) **× jede Akzentfarbe** der Palette
+  (`ACCENT_PRESETS`: Blau, Cyan, Grün, Violett, Pink, Amber) → pro Widget die
+  volle Theme-Matrix.
+- **Mit Playwright** erzeugt (eigener Spec/Script über dem Seed-/Demo-Backend),
+  deterministisch und reproduzierbar; Ausgabe nach `assets/widgets/<widget>/
+  <mode>-<accent>.png` und als CI-Artefakt gesammelt.
+- README/Doku-Galerie + Demo-Sektion werden mit den neuen Bildern bestückt
+  (ersetzt die in Run 99 entfernten Platzhalter).
+
 ## Phase Ω — Beta-Release (Run 120, **letzter Schritt**)
 
 120. 🚀 **v1.0.0-beta — unsignierte Beta für alle Betriebssysteme** (erst nach
