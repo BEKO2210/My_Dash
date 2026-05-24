@@ -37,10 +37,6 @@
   (<code>Hooks → /api/ingest → SQLite → UI</code>) is stable; more widgets land via the plugin registry.
 </p>
 
-<p align="center">
-  <img src="assets/demo.svg" alt="Claude Mission Control dashboard" width="100%">
-</p>
-
 ---
 
 ## Demo
@@ -52,51 +48,21 @@ tasks, so the full dashboard — live stream, kanban, token/cost charts and the 
 graph — animates with no server. Deployed from `.github/workflows/pages.yml`
 (enable repo → Settings → Pages → Source: **GitHub Actions**).
 
-<!--
-  Demo clips live in assets/ as looping GIFs (autoplay inline on GitHub) with the
-  source MP4s linked underneath for full resolution. Regenerate a GIF from its MP4
-  with ffmpeg if you re-record.
--->
-
-### Dashboard
-
-<p align="center">
-  <img src="assets/dashboard.gif" alt="Claude Mission Control dashboard — live demo" width="100%">
-</p>
-
-▶️ [Full-resolution recording (dashboard.mp4)](https://github.com/BEKO2210/My_Dash/raw/main/assets/dashboard.mp4)
-
-### 3D tool graph
-
-<p align="center">
-  <img src="assets/graph-3d.gif" alt="3D tool-call graph (fullscreen) — live demo" width="100%">
-</p>
-
-▶️ [Full-resolution recording (graph-3d.mp4)](https://github.com/BEKO2210/My_Dash/raw/main/assets/graph-3d.mp4)
+> **📸 Screenshots are being regenerated for the beta.** A Playwright pass captures
+> every widget across both themes and all accent colours just before the v1.0.0-beta
+> release (see [ROADMAP](ROADMAP.md), Phase Z). The fastest way to see it now is the
+> live demo link above, or `npm run dev` locally.
 
 ---
 
 ## Features in action
 
-The full dashboard — kanban, live stream, token/cost chart and the 3D tool-call graph
-in one read-only view:
+The full dashboard puts the kanban, live stream, token/cost chart and the 3D
+tool-call graph in one read-only view:
 
-<p align="center">
-  <img src="assets/feature-dashboard.png" alt="Claude Mission Control dashboard overview" width="100%">
-</p>
-
-**Global search** — filter the live stream and the session kanban straight from the header.
-
-<p align="center">
-  <img src="assets/feature-search.png" alt="Global search filtering the live stream and kanban" width="100%">
-</p>
-
-**Session details** — click any kanban card for its status, timings, counts and recent
-events. Panels are drag-and-drop reorderable (with a one-click reset).
-
-<p align="center">
-  <img src="assets/feature-session-detail.png" alt="Session detail dialog with recent events" width="100%">
-</p>
+- **Global search** — filter the live stream and the session kanban straight from the header (or `⌘/Ctrl-K`).
+- **Session details** — click any kanban card for its status, timings, counts and recent events; jump to the full session page with its transcript.
+- **Make it yours** — drag-and-drop reorder panels, resize them, add/remove widgets from the gallery, switch light/dark and pick an accent colour. Layout persists locally.
 
 ---
 
@@ -112,12 +78,15 @@ UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
 
 ## Features
 
-- **Live stream** — every tool call, prompt and lifecycle event in real time (SSE).
-- **Session Kanban** — sessions flow through `Aktiv → Wartet → Beendet`, filterable by project.
-- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage), in USD **and** EUR.
+- **Live stream** — every tool call, prompt and lifecycle event in real time (SSE), virtualized for long histories.
+- **Session Kanban** — sessions flow through `Aktiv → Wartet → Beendet`, filterable by project, with full session detail + transcript pages.
+- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and 30+ widgets (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…).
 - **3D tool-call graph** — Session → Tool → File, revealing structure across sessions.
-- **Plugin-ready** — new panels drop in via a registry; the seam for future plugins.
-- **Never in the way** — the hook forwarder is fire-and-forget and never blocks Claude.
+- **Alerts & notifications** — rule-based alerts at ingest, in-app inbox + toasts, desktop notifications, optional Slack/Discord webhook, quiet hours and a daily/weekly digest.
+- **Themes & i18n** — light/dark plus accent colours; full German/English UI.
+- **Plugin platform** — widgets are registry entries; drop external ones into `plugins.local/` (see [docs/PLUGINS.md](docs/PLUGINS.md)).
+- **Open data hub** — read-only `/api/*` routes, CSV/JSON export, an OpenAPI 3.1 spec (`/api/openapi`), a Prometheus endpoint (`/api/metrics`) and an optional OTLP receiver.
+- **Never in the way** — the hook forwarder is fire-and-forget and never blocks Claude; the dashboard is local-only (`127.0.0.1`) and read-only.
 
 ## Architecture
 
@@ -130,9 +99,15 @@ Claude Code CLI (your machine)
                  └─ broadcasts via in-memory bus
                       └─ GET /api/stream (SSE) → widgets update live
 
-Side sources (read-only):
+Side sources (read-only, opt-in):
   ~/.claude/projects/**/*.jsonl → scripts/import-history.mjs  (backfill)
   npx ccusage --json            → /api/usage                 (tokens & cost)
+  OTLP/HTTP (Claude Code OTel)  → /api/otlp/v1/*             (MC_OTLP_ENABLED=1)
+  another machine's DB          → scripts/sync-machine.mjs   (combined view)
+
+Read-only outputs (for integration):
+  /api/openapi   OpenAPI 3.1 spec      /api/metrics  Prometheus scrape
+  /api/export    CSV/JSON export       /api/digest   daily/weekly HTML digest
 ```
 
 One Next.js process. SQLite file at `./data/mission-control.db` (gitignored).
