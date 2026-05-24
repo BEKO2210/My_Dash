@@ -65,4 +65,4 @@ Open an issue describing what you did, what you expected, and what happened.
 Screenshots or a copy of the relevant event payload help a lot.
 
 By contributing you agree that your contributions are licensed under the
-project's [MIT License](LICENSE).
+project's(LICENSE).
