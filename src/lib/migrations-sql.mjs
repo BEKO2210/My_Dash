@@ -244,4 +244,11 @@ export const MIGRATIONS = [
   `
   ALTER TABLE sessions ADD COLUMN remote_url TEXT;
   `,
+
+  // v18 — optional multi-machine aggregation. NULL = this (local) machine; a label
+  // marks sessions read-only-synced in from another machine's DB (scripts/sync-machine.mjs).
+  `
+  ALTER TABLE sessions ADD COLUMN machine TEXT;
+  CREATE INDEX IF NOT EXISTS idx_sessions_machine ON sessions(machine);
+  `,
 ];
