@@ -89,13 +89,15 @@ export function SessionTimeline() {
         <WidgetState icon={GanttChartSquare} title={t("timeline.empty")} />
       ) : (
         <div className="flex h-full flex-col p-3">
-          <div className="flex pb-1 text-[10px] text-muted">
+          <div className="flex pb-2 text-[10px] text-muted">
             <span className="w-24 shrink-0" />
-            <div className="relative flex-1">
+            {/* h-4 gives the absolutely-positioned tick labels their own band so
+                they sit above the bars instead of overlapping the first row. */}
+            <div className="relative h-4 flex-1">
               {ticks.map((label, i) => (
                 <span
                   key={i}
-                  className="absolute -translate-x-1/2 whitespace-nowrap"
+                  className="absolute top-0 -translate-x-1/2 whitespace-nowrap"
                   style={{ left: `${(i / (TICKS - 1)) * 100}%` }}
                 >
                   {label}
