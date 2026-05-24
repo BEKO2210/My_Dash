@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "plugins:scan": "node scripts/scan-plugins.mjs",
+    "docs:plugins": "node scripts/gen-plugin-docs.mjs",
     "prebuild": "node scripts/scan-plugins.mjs",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
