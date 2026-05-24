@@ -98,6 +98,12 @@ export function CommandPalette({
       });
     }
     list.push({ id: "facet-clear", group: t("cmd.status"), label: t("facets.clear"), run: () => { clear(); close(); } });
+    const openDigest = (period: "day" | "week") => {
+      window.open(`/api/digest?period=${period}`, "_blank", "noopener");
+      close();
+    };
+    list.push({ id: "digest-day", group: t("cmd.actions"), label: t("cmd.digestDay"), keywords: "report summary", run: () => openDigest("day") });
+    list.push({ id: "digest-week", group: t("cmd.actions"), label: t("cmd.digestWeek"), keywords: "report summary", run: () => openDigest("week") });
     list.push({ id: "reset", group: t("cmd.actions"), label: t("layout.reset"), run: () => { onResetLayout(); close(); } });
     list.push({ id: "gallery", group: t("cmd.actions"), label: t("gallery.title"), run: () => { onOpenGallery(); close(); } });
     list.push({

@@ -254,6 +254,8 @@ const DE: Record<string, string> = {
   "cmd.setRange": "Zeitraum",
   "cmd.setStatus": "Status",
   "cmd.goto": "Gehe zu",
+  "cmd.digestDay": "Tages-Digest öffnen",
+  "cmd.digestWeek": "Wochen-Digest öffnen",
 
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
@@ -651,6 +653,8 @@ const EN: Record<string, string> = {
   "cmd.setRange": "Range",
   "cmd.setStatus": "Status",
   "cmd.goto": "Go to",
+  "cmd.digestDay": "Open daily digest",
+  "cmd.digestWeek": "Open weekly digest",
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",
