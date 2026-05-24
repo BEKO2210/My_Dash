@@ -233,6 +233,8 @@ const DE: Record<string, string> = {
 
   "layout.drag": "Zum Umordnen ziehen",
   "layout.reset": "Layout zurücksetzen",
+  "layout.width": "Breite ändern",
+  "layout.height": "Höhe ändern",
 
   "status.active": "Aktiv",
   "status.waiting": "Wartet",
@@ -522,6 +524,8 @@ const EN: Record<string, string> = {
 
   "layout.drag": "Drag to reorder",
   "layout.reset": "Reset layout",
+  "layout.width": "Change width",
+  "layout.height": "Change height",
 
   "status.active": "Active",
   "status.waiting": "Waiting",
