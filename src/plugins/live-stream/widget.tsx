@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   Bell,
@@ -21,6 +21,11 @@ import { useSearch, matchesQuery } from "@/components/search";
 import { usePluginConfig } from "@/components/plugin-config";
 import { useT } from "@/lib/i18n";
 import { eventKind, KIND_COLOR, relativeTime, type EventKind } from "@/lib/format";
+import { windowRange } from "@/lib/virtual";
+
+// Estimated row height (icon + two truncated lines + padding). Used only for
+// windowing math; overscan absorbs small deviations.
+const ROW_H = 53;
 
 const ICONS: Record<EventKind, LucideIcon> = {
   "session-start": Play,
@@ -50,9 +55,42 @@ export function LiveStream() {
 
   const limit = typeof values.limit === "number" ? values.limit : 100;
 
-  const filtered = events
-    .filter((e) => matchesQuery(query, e.summary, e.event_type, e.tool_name, e.session_id))
-    .slice(0, limit);
+  const filtered = useMemo(
+    () =>
+      events
+        .filter((e) => matchesQuery(query, e.summary, e.event_type, e.tool_name, e.session_id))
+        .slice(0, limit),
+    [events, query, limit],
+  );
+
+  // Fixed-height list virtualization: only render the rows in (or near) view.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewport, setViewport] = useState(0);
+  const showList = events.length > 0 && filtered.length > 0;
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setViewport(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [showList]);
+
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el || rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      setScrollTop(el.scrollTop);
+    });
+  };
+
+  const win = windowRange({ scrollTop, viewport, rowHeight: ROW_H, count: filtered.length, overscan: 8 });
+  const visible = filtered.slice(win.start, win.end);
 
   return (
     <Panel
@@ -84,30 +122,34 @@ export function LiveStream() {
         <WidgetState icon={Activity} title={t("common.noResults")} />
       ) : (
         // role="log" lives on a wrapper so the inner <ul>/<li> keep their list semantics.
-        <div role="log" aria-live="polite" aria-label={t("stream.title")}>
-          <ul className="divide-y divide-panel-border/60">
-            {filtered.map((e) => {
-              const kind = eventKind(e.event_type);
-              const Icon = ICONS[kind];
-              return (
-                <li
-                  key={e.id}
-                  className="mc-stream-in flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
-                >
-                  <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>
-                    <p className="truncate font-mono text-[11px] text-muted">
-                      {e.event_type} · {e.session_id.slice(0, 8)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
-                    {relativeTime(e.created_at, lang)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+        // Only the rows in view are mounted; top/bottom padding preserves scroll height.
+        <div ref={scrollRef} onScroll={onScroll} tabIndex={0} className="h-full overflow-auto outline-none">
+          <div role="log" aria-live="polite" aria-label={t("stream.title")}>
+            <ul className="divide-y divide-panel-border/60" style={{ paddingTop: win.padTop, paddingBottom: win.padBottom }}>
+              {visible.map((e) => {
+                const kind = eventKind(e.event_type);
+                const Icon = ICONS[kind];
+                return (
+                  <li
+                    key={e.id}
+                    style={{ height: ROW_H }}
+                    className="flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03]"
+                  >
+                    <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>
+                      <p className="truncate font-mono text-[11px] text-muted">
+                        {e.event_type} · {e.session_id.slice(0, 8)}
+                      </p>
+                    </div>
+                    <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
+                      {relativeTime(e.created_at, lang)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       )}
     </Panel>

@@ -49,6 +49,13 @@ export function Kanban() {
     [sessions, facets, query],
   );
 
+  // Group once per change instead of filtering the list three times each render.
+  const byStatus = useMemo(() => {
+    const g: Record<SessionStatus, SessionCard[]> = { active: [], waiting: [], ended: [] };
+    for (const s of filtered) g[s.status].push(s);
+    return g;
+  }, [filtered]);
+
   // Keep the open detail in sync with refreshed data; close it if the session is gone.
   const selectedLive = useMemo(
     () => (selected ? sessions.find((s) => s.id === selected.id) ?? null : null),
@@ -63,7 +70,7 @@ export function Kanban() {
     >
       <div className="grid h-full grid-cols-3 gap-px bg-panel-border/50">
         {COLUMNS.map((status) => {
-          const items = filtered.filter((s) => s.status === status);
+          const items = byStatus[status];
           const meta = STATUS_META[status];
           return (
             <div key={status} className="flex min-h-0 flex-col bg-panel">
