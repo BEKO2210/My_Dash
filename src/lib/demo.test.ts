@@ -11,6 +11,7 @@ import {
   demoSessionDuration,
   demoSessions,
   startDemo,
+  TICK_MS,
 } from "./demo";
 
 // Z-Demo-1: the in-browser demo engine must be deterministic. Each snapshot
@@ -59,17 +60,24 @@ describe("demo live evolution is monotonic and persistent", () => {
   it("cost/tokens only rise and ended sessions never disappear", () => {
     vi.useFakeTimers({ now: new Date("2026-05-24T12:00:00.000Z") });
     try {
-      startDemo(); // 4 sessions + 30 pre-warm steps, then a 1100ms interval
+      startDemo(); // 4 sessions + 30 pre-warm steps, then a TICK_MS interval
       let prevCost = -1;
       let prevTokens = -1;
       let prevEnded = -1;
       for (let i = 0; i < 150; i++) {
-        vi.advanceTimersByTime(1100); // one step
+        vi.advanceTimersByTime(TICK_MS); // one step
         const today = demoUsage().days.at(-1)!;
         expect(today.costUsd).toBeGreaterThanOrEqual(prevCost);
         expect(today.totalTokens).toBeGreaterThanOrEqual(prevTokens);
         const ended = demoSessions().filter((s) => s.status === "ended").length;
         expect(ended).toBeGreaterThanOrEqual(prevEnded);
+        // Z-Demo-3: values are carried forward in small increments — never a jump.
+        // A single tick accrues at most one tool call, so the per-tick deltas are
+        // tightly bounded (no re-rolling that would lurch the figures up and down).
+        if (prevTokens >= 0) {
+          expect(today.totalTokens - prevTokens).toBeLessThanOrEqual(4000);
+          expect(today.costUsd - prevCost).toBeLessThanOrEqual(0.02);
+        }
         prevCost = today.costUsd;
         prevTokens = today.totalTokens;
         prevEnded = ended;
