@@ -11,6 +11,9 @@ interface Props {
   couldNotLoad?: string;
   genericText?: string;
   retryLabel?: string;
+  /** "Disable this widget" — hides a repeatedly-crashing plugin from the grid. */
+  disableLabel?: string;
+  onDisable?: () => void;
 }
 interface State {
   error: Error | null;
@@ -43,12 +46,22 @@ export class WidgetErrorBoundary extends Component<Props, State> {
               : (this.props.genericText ?? "Widget-Fehler.")}
           </p>
           <p className="max-w-[90%] break-words text-[11px] text-muted/70">{this.state.error.message}</p>
-          <button
-            onClick={this.reset}
-            className="mt-1 rounded-md border border-panel-border px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/50"
-          >
-            {this.props.retryLabel ?? "Erneut versuchen"}
-          </button>
+          <div className="mt-1 flex items-center gap-2">
+            <button
+              onClick={this.reset}
+              className="rounded-md border border-panel-border px-3 py-1 text-xs text-foreground transition-colors hover:border-accent/50"
+            >
+              {this.props.retryLabel ?? "Erneut versuchen"}
+            </button>
+            {this.props.onDisable && (
+              <button
+                onClick={this.props.onDisable}
+                className="rounded-md border border-panel-border px-3 py-1 text-xs text-muted transition-colors hover:border-red-400/50 hover:text-red-400"
+              >
+                {this.props.disableLabel ?? "Deaktivieren"}
+              </button>
+            )}
+          </div>
         </div>
       );
     }

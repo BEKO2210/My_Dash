@@ -416,6 +416,8 @@ const DE: Record<string, string> = {
 
   "error.couldNotLoad": "konnte nicht geladen werden.",
   "error.generic": "Widget-Fehler.",
+  "error.disable": "Deaktivieren",
+  "telemetry.renderTime": "Render-Zeit beim Laden",
 };
 
 const EN: Record<string, string> = {
@@ -799,6 +801,8 @@ const EN: Record<string, string> = {
 
   "error.couldNotLoad": "couldn’t load.",
   "error.generic": "Widget error.",
+  "error.disable": "Disable",
+  "telemetry.renderTime": "Render time on load",
 };
 
 const T: Record<Lang, Record<string, string>> = { de: DE, en: EN };
