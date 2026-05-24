@@ -14,6 +14,7 @@ import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
 import type { ToolCallDetail } from "./errors";
 import type { AlertItem } from "./alerts";
+import type { AnomalyReport } from "./anomaly";
 import type { ProjectReliability } from "./reliability";
 import type { SearchHit } from "./search-index";
 import type { SessionDetail } from "./session-detail";
@@ -883,6 +884,15 @@ export function demoAlerts() {
   return { alerts, unread: alerts.filter((a) => !a.read).length };
 }
 
+export function demoAnomaly(): AnomalyReport {
+  return {
+    latencyMs: { recent: 640, baseline: 410, deltaPct: (640 - 410) / 410, anomalous: true },
+    errorRate: { recent: 0.06, baseline: 0.05, deltaPct: (0.06 - 0.05) / 0.05, anomalous: false },
+    recentSamples: 142,
+    baselineSamples: 980,
+  };
+}
+
 export function demoSubscribe(fn: (m: StreamMessage) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
@@ -933,6 +943,7 @@ export function installDemoBackend() {
     if (path.endsWith("/api/plugins/config")) return json({ config: {} });
     if (path.includes("/api/alerts/webhook")) return json({ url: "", enabled: false });
     if (path.endsWith("/api/alerts")) return json(demoAlerts());
+    if (path.endsWith("/api/anomaly")) return json(demoAnomaly());
     if (path.endsWith("/api/reliability")) return json(demoReliability());
     if (path.endsWith("/api/search")) {
       const u = new URL(raw, window.location.href);

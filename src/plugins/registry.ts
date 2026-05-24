@@ -58,6 +58,7 @@ import { Velocity } from "./velocity/widget";
 import { SessionDuration } from "./session-duration/widget";
 import { Reliability } from "./reliability/widget";
 import { Incidents } from "./incidents/widget";
+import { Anomaly } from "./anomaly/widget";
 import { externalWidgets } from "./external.generated";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -135,6 +136,7 @@ export const widgets: Widget[] = [
   { id: "session-duration", title: "Session-Dauer", span: "lg:col-span-3", height: H, icon: Hourglass, category: "sessions", description: "sessionDur.info", component: SessionDuration },
   { id: "reliability", title: "Zuverlässigkeit je Projekt", span: "lg:col-span-3", height: H, icon: ShieldCheck, category: "quality", description: "reliability.info", component: Reliability },
   { id: "incidents", title: "Was lief schief", span: "lg:col-span-3", height: H, icon: AlertTriangle, category: "quality", description: "incidents.info", component: Incidents },
+  { id: "anomaly", title: "Anomalie-Erkennung", span: "lg:col-span-3", height: H, icon: Activity, category: "quality", description: "anomaly.info", component: Anomaly },
   // Third-party widgets dropped into plugins.local/ (scanned at build).
   ...externalWidgets,
 ];

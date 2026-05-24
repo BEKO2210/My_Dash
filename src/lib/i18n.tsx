@@ -221,6 +221,15 @@ const DE: Record<string, string> = {
   "reliability.empty": "Noch keine Tool-Aufrufe.",
   "reliability.fail": "Fehler",
 
+  "anomaly.title": "Anomalie-Erkennung",
+  "anomaly.info": "Letzte 24 h vs. Basislinie (7 Tage): steigt Latenz/Fehlerrate? – „Wird Claude schlechter?“",
+  "anomaly.empty": "Noch nicht genug Daten.",
+  "anomaly.latency": "Latenz p95",
+  "anomaly.errorRate": "Fehlerrate",
+  "anomaly.vs": "vs.",
+  "anomaly.flag": "Auffällig über Basislinie",
+  "anomaly.window": "24 h vs. 7-Tage-Basislinie",
+
   "incidents.title": "Was lief schief",
   "incidents.info": "Letzte fehlgeschlagene Tool-Aufrufe. Klick öffnet Eingabe und Fehlertext.",
   "incidents.empty": "Keine Fehler – alles grün. 🎉",
@@ -619,6 +628,15 @@ const EN: Record<string, string> = {
   "reliability.info": "Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red.",
   "reliability.empty": "No tool calls yet.",
   "reliability.fail": "fail",
+
+  "anomaly.title": "Anomaly detection",
+  "anomaly.info": "Last 24h vs. baseline (7 days): is latency/error rate rising? — \"Is Claude getting worse?\"",
+  "anomaly.empty": "Not enough data yet.",
+  "anomaly.latency": "Latency p95",
+  "anomaly.errorRate": "Error rate",
+  "anomaly.vs": "vs.",
+  "anomaly.flag": "Notably above baseline",
+  "anomaly.window": "24h vs. 7-day baseline",
 
   "incidents.title": "What went wrong",
   "incidents.info": "Latest failed tool calls. Click to reveal the input and error text.",
