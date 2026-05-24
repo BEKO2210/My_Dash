@@ -9,6 +9,16 @@
   --accent: #4f8cff;
 }
 
+/* Light token set — swapped in via data-theme on <html>. Charts/tooltips that
+   hard-code dark hues stay dark by design; the panel chrome adapts. */
+[data-theme="light"] {
+  --background: #f5f7fa;
+  --panel: #ffffff;
+  --panel-border: #e2e6ee;
+  --foreground: #1a2230;
+  --muted: #586074;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-panel: var(--panel);
