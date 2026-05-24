@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🌐 Live demo
+    url: https://beko2210.github.io/My_Dash/
+    about: Try the dashboard in your browser before filing an issue.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/BEKO2210/My_Dash/security/policy
+    about: Please report security issues privately, not as a public issue.
+  - name: 💼 Commercial licensing
+    url: https://github.com/BEKO2210/My_Dash/blob/main/COMMERCIAL.md
+    about: Using Claude Mission Control commercially? See licensing options.
