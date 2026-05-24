@@ -206,4 +206,36 @@ export const MIGRATIONS = [
     ('session_long', 120, 1, 'Long-running session'),
     ('cost_session', 5, 1, 'Session cost over budget');
   `,
+
+  // v16 — optional OTLP receiver (a SECOND read-only ingress, off by default).
+  // Claude Code's OpenTelemetry exporter can post metrics/logs here when MC_OTLP_ENABLED=1.
+  // Kept deliberately isolated from the hook-driven model: raw-ish rows land in their own
+  // tables so the OTLP path can never corrupt sessions/events. Mapping + reconcile with the
+  // core model happens in a later run; this run only receives and stores.
+  `
+  CREATE TABLE IF NOT EXISTS otlp_metric (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ts          TEXT,
+    name        TEXT NOT NULL,
+    session_id  TEXT,
+    model       TEXT,
+    value       REAL NOT NULL DEFAULT 0,
+    attrs       TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_otlp_metric_name ON otlp_metric(name);
+  CREATE INDEX IF NOT EXISTS idx_otlp_metric_session ON otlp_metric(session_id);
+  CREATE TABLE IF NOT EXISTS otlp_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ts          TEXT,
+    name        TEXT NOT NULL,
+    session_id  TEXT,
+    model       TEXT,
+    body        TEXT,
+    attrs       TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_otlp_log_name ON otlp_log(name);
+  CREATE INDEX IF NOT EXISTS idx_otlp_log_session ON otlp_log(session_id);
+  `,
 ];
