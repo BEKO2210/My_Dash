@@ -14,10 +14,11 @@ import { topTerms } from "./tags";
 import type { ToolTokenBurn } from "./token-burn";
 import type { ToolCallDetail } from "./errors";
 import type { ProjectReliability } from "./reliability";
+import type { SessionDetail } from "./session-detail";
 import { durationStats } from "./session-duration";
 import type { VelocityDay } from "./velocity";
 import type { SubagentGroup } from "./subagents";
-import type { EventRow, SessionRow, StreamMessage } from "./types";
+import type { EventRow, SessionRow, StreamMessage, ToolCallRow } from "./types";
 
 export const DEMO =
   typeof process !== "undefined" && process.env.NEXT_PUBLIC_MC_DEMO === "1";
@@ -234,6 +235,41 @@ export function demoSessions() {
       tool_count: s.tools.length,
       stale: false,
     }));
+}
+
+export function demoSessionDetail(id: string): SessionDetail | null {
+  const s = sessions.find((x) => x.id === id);
+  if (!s) return null;
+  const tools: ToolCallRow[] = s.tools
+    .map((tc, i) => ({
+      id: i + 1,
+      session_id: s.id,
+      tool_name: tc.tool,
+      target: tc.full ?? tc.label,
+      duration_ms: 100 + Math.round(Math.random() * 400),
+      success: 1,
+      source: tc.tool.startsWith("mcp__") ? "mcp" : "builtin",
+      mcp_server: null,
+      created_at: s.last_seen,
+    }))
+    .reverse();
+  const prompts = s.prompts
+    .map((p, i) => ({
+      id: i + 1,
+      text: p.text,
+      token_estimate: Math.max(1, Math.ceil(p.text.length / 4)),
+      created_at: p.created_at,
+    }))
+    .reverse();
+  return {
+    session: toRow(s),
+    eventCount: s.events.length,
+    toolCount: s.tools.length,
+    failureCount: 0,
+    events: s.events.slice().reverse(),
+    tools,
+    prompts,
+  };
 }
 
 export function demoEvents(limit = 100, sessionId?: string) {
@@ -794,6 +830,11 @@ export function installDemoBackend() {
       path = new URL(raw, window.location.href).pathname;
     } catch {
       /* keep raw */
+    }
+    if (path.includes("/api/sessions/")) {
+      const id = decodeURIComponent(path.split("/api/sessions/")[1] ?? "");
+      const detail = demoSessionDetail(id);
+      return detail ? json(detail) : new Response("{}", { status: 404 });
     }
     if (path.endsWith("/api/sessions")) return json({ sessions: demoSessions() });
     if (path.endsWith("/api/graph")) return json(demoGraph());
