@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
-import { computeBudget, getBudgets } from "@/lib/budget";
+import { computeBudget, dayElapsedFraction, getBudgets, monthElapsedFraction, projectSpend } from "@/lib/budget";
 import { setConfig } from "@/lib/config";
 import { migrate } from "@/lib/migrations";
 import type { UsageReport } from "@/lib/ccusage";
@@ -71,5 +71,36 @@ describe("computeBudget", () => {
     const status = computeBudget(report(), { dailyUsd: null, monthlyUsd: null }, now);
     expect(status.daily).toEqual({ budgetUsd: null, spentUsd: 0, pct: null });
     expect(status.monthly).toEqual({ budgetUsd: null, spentUsd: 0, pct: null });
+  });
+});
+
+describe("projectSpend", () => {
+  it("projects end-of-period spend from elapsed fraction and flags over-budget", () => {
+    // half the period gone, $60 spent → projected $120 > $100 budget.
+    const p = projectSpend(60, 100, 0.5);
+    expect(p.projectedUsd).toBe(120);
+    expect(p.projectedPct).toBe(1.2);
+    expect(p.overBudget).toBe(true);
+  });
+
+  it("does not flag when under budget or no budget", () => {
+    expect(projectSpend(30, 100, 0.5).overBudget).toBe(false);
+    expect(projectSpend(60, null, 0.5).overBudget).toBe(false);
+  });
+
+  it("suppresses noisy early projections below minFraction", () => {
+    // $5 in the first 2% of the period would project huge, but it's too early.
+    expect(projectSpend(5, 100, 0.02).overBudget).toBe(false);
+  });
+});
+
+describe("elapsed fractions", () => {
+  it("computes day fraction from local time", () => {
+    expect(dayElapsedFraction(new Date(2026, 4, 24, 12, 0, 0))).toBeCloseTo(0.5);
+  });
+
+  it("computes month fraction from day of month", () => {
+    // 2026-05 has 31 days; on the 16th ~ (15 + 0.5)/31.
+    expect(monthElapsedFraction(new Date(2026, 4, 16, 12, 0, 0))).toBeCloseTo((15 + 0.5) / 31, 3);
   });
 });

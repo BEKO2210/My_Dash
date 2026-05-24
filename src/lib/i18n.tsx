@@ -400,6 +400,7 @@ const DE: Record<string, string> = {
   "budget.daily": "Heute",
   "budget.monthly": "Dieser Monat",
   "budget.projected": "Hochrechnung",
+  "budget.alarm": "Burn-Rate projiziert über Budget!",
   "budget.none": "Kein Budget gesetzt.",
   "graph.title": "Tool-Graph (3D)",
   "graph.info":
@@ -808,6 +809,7 @@ const EN: Record<string, string> = {
   "budget.daily": "Today",
   "budget.monthly": "This month",
   "budget.projected": "Projected",
+  "budget.alarm": "Burn rate projected over budget!",
   "budget.none": "No budget set.",
   "graph.title": "Tool Graph (3D)",
   "graph.info":

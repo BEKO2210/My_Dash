@@ -55,3 +55,52 @@ export function computeBudget(
     monthly: usage(monthSpent, budgets.monthlyUsd),
   };
 }
+
+// ── Burn-rate projection / cost alarm ───────────────────────────────────────
+export interface BudgetProjection {
+  projectedUsd: number; // linear projection of end-of-period spend
+  budgetUsd: number | null;
+  projectedPct: number | null;
+  overBudget: boolean;
+}
+
+export function dayElapsedFraction(now: Date): number {
+  return (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()) / 86_400;
+}
+
+export function monthElapsedFraction(now: Date): number {
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return (now.getDate() - 1 + now.getHours() / 24) / daysInMonth;
+}
+
+// Project end-of-period spend from how much of the period has elapsed. Only flags
+// over-budget once enough of the period has passed (minFraction) to avoid noisy
+// early projections.
+export function projectSpend(
+  spentUsd: number,
+  budgetUsd: number | null,
+  elapsedFraction: number,
+  minFraction = 0.1,
+): BudgetProjection {
+  const f = Math.min(1, Math.max(0, elapsedFraction));
+  const projectedUsd = f > 0 ? spentUsd / f : 0;
+  const hasBudget = budgetUsd != null && budgetUsd > 0;
+  return {
+    projectedUsd,
+    budgetUsd,
+    projectedPct: hasBudget ? projectedUsd / budgetUsd! : null,
+    overBudget: hasBudget && f >= minFraction && projectedUsd > budgetUsd!,
+  };
+}
+
+export interface BudgetProjections {
+  daily: BudgetProjection;
+  monthly: BudgetProjection;
+}
+
+export function budgetProjections(status: BudgetStatus, now: Date = new Date()): BudgetProjections {
+  return {
+    daily: projectSpend(status.daily.spentUsd, status.daily.budgetUsd, dayElapsedFraction(now)),
+    monthly: projectSpend(status.monthly.spentUsd, status.monthly.budgetUsd, monthElapsedFraction(now)),
+  };
+}
