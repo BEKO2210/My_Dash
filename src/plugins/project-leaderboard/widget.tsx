@@ -66,7 +66,11 @@ export function ProjectLeaderboard() {
                 <th className="px-2 py-2 text-left font-medium">#</th>
                 <th className="px-2 py-2 text-left font-medium">{t("leaderboard.project")}</th>
                 {COLUMNS.map((c) => (
-                  <th key={c.key} className="px-2 py-2 text-right font-medium">
+                  <th
+                    key={c.key}
+                    aria-sort={sort === c.key ? "descending" : "none"}
+                    className="px-2 py-2 text-right font-medium"
+                  >
                     <button
                       onClick={() => setSort(c.key)}
                       className={`tabular-nums hover:text-foreground ${sort === c.key ? "text-accent" : ""}`}
