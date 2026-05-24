@@ -146,3 +146,13 @@ export function recentAlerts(db: Database.Database, limit: number): AlertItem[] 
 export function unreadAlertCount(db: Database.Database): number {
   return (db.prepare(`SELECT COUNT(*) AS n FROM alerts WHERE read = 0`).get() as { n: number }).n;
 }
+
+export function markAllAlertsRead(db: Database.Database): number {
+  return db.prepare(`UPDATE alerts SET read = 1 WHERE read = 0`).run().changes;
+}
+
+export function markAlertsRead(db: Database.Database, ids: number[]): number {
+  if (ids.length === 0) return 0;
+  const placeholders = ids.map(() => "?").join(",");
+  return db.prepare(`UPDATE alerts SET read = 1 WHERE id IN (${placeholders})`).run(...ids).changes;
+}
