@@ -67,7 +67,7 @@ export const plugin: Widget = {
 | Budget | `budget-gauge` | 2/6 | standard | — | Today's & this month's spend against your budget (USD), with a projection. |
 | Modelle | `model-donut` | 3/6 | standard | yes | Share per model of tokens or cost. |
 | Projekt-Rangliste | `project-leaderboard` | 3/6 | standard | yes | Projects by cost, sessions, tools and tokens. Click a column to sort. |
-| Token-Verbrauch je Tool | `token-burn` | 3/6 | standard | — | Where most tokens burn — estimated from tool I/O size (chars ÷ 4). |
+| Token-Verbrauch je Tool | `token-burn` | 3/6 | standard | yes | Where most tokens burn — estimated from tool I/O size (chars ÷ 4). |
 
 ### Activity
 
@@ -76,7 +76,7 @@ export const plugin: Widget = {
 | Aktivität | `heatmap` | 4/6 | standard | — | Activity by weekday and hour (local time), from the event history. |
 | Streak & Produktivität | `streak` | 3/6 | standard | — | Day-streak of active days, peak hours and the sessions-per-day trend. |
 | Jahres-Kalender | `calendar-heatmap` | 6/6 | auto | — | Activity per day over the last year — the darker, the more events. |
-| Geschwindigkeits-Trend | `velocity` | 3/6 | standard | — | Tools/minute and events/session over 30 days (Ø = 7-day mean). Degradation signal. |
+| Geschwindigkeits-Trend | `velocity` | 3/6 | standard | yes | Tools/minute and events/session over 30 days (Ø = 7-day mean). Degradation signal. |
 
 ### Tools
 
