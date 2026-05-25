@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 // Lightweight i18n: a flat dictionary + a hook backed by an external store over
 // localStorage (hydration-safe, default German). No provider needed — every
@@ -1117,4 +1117,14 @@ export function useT() {
   const lang = useSyncExternalStore(subscribe, readLang, () => "de" as Lang);
   const t = (key: string) => translate(lang, key);
   return { lang, t, setLang: writeLang };
+}
+
+// Keeps the document's <html lang> attribute in sync with the active UI language
+// (WCAG 3.1.1 Language of Page). Rendered once near the app root.
+export function LangSync() {
+  const { lang } = useT();
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  return null;
 }
