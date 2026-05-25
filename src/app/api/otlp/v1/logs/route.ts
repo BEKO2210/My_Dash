@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { insertLogs, otlpEnabled, parseLogs } from "@/lib/otlp";
+import { readBodyCapped } from "@/lib/body-limit";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
@@ -16,17 +17,13 @@ export async function POST(req: Request) {
   if (!otlpEnabled()) {
     return NextResponse.json({ error: "otlp disabled" }, { status: 404 });
   }
-  const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY) {
+  const capped = await readBodyCapped(req, MAX_BODY);
+  if (!capped.ok) {
     return NextResponse.json({ error: "payload too large" }, { status: 413 });
   }
   let body: unknown;
   try {
-    const text = await req.text();
-    if (text.length > MAX_BODY) {
-      return NextResponse.json({ error: "payload too large" }, { status: 413 });
-    }
-    body = text ? JSON.parse(text) : {};
+    body = capped.text ? JSON.parse(capped.text) : {};
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }

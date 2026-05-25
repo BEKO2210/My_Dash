@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ingest } from "@/lib/ingest";
 import { parseHookPayload } from "@/lib/hook-schema";
+import { readBodyCapped } from "@/lib/body-limit";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
@@ -19,21 +20,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  // Reject oversized payloads early (a hook should never send megabytes).
+  // Reject oversized payloads early (a hook should never send megabytes). Reads the
+  // body with a streaming byte cap so a chunked/headerless request can't OOM us.
   const MAX_BODY = 4 * 1024 * 1024;
-  const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY) {
+  const body = await readBodyCapped(req, MAX_BODY);
+  if (!body.ok) {
     return NextResponse.json({ ok: false, error: "payload too large" }, { status: 413 });
   }
 
   const headerEvent = req.headers.get("x-hook-event") ?? "";
   let raw: unknown;
   try {
-    const text = await req.text();
-    if (text.length > MAX_BODY) {
-      return NextResponse.json({ ok: false, error: "payload too large" }, { status: 413 });
-    }
-    raw = text ? JSON.parse(text) : {};
+    raw = body.text ? JSON.parse(body.text) : {};
   } catch {
     return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });
   }
