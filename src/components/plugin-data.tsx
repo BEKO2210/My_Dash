@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLive } from "@/components/live-provider";
 
 // Typed data API for plugins. `usePluginQuery` removes the fetch + poll + tick +
@@ -16,12 +16,19 @@ export interface PluginQuery<T> {
   data: T | null;
   loading: boolean;
   error: boolean;
+  /** Manually re-run the fetch (used by the WidgetState error-state retry). */
+  refetch: () => void;
 }
 
 export function usePluginQuery<T>(path: string, opts?: { pollMs?: number }): PluginQuery<T> {
   const pollMs = opts?.pollMs ?? 15_000;
   const tick = useLive().tick;
-  const [state, setState] = useState<PluginQuery<T>>({ data: null, loading: true, error: false });
+  const [reloadKey, setReloadKey] = useState(0);
+  const [state, setState] = useState<{ data: T | null; loading: boolean; error: boolean }>({
+    data: null,
+    loading: true,
+    error: false,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -40,8 +47,14 @@ export function usePluginQuery<T>(path: string, opts?: { pollMs?: number }): Plu
       cancelled = true;
       if (id) clearInterval(id);
     };
-    // Re-fetch when the path changes (e.g. a filter param) or the live tick bumps.
-  }, [path, pollMs, tick]);
+    // Re-fetch when the path changes (e.g. a filter param), the live tick bumps,
+    // or a manual refetch is requested.
+  }, [path, pollMs, tick, reloadKey]);
 
-  return state;
+  const refetch = useCallback(() => {
+    setState((s) => ({ ...s, loading: true, error: false }));
+    setReloadKey((k) => k + 1);
+  }, []);
+
+  return { ...state, refetch };
 }
