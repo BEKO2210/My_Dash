@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { PieChart as PieIcon } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { formatCompact, formatMoney } from "@/lib/format";
 import { modelShare, OTHER, type ModelSlice } from "@/lib/model-usage";
@@ -20,27 +22,11 @@ const colorFor = (s: ModelSlice, i: number) => (s.full === OTHER ? OTHER_COLOR :
 
 export function ModelDonut() {
   const { t } = useT();
-  const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("cost");
+  const q = usePluginQuery<UsageReport>("/api/usage", { pollMs: 30_000 });
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/usage")
-        .then((r) => r.json())
-        .then((d: UsageReport) => {
-          if (!cancelled) setUsage(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, []);
-
-  const { slices, total } = modelShare(usage?.models ?? [], mode);
+  const { slices, total } = modelShare(q.data?.models ?? [], mode);
+  const vs = viewState(q, () => slices.length === 0);
   // modelShare uses ccusage's native USD for cost mode, so label it in USD (a € sign
   // on a USD value would misstate the amount).
   const fmt = (n: number) => (mode === "cost" ? formatMoney(n, "USD") : formatCompact(n));
@@ -66,9 +52,11 @@ export function ModelDonut() {
         </div>
       }
     >
-      {!usage ? (
+      {vs === "error" ? (
+        <WidgetState icon={PieIcon} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={PieIcon} title={t("common.loading")} loading />
-      ) : slices.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={PieIcon} title={t("donut.empty")} />
       ) : (
         <div className="flex h-full items-center gap-2 p-3">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CalendarClock } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { foldHeatmap, level } from "@/lib/heatmap";
 import type { ActivityBucket } from "@/lib/activity";
@@ -22,27 +23,10 @@ const HOUR_LABELS = [0, 6, 12, 18];
 
 export function Heatmap() {
   const { t, lang } = useT();
-  const { tick } = useLive();
-  const [buckets, setBuckets] = useState<ActivityBucket[] | null>(null);
+  const q = usePluginQuery<{ buckets: ActivityBucket[] }>("/api/activity?limit=5000", { pollMs: 30_000 });
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/activity?limit=5000")
-        .then((r) => r.json())
-        .then((d: { buckets: ActivityBucket[] }) => {
-          if (!cancelled) setBuckets(d.buckets);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const { grid, p95, total } = useMemo(() => foldHeatmap(buckets ?? []), [buckets]);
+  const { grid, p95, total } = useMemo(() => foldHeatmap(q.data?.buckets ?? []), [q.data]);
+  const vs = viewState(q, () => total === 0);
 
   const weekdays = useMemo(() => {
     const fmt = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "de-DE", { weekday: "short" });
@@ -55,9 +39,11 @@ export function Heatmap() {
       icon={<CalendarClock className="h-4 w-4 text-accent" />}
       info={t("heatmap.info")}
     >
-      {!buckets ? (
+      {vs === "error" ? (
+        <WidgetState icon={CalendarClock} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={CalendarClock} title={t("common.loading")} loading />
-      ) : total === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={CalendarClock} title={t("heatmap.empty")} />
       ) : (
         <div className="flex h-full flex-col justify-center gap-3 p-4">

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Timer } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { formatMs, type LatencyStats } from "@/lib/latency";
 
@@ -23,28 +24,12 @@ const tooltipStyle = {
 
 export function Latency() {
   const { t } = useT();
-  const { tick } = useLive();
   const [tool, setTool] = useState("");
-  const [data, setData] = useState<Response | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch(`/api/tools/latency${tool ? `?tool=${encodeURIComponent(tool)}` : ""}`)
-        .then((r) => r.json())
-        .then((d: Response) => {
-          if (!cancelled) setData(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tool, tick]);
-
-  const stats = data?.stats;
+  const q = usePluginQuery<Response>(
+    `/api/tools/latency${tool ? `?tool=${encodeURIComponent(tool)}` : ""}`,
+    { pollMs: 30_000 },
+  );
+  const vs = viewState(q, (d) => d.stats.count === 0);
 
   return (
     <Panel
@@ -59,7 +44,7 @@ export function Latency() {
           className="max-w-[10rem] rounded-md border border-panel-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-accent"
         >
           <option value="">{t("latency.all")}</option>
-          {(data?.tools ?? []).map((tn) => (
+          {(q.data?.tools ?? []).map((tn) => (
             <option key={tn} value={tn}>
               {tn}
             </option>
@@ -67,37 +52,45 @@ export function Latency() {
         </select>
       }
     >
-      {!stats ? (
+      {vs === "error" ? (
+        <WidgetState icon={Timer} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Timer} title={t("common.loading")} loading />
-      ) : stats.count === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Timer} title={t("latency.empty")} />
       ) : (
-        <div className="flex h-full flex-col gap-2 p-3">
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <Stat label="p50" value={formatMs(stats.p50)} tone="text-emerald-400" />
-            <Stat label="p95" value={formatMs(stats.p95)} tone="text-amber-400" />
-            <Stat label="p99" value={formatMs(stats.p99)} tone="text-red-400" />
-            <Stat label={t("latency.max")} value={formatMs(stats.max)} tone="text-muted" />
-            <Stat label="n" value={String(stats.count)} tone="text-muted" />
-          </div>
-          <div className="min-h-0 flex-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.buckets} margin={{ top: 6, right: 8, bottom: 0, left: -8 }}>
-                <CartesianGrid stroke="#1c2230" vertical={false} />
-                <XAxis dataKey="label" stroke="#8b94a7" fontSize={10} tickLine={false} interval={0} angle={-30} textAnchor="end" height={42} />
-                <YAxis stroke="#8b94a7" fontSize={11} tickLine={false} allowDecimals={false} width={36} />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                  formatter={(value) => [String(value), t("latency.calls")]}
-                />
-                <Bar dataKey="count" fill="#4f8cff" radius={[3, 3, 0, 0]} isAnimationActive />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <LatencyBody stats={q.data!.stats} t={t} />
       )}
     </Panel>
+  );
+}
+
+function LatencyBody({ stats, t }: { stats: LatencyStats; t: (key: string) => string }) {
+  return (
+    <div className="flex h-full flex-col gap-2 p-3">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <Stat label="p50" value={formatMs(stats.p50)} tone="text-emerald-400" />
+        <Stat label="p95" value={formatMs(stats.p95)} tone="text-amber-400" />
+        <Stat label="p99" value={formatMs(stats.p99)} tone="text-red-400" />
+        <Stat label={t("latency.max")} value={formatMs(stats.max)} tone="text-muted" />
+        <Stat label="n" value={String(stats.count)} tone="text-muted" />
+      </div>
+      <div className="min-h-0 flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={stats.buckets} margin={{ top: 6, right: 8, bottom: 0, left: -8 }}>
+            <CartesianGrid stroke="#1c2230" vertical={false} />
+            <XAxis dataKey="label" stroke="#8b94a7" fontSize={10} tickLine={false} interval={0} angle={-30} textAnchor="end" height={42} />
+            <YAxis stroke="#8b94a7" fontSize={11} tickLine={false} allowDecimals={false} width={36} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              formatter={(value) => [String(value), t("latency.calls")]}
+            />
+            <Bar dataKey="count" fill="#4f8cff" radius={[3, 3, 0, 0]} isAnimationActive />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }
 

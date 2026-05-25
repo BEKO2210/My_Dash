@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { CalendarRange } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { formatCompact } from "@/lib/format";
 import { buildCalendar, type CalDayCount } from "@/lib/calendar";
@@ -20,28 +20,11 @@ const LEVEL_BG = [
 const PITCH = 13; // cell (10px) + gap (3px)
 
 export function CalendarHeatmap() {
-  const { tick } = useLive();
   const { t, lang } = useT();
-  const [days, setDays] = useState<CalDayCount[] | null>(null);
+  const q = usePluginQuery<{ days: CalDayCount[] }>("/api/calendar?days=371", { pollMs: 30_000 });
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/calendar?days=371")
-        .then((r) => r.json())
-        .then((d: { days: CalDayCount[] }) => {
-          if (!cancelled) setDays(d.days);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const cal = buildCalendar(days ?? []);
+  const cal = buildCalendar(q.data?.days ?? []);
+  const vs = viewState(q, () => cal.total === 0);
   const monthName = (m: number) =>
     new Date(Date.UTC(2026, m, 1)).toLocaleString(lang, { month: "short" });
 
@@ -56,16 +39,18 @@ export function CalendarHeatmap() {
       icon={<CalendarRange className="h-4 w-4 text-accent" />}
       info={t("calendar.info")}
       right={
-        days && cal.total > 0 ? (
+        q.data && cal.total > 0 ? (
           <span className="text-xs text-muted">
             {formatCompact(cal.total)} {t("calendar.events")}
           </span>
         ) : undefined
       }
     >
-      {!days ? (
+      {vs === "error" ? (
+        <WidgetState icon={CalendarRange} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={CalendarRange} title={t("common.loading")} loading />
-      ) : cal.total === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={CalendarRange} title={t("calendar.empty")} />
       ) : (
         <div tabIndex={0} className="flex h-full flex-col justify-center gap-2 overflow-auto p-4 outline-none">
