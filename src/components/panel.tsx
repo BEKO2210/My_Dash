@@ -24,7 +24,7 @@ export function Panel({
         className,
       )}
     >
-      <header className="flex items-center justify-between border-b border-panel-border px-4 py-2.5">
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-panel-border px-4 py-2.5">
         <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-foreground">
           {icon}
           <span>{title}</span>
