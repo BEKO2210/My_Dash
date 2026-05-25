@@ -20,8 +20,11 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 # Load local config (port etc.).
+# Default port is 3000 everywhere (next dev/start, electron, hook forwarder) so
+# the wired hooks always point at the port the dashboard actually serves; override
+# with MC_PORT (env or .env) if 3000 is taken.
 if [ -f .env ]; then set -a; . ./.env; set +a; fi
-PORT="${MC_PORT:-3001}"
+PORT="${MC_PORT:-3000}"
 
 # 1) Dependencies
 if [ ! -d node_modules ]; then
