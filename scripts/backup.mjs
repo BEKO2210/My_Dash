@@ -32,6 +32,9 @@ try {
   await db.backup(dest);
   const mb = (statSync(dest).size / 1024 / 1024).toFixed(2);
   console.log(`✓ Backup: ${path.relative(process.cwd(), dest)} (${mb} MB)`);
+} catch (err) {
+  console.error(`✗ Backup fehlgeschlagen: ${err instanceof Error ? err.message : err}`);
+  process.exit(1);
 } finally {
   db.close();
 }

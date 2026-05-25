@@ -15,6 +15,16 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { MIGRATIONS } from "../src/lib/migrations-sql.mjs";
 
+// Any unexpected failure (locked/corrupt DB, schema mismatch) exits non-zero with a
+// readable message. The merge runs in a single transaction, so a mid-run throw rolls
+// back cleanly — the local DB is never left half-written.
+const fail = (err) => {
+  console.error(`✗ sync-machine fehlgeschlagen: ${err instanceof Error ? err.message : err}`);
+  process.exit(1);
+};
+process.on("uncaughtException", fail);
+process.on("unhandledRejection", fail);
+
 const SYNC_COLUMNS = [
   "id",
   "project_path",

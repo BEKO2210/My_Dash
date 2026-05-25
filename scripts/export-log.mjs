@@ -10,6 +10,15 @@ import Database from "better-sqlite3";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 
+// Any unexpected failure (corrupt DB, schema mismatch, write error) exits non-zero
+// with a readable message instead of an unhandled-rejection stack trace.
+const fail = (err) => {
+  console.error(`✗ Export fehlgeschlagen: ${err instanceof Error ? err.message : err}`);
+  process.exit(1);
+};
+process.on("uncaughtException", fail);
+process.on("unhandledRejection", fail);
+
 const src = path.join(process.cwd(), "data", "mission-control.db");
 if (!existsSync(src)) {
   console.error(`Keine Datenbank gefunden: ${src}\nLäuft das Dashboard schon? (./start.sh)`);

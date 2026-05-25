@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     coverage: {
       // Gate the heavily unit-tested core logic (src/lib). UI (components/plugins/
       // app) is exercised by the Playwright e2e suite, not unit tests, so including
