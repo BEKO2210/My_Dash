@@ -5,7 +5,7 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
 import { useT } from "@/lib/i18n";
-import { formatMoney } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import { gaugeTone, type BudgetProjection, type GaugeTone } from "@/lib/budget";
 
 const TONE_BAR: Record<GaugeTone, string> = {
@@ -70,12 +70,13 @@ function Gauge({
   proj: BudgetProjection | null;
 }) {
   const { t } = useT();
+  const money = useMoney();
   if (usage.budgetUsd == null) return null;
   const pct = usage.pct ?? 0;
   const shownPct = Math.round(pct * 100);
   const color = TONE_BAR[gaugeTone(pct)];
   const showProjected = proj != null && usage.spentUsd > 0;
-  const valueText = `${formatMoney(usage.spentUsd, "USD")} / ${formatMoney(usage.budgetUsd, "USD")} · ${shownPct}%`;
+  const valueText = `${money(usage.spentUsd)} / ${money(usage.budgetUsd)} · ${shownPct}%`;
 
   return (
     <div>
@@ -99,7 +100,7 @@ function Gauge({
       </div>
       {showProjected && (
         <p className={`mt-1 text-[11px] ${proj!.overBudget ? "text-red-400" : "text-muted"}`}>
-          {t("budget.projected")}: {formatMoney(proj!.projectedUsd, "USD")}
+          {t("budget.projected")}: {money(proj!.projectedUsd)}
         </p>
       )}
     </div>

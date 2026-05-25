@@ -27,6 +27,7 @@ import {
 import { LiveProvider, useLive } from "@/components/live-provider";
 import { RadarLogo } from "@/components/radar-logo";
 import { LangToggle } from "@/components/lang-toggle";
+import { CurrencyToggle } from "@/components/currency";
 import { InfoHint } from "@/components/info-hint";
 import { WidgetErrorBoundary } from "@/components/error-boundary";
 import { Landing } from "@/components/landing";
@@ -672,6 +673,7 @@ function Header({
         )}
         <Notifications />
         <ThemePicker />
+        <CurrencyToggle />
         <LangToggle />
         <span className="hidden font-mono tabular-nums sm:inline">{clock}</span>
         <span className="hidden items-center gap-1 rounded-full border border-panel-border bg-background/40 px-2.5 py-1 tabular-nums sm:flex">

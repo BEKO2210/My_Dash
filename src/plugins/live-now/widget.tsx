@@ -25,13 +25,13 @@ import {
   eventKind,
   formatCompact,
   formatDuration,
-  formatMoney,
   KIND_COLOR,
   parseDbTime,
   relativeTime,
   STATUS_META,
   type EventKind,
 } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import type { SessionRow } from "@/lib/types";
 
 const ICONS: Record<EventKind, LucideIcon> = {
@@ -52,6 +52,7 @@ type SessionCard = SessionRow & { event_count: number; tool_count: number };
 export function LiveNow() {
   const { events, connected } = useLive();
   const { t, lang } = useT();
+  const money = useMoney();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const q = usePluginQuery<{ sessions: SessionCard[] }>("/api/sessions");
   const sessions = q.data?.sessions ?? null;
@@ -123,7 +124,7 @@ export function LiveNow() {
             <Stat label={t("now.elapsed")} value={formatDuration(nowMs - (parseDbTime(active.first_seen)?.getTime() ?? nowMs))} accent />
             <Stat label={t("now.tools")} value={String(active.tool_count)} />
             <Stat label={t("now.events")} value={String(active.event_count)} />
-            <Stat label={t("now.cost")} value={formatMoney(active.cost_usd, "USD")} />
+            <Stat label={t("now.cost")} value={money(active.cost_usd)} />
           </div>
 
           <div className="min-h-0 flex-1">

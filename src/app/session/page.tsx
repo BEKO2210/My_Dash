@@ -32,13 +32,13 @@ import {
   eventKind,
   formatCompact,
   formatDuration,
-  formatMoney,
   KIND_COLOR,
   parseDbTime,
   relativeTime,
   STATUS_META,
   type EventKind,
 } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import type { SessionDetail } from "@/lib/session-detail";
 import type { TranscriptMessage } from "@/lib/transcript";
 
@@ -124,6 +124,7 @@ function SessionView({
   t: (k: string) => string;
 }) {
   const { session: s } = data;
+  const money = useMoney();
   const meta = STATUS_META[s.status] ?? STATUS_META.ended;
   const start = parseDbTime(s.first_seen)?.getTime();
   const end = parseDbTime(s.last_seen)?.getTime();
@@ -193,7 +194,7 @@ function SessionView({
           <Metric label={t("session.tools")} value={String(data.toolCount)} />
           <Metric label={t("session.failures")} value={String(data.failureCount)} tone={data.failureCount > 0 ? "text-red-400" : undefined} />
           <Metric label={t("session.tokens")} value={formatCompact(totalTokens)} />
-          <Metric label={t("session.cost")} value={formatMoney(s.cost_usd, "USD")} />
+          <Metric label={t("session.cost")} value={money(s.cost_usd)} />
         </div>
       </header>
 
