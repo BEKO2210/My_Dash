@@ -97,6 +97,6 @@ export const plugin: Widget = {
 | Fehlerrate | `error-rate` | 3/6 | standard | yes | Share of failed tool calls, the trend, and the most failure-prone tools. |
 | Kompaktierungen | `compaction-timeline` | 3/6 | standard | — | When and how often the context was compacted (auto vs. manual). |
 | Zuverlässigkeit je Projekt | `reliability` | 3/6 | standard | — | Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red. |
-| Was lief schief | `incidents` | 3/6 | standard | — | Latest failed tool calls. Click to reveal the input and error text. |
+| Was lief schief | `incidents` | 3/6 | standard | yes | Latest failed tool calls. Click to reveal the input and error text. |
 | Anomalie-Erkennung | `anomaly` | 3/6 | standard | — | Last 24h vs. baseline (7 days): is latency/error rate rising? — \"Is Claude getting worse?\" |
 
