@@ -23,6 +23,7 @@ export interface HookPayload {
   cwd?: string;
   hook_event_name?: string;
   tool_name?: string;
+  tool_use_id?: string; // unique id for a single tool call — pairs Pre/PostToolUse exactly
   tool_input?: Record<string, unknown>;
   tool_response?: unknown;
   prompt?: string;

@@ -18,6 +18,7 @@ import type {
 // the db module at a temp dir via MC_DATA_DIR *before* importing it (dynamic import),
 // so the real schema + prepared statements are used — just on a disposable file.
 let ingest: (typeof import("@/lib/ingest"))["ingest"];
+let fallbackDuration: (typeof import("@/lib/ingest"))["fallbackDuration"];
 let db: (typeof import("@/lib/db"))["db"];
 let updateSessionUsage: (typeof import("@/lib/transcript-sync"))["updateSessionUsage"];
 let updateSessionGit: (typeof import("@/lib/git-sync"))["updateSessionGit"];
@@ -26,7 +27,7 @@ let dataDir: string;
 beforeAll(async () => {
   dataDir = mkdtempSync(path.join(tmpdir(), "mc-ingest-test-"));
   process.env.MC_DATA_DIR = dataDir;
-  ({ ingest } = await import("@/lib/ingest"));
+  ({ ingest, fallbackDuration } = await import("@/lib/ingest"));
   ({ db } = await import("@/lib/db"));
   ({ updateSessionUsage } = await import("@/lib/transcript-sync"));
   ({ updateSessionGit } = await import("@/lib/git-sync"));
@@ -327,6 +328,52 @@ describe("ingest — prompt redaction & storage", () => {
   it("does not create a prompt row for non-prompt events", () => {
     send("SessionStart", { session_id: "s1" });
     expect(prompts("s1")).toHaveLength(0);
+  });
+});
+
+describe("ingest — tool duration pairing", () => {
+  // #6 — two parallel calls of the same tool (no tool_use_id) must not overwrite
+  // each other's start; they pair FIFO (oldest Pre ↔ oldest Post).
+  it("pairs two concurrent same-tool calls FIFO instead of overwriting", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-23T10:00:00Z"));
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "a" } }); // t=0
+    vi.advanceTimersByTime(100);
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "b" } }); // t=100
+    vi.advanceTimersByTime(400); // t=500
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "a" }, tool_response: {} });
+    vi.advanceTimersByTime(300); // t=800
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "b" }, tool_response: {} });
+    const calls = toolCalls("s1");
+    expect(calls).toHaveLength(2);
+    expect(calls[0].duration_ms).toBe(500); // first Post (t=500) ↔ first Pre (t=0)
+    expect(calls[1].duration_ms).toBe(700); // second Post (t=800) ↔ second Pre (t=100)
+  });
+
+  // #6 — with a tool_use_id, pairing is exact even when Posts arrive out of order.
+  it("pairs by tool_use_id exactly, even for out-of-order completion", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-23T10:00:00Z"));
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t1", tool_input: { command: "a" } }); // t=0
+    vi.advanceTimersByTime(100);
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t2", tool_input: { command: "b" } }); // t=100
+    vi.advanceTimersByTime(400); // t=500 — t2 finishes first
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t2", tool_input: { command: "b" }, tool_response: {} });
+    vi.advanceTimersByTime(300); // t=800 — then t1
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t1", tool_input: { command: "a" }, tool_response: {} });
+    const calls = toolCalls("s1");
+    expect(calls[0].duration_ms).toBe(400); // t2 Post (t=500) ↔ t2 Pre (t=100)
+    expect(calls[1].duration_ms).toBe(800); // t1 Post (t=800) ↔ t1 Pre (t=0)
+  });
+
+  // #7 — the pure DB-fallback decision: an open Pre pairs; a consumed one (no newer
+  // than the last tool_call) yields null instead of over-counting from a stale start.
+  it("fallbackDuration pairs an open Pre and rejects a consumed one", () => {
+    expect(fallbackDuration(5000, 3000, null)).toBe(2000); // no prior call → open
+    expect(fallbackDuration(5000, 3000, 1000)).toBe(2000); // Pre newer than last call → open
+    expect(fallbackDuration(60000, 3000, 4000)).toBeNull(); // last call newer → already paired
+    expect(fallbackDuration(60000, 3000, 3000)).toBeNull(); // same second → treat as paired
+    expect(fallbackDuration(5000, null, null)).toBeNull(); // no Pre at all
   });
 });
 

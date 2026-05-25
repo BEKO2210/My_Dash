@@ -201,6 +201,14 @@ const lastPreToolTime = db.prepare<[string, string]>(`
   ORDER BY id DESC LIMIT 1
 `);
 
+// Most recent recorded tool_call (i.e. PostToolUse) time for a session+tool — used
+// to tell whether the last PreToolUse is still "open" in the DB fallback below.
+const lastToolCallTime = db.prepare<[string, string]>(`
+  SELECT created_at FROM tool_calls
+  WHERE session_id = ? AND tool_name = ?
+  ORDER BY id DESC LIMIT 1
+`);
+
 const insertToolCall = db.prepare<
   [string, string, string | null, number | null, number, string, string | null]
 >(`
@@ -227,11 +235,46 @@ const insertFileEdit = db.prepare<[string, number, string, number, number]>(`
 
 // Millisecond-precise tool durations: SQLite's CURRENT_TIMESTAMP only has second
 // resolution, so we remember PreToolUse start times in memory (single process) and
-// pair them on PostToolUse. Falls back to the events table after a restart.
-const globalForPending = globalThis as unknown as { __mcPending?: Map<string, number> };
-const pendingStarts = globalForPending.__mcPending ?? new Map<string, number>();
+// pair them on PostToolUse. Each key holds a FIFO *queue* of starts, so two
+// concurrent calls of the same tool (Claude can issue parallel tool_use blocks) no
+// longer overwrite each other. With a tool_use_id the key is unique per call (exact
+// pairing, even out of order); otherwise it's per (session, tool), paired
+// oldest-first. Falls back to the events table after a restart.
+const globalForPending = globalThis as unknown as { __mcPending?: Map<string, number[]> };
+const pendingStarts = globalForPending.__mcPending ?? new Map<string, number[]>();
 globalForPending.__mcPending = pendingStarts;
-const startKey = (s: string, t: string) => `${s} ${t}`;
+// A space can't appear in a session id, tool name or tool_use_id, so it separates
+// the parts unambiguously.
+const startKey = (sessionId: string, toolName: string, toolUseId: string | null) =>
+  `${sessionId} ${toolUseId ?? `name:${toolName}`}`;
+
+function pushStart(key: string, at: number): void {
+  const q = pendingStarts.get(key);
+  if (q) q.push(at);
+  else pendingStarts.set(key, [at]);
+}
+
+function shiftStart(key: string): number | undefined {
+  const q = pendingStarts.get(key);
+  if (!q || q.length === 0) return undefined;
+  const at = q.shift();
+  if (q.length === 0) pendingStarts.delete(key);
+  return at;
+}
+
+// Duration for the DB fallback (used after a restart, when the in-memory start is
+// gone). Returns null when the most-recent PreToolUse was already consumed by an
+// earlier PostToolUse — i.e. it is no newer than the last recorded tool_call — so a
+// 2nd Post with no fresh Pre doesn't over-count from a stale start. Pure → testable.
+export function fallbackDuration(
+  nowMs: number,
+  preMs: number | null,
+  lastCallMs: number | null,
+): number | null {
+  if (preMs === null || !Number.isFinite(preMs)) return null;
+  if (lastCallMs !== null && preMs <= lastCallMs) return null; // Pre already paired
+  return Math.max(0, nowMs - preMs);
+}
 
 export interface IngestResult {
   event: EventRow;
@@ -260,6 +303,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   const cwd = typeof payload.cwd === "string" ? payload.cwd : null;
   const projectName = cwd ? path.basename(cwd) : null;
   const toolName = typeof payload.tool_name === "string" ? payload.tool_name : null;
+  const toolUseId = typeof payload.tool_use_id === "string" ? payload.tool_use_id : null;
   const model = extractModel(payload);
 
   // Captured in the PostToolUse branch for the alert engine (after the tx).
@@ -313,25 +357,25 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
 
     if (eventType === "PreToolUse" && toolName) {
       if (pendingStarts.size > 1000) pendingStarts.clear(); // guard against orphaned starts
-      pendingStarts.set(startKey(sessionId, toolName), Date.now());
+      pushStart(startKey(sessionId, toolName, toolUseId), Date.now());
     }
 
     if (eventType === "PostToolUse" && toolName) {
       let duration: number | null = null;
-      const key = startKey(sessionId, toolName);
-      const startedAt = pendingStarts.get(key);
+      const startedAt = shiftStart(startKey(sessionId, toolName, toolUseId));
       if (startedAt !== undefined) {
         duration = Date.now() - startedAt;
-        pendingStarts.delete(key);
       } else {
-        const pre = lastPreToolTime.get(sessionId, toolName) as
-          | { created_at: string }
-          | undefined;
-        if (pre)
-          duration = Math.max(
-            0,
-            Date.now() - new Date(pre.created_at.replace(" ", "T") + "Z").getTime(),
-          );
+        // No in-memory start (server restarted mid-call). Pair against the events
+        // table — but only if that PreToolUse is still "open" (newer than the last
+        // recorded tool_call), so a 2nd Post with no fresh Pre doesn't over-count.
+        const pre = lastPreToolTime.get(sessionId, toolName) as { created_at: string } | undefined;
+        const lastCall = lastToolCallTime.get(sessionId, toolName) as { created_at: string } | undefined;
+        duration = fallbackDuration(
+          Date.now(),
+          pre ? (parseDbTime(pre.created_at)?.getTime() ?? null) : null,
+          lastCall ? (parseDbTime(lastCall.created_at)?.getTime() ?? null) : null,
+        );
       }
       const { isError, errorText } = describeToolResult(payload.tool_response);
       const mcp = parseMcpTool(toolName);
