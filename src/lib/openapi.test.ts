@@ -71,9 +71,12 @@ describe("buildOpenApiSpec", () => {
     }
   });
 
+  it("documents its own /api/openapi route (self-describing)", () => {
+    expect((spec.paths["/api/openapi"] as Record<string, unknown> | undefined)?.get).toBeTruthy();
+  });
+
   it("documents every real API route (no drift)", () => {
     const real = new Set(discoverRoutes(path.join(process.cwd(), "src/app/api")));
-    real.delete("/api/openapi"); // self
     const documented = new Set(Object.keys(spec.paths));
     const missing = [...real].filter((p) => !documented.has(p));
     const extra = [...documented].filter((p) => !real.has(p));

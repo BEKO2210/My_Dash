@@ -29,6 +29,7 @@ const ROUTES: RouteDef[] = [
   // Overview / system
   { method: "get", path: "/api/stats", tag: "overview", summary: "Headline KPIs for the status strip." },
   { method: "get", path: "/api/health", tag: "system", summary: "Liveness + basic DB stats." },
+  { method: "get", path: "/api/openapi", tag: "system", summary: "This OpenAPI 3.1 document (the API's self-description)." },
   {
     method: "get",
     path: "/api/metrics",
