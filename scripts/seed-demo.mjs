@@ -4,6 +4,8 @@
 //
 //   npm run seed
 
+import { randomBytes } from "node:crypto";
+
 const PORT = process.env.MC_PORT || 3000;
 const TOKEN = process.env.MC_HOOK_TOKEN || "";
 const BASE = `http://127.0.0.1:${PORT}/api/ingest`;
@@ -22,7 +24,7 @@ async function post(event, payload) {
 }
 
 function id() {
-  return "demo-" + Math.random().toString(36).slice(2, 10);
+  return "demo-" + randomBytes(6).toString("hex");
 }
 
 async function runSession({ cwd, prompt, tools, end }) {

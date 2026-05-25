@@ -7,7 +7,7 @@
 // stdin via `--data-binary @-`; it's fire-and-forget (short timeout) so a stopped
 // dashboard never blocks Claude Code.
 
-import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
@@ -76,14 +76,22 @@ export function wireHooks({ port = "3000", token = "", claudeDir } = {}) {
 
   let settings = {};
   let backup = null;
-  if (existsSync(settingsPath)) {
+  // Read directly and handle "missing" via ENOENT instead of an existsSync
+  // check, so there's no check-then-use race on the settings file.
+  let existing = null;
+  try {
+    existing = readFileSync(settingsPath);
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
+  }
+  if (existing != null) {
     try {
-      settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+      settings = JSON.parse(existing.toString("utf8"));
     } catch {
       throw new Error(`Could not parse ${settingsPath} — aborting to avoid clobbering it.`);
     }
     backup = settingsPath + ".bak";
-    copyFileSync(settingsPath, backup);
+    writeFileSync(backup, existing);
   }
 
   settings.hooks = settings.hooks || {};
