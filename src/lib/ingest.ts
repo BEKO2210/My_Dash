@@ -2,6 +2,7 @@ import path from "node:path";
 import { db } from "./db";
 import { hourBucket } from "./activity";
 import { processAlerts } from "./alerts";
+import { checkBudgetAlarms } from "./budget-alarm";
 import { publish } from "./bus";
 import { describeFileEdit } from "./file-edit";
 import { parseDbTime } from "./format";
@@ -476,6 +477,13 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
           void sendAlertWebhook(wh.url, f.message).catch((err) => log.error("webhook failed", err));
         }
       }
+    }
+
+    // Budget over-spend alarm: a write, so it belongs here on the ingest path (not
+    // on the read-only /api/budget GET). Checked at turn boundaries, where spend
+    // changes; no-ops unless a budget is configured. Deduped per period/day.
+    if (eventType === "Stop" || eventType === "SessionEnd") {
+      checkBudgetAlarms(db);
     }
   } catch (err) {
     log.error("alert processing failed", err);

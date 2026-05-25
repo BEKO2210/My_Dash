@@ -1,40 +1,23 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getUsage } from "@/lib/ccusage";
-import { budgetProjections, computeBudget, getBudgets, type BudgetProjection } from "@/lib/budget";
-import { recordAlert } from "@/lib/alerts";
+import { budgetProjections, computeBudget, getBudgets } from "@/lib/budget";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Raise a cost alarm into the inbox when a period's burn projects over budget.
-// Deduped per period/day so it fires at most once a day.
-function raiseAlarm(period: "daily" | "monthly", proj: BudgetProjection): void {
-  if (!proj.overBudget || proj.budgetUsd == null) return;
-  const day = new Date().toISOString().slice(0, 10);
-  recordAlert(db, {
-    ruleId: 0,
-    type: "cost_projection",
-    sessionId: "",
-    dedupKey: `cost:${period}:${day}`,
-    message: `Projected ${period} spend $${proj.projectedUsd.toFixed(2)} over $${proj.budgetUsd.toFixed(0)} budget`,
-  });
-}
-
-// Daily/monthly budget limits, how much of each is used, and a burn-rate projection.
+// Daily/monthly budget limits, how much of each is used, and a burn-rate
+// projection. READ-ONLY: `projection.{daily,monthly}.overBudget` is the computed
+// over-budget flag the UI renders. The inbox alarm for going over budget is a
+// write, so it's raised on the ingest path (see lib/budget-alarm.ts) — never here,
+// because a read route must not mutate the DB (the one-way data rule).
 export async function GET() {
   try {
     const report = await getUsage();
     const budgets = getBudgets(db);
     const status = computeBudget(report, budgets);
     const projection = budgetProjections(status);
-    try {
-      raiseAlarm("daily", projection.daily);
-      raiseAlarm("monthly", projection.monthly);
-    } catch (err) {
-      log.error("cost alarm failed", err);
-    }
     return NextResponse.json({ budgets, status, projection });
   } catch (err) {
     log.error("/api/budget failed", err);
