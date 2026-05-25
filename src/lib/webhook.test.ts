@@ -12,6 +12,13 @@ describe("webhookPayload", () => {
   it("uses Discord's content field for discord URLs", () => {
     expect(webhookPayload("https://discord.com/api/webhooks/x", "hi")).toEqual({ content: "hi" });
     expect(webhookPayload("https://discordapp.com/api/webhooks/x", "hi")).toEqual({ content: "hi" });
+    expect(webhookPayload("https://canary.discord.com/api/webhooks/x", "hi")).toEqual({ content: "hi" });
+  });
+
+  it("does not treat look-alike hosts as Discord (anchored host match)", () => {
+    expect(webhookPayload("https://discord.com.evil.example/x", "hi")).toEqual({ text: "hi" });
+    expect(webhookPayload("https://evil.example/discord.com", "hi")).toEqual({ text: "hi" });
+    expect(webhookPayload("not-a-url", "hi")).toEqual({ text: "hi" });
   });
 });
 

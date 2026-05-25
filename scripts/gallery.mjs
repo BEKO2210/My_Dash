@@ -51,6 +51,12 @@ function serve() {
         return;
       }
       let fp = path.join(ROOT, decoded);
+      // Path-traversal guard: the resolved target must stay inside ROOT.
+      if (fp !== ROOT && !fp.startsWith(ROOT + path.sep)) {
+        res.writeHead(403);
+        res.end("403");
+        return;
+      }
       try {
         if (fp.endsWith("/") || fs.statSync(fp).isDirectory()) fp = path.join(fp, "index.html");
       } catch {

@@ -13,7 +13,16 @@ export interface WebhookConfig {
 // Slack expects { text }, Discord expects { content }. Pick by URL host so a
 // single config field works for either.
 export function webhookPayload(url: string, message: string): Record<string, string> {
-  return /discord(app)?\.com/i.test(url) ? { content: message } : { text: message };
+  let host = "";
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    /* not a parseable URL — fall back to the Slack shape */
+  }
+  // Anchored on the host so e.g. "discord.com.evil.example" can't masquerade as
+  // Discord; still allows subdomains like canary.discord.com.
+  const isDiscord = /^(.+\.)?discord(app)?\.com$/.test(host);
+  return isDiscord ? { content: message } : { text: message };
 }
 
 // Loopback / link-local / private-range hosts. We refuse to POST alerts to these

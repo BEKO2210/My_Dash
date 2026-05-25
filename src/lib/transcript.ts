@@ -1,4 +1,4 @@
-import { open, readFile, stat } from "node:fs/promises";
+import { open } from "node:fs/promises";
 import { redactSecrets, redactValue } from "./prompt";
 
 // Reads Claude Code's per-session JSONL transcript and rolls up the billable token
@@ -177,11 +177,13 @@ const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;
 // Read the transcript, capping at maxBytes by reading only the tail of very large
 // files (a cut first line just fails to parse and is skipped).
 export async function readTranscriptText(path: string, maxBytes = DEFAULT_MAX_BYTES): Promise<string> {
-  const st = await stat(path);
-  if (st.size <= maxBytes) return readFile(path, "utf8");
-
+  // Open once and operate on the file handle (fstat + read on the same fd) so
+  // there's no check-then-use window between sizing and reading the file.
   const fh = await open(path, "r");
   try {
+    const st = await fh.stat();
+    if (st.size <= maxBytes) return await fh.readFile("utf8");
+
     const buf = Buffer.alloc(maxBytes);
     await fh.read(buf, 0, maxBytes, st.size - maxBytes);
     return buf.toString("utf8");
