@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { Gauge, TrendingDown, TrendingUp } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useTimeRange } from "@/components/time-range";
 import { useT } from "@/lib/i18n";
 import {
@@ -70,42 +70,27 @@ function Trend({
 }
 
 export function Velocity() {
-  const { tick } = useLive();
   const { t } = useT();
   const { days: rangeDays } = useTimeRange();
-  const [days, setDays] = useState<VelocityDay[] | null>(null);
+  const q = usePluginQuery<{ days: VelocityDay[] }>(`/api/velocity?days=${rangeDays}`, { pollMs: 30_000 });
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch(`/api/velocity?days=${rangeDays}`)
-        .then((r) => r.json())
-        .then((d: { days: VelocityDay[] }) => {
-          if (!cancelled) setDays(d.days);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [rangeDays, tick]);
+  const days = q.data?.days ?? [];
+  const vs = viewState(q, () => days.length === 0 || days.every((d) => d.toolCalls === 0 && d.events === 0));
 
-  const empty = days && days.every((d) => d.toolCalls === 0 && d.events === 0);
-
-  const tpm = (days ?? []).map(toolsPerMinute);
-  const eps = (days ?? []).map(eventsPerSession);
+  const tpm = days.map(toolsPerMinute);
+  const eps = days.map(eventsPerSession);
   const tpmAvg = movingAverage(tpm, 7);
   const epsAvg = movingAverage(eps, 7);
-  const chartTpm = (days ?? []).map((d, i) => ({ date: d.date, v: +tpm[i].toFixed(3), avg: +tpmAvg[i].toFixed(3) }));
-  const chartEps = (days ?? []).map((d, i) => ({ date: d.date, v: +eps[i].toFixed(2), avg: +epsAvg[i].toFixed(2) }));
+  const chartTpm = days.map((d, i) => ({ date: d.date, v: +tpm[i].toFixed(3), avg: +tpmAvg[i].toFixed(3) }));
+  const chartEps = days.map((d, i) => ({ date: d.date, v: +eps[i].toFixed(2), avg: +epsAvg[i].toFixed(2) }));
 
   return (
     <Panel title={t("velocity.title")} icon={<Gauge className="h-4 w-4 text-accent" />} info={t("velocity.info")}>
-      {!days ? (
+      {vs === "error" ? (
+        <WidgetState icon={Gauge} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Gauge} title={t("common.loading")} loading />
-      ) : empty ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Gauge} title={t("velocity.empty")} />
       ) : (
         <div className="flex h-full flex-col gap-3 p-4">

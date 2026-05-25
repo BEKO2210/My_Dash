@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ResponsiveContainer, Tooltip, Treemap } from "recharts";
 import { FileCode2 } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useSearch } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import type { FileHotspot } from "@/lib/files";
@@ -98,30 +99,13 @@ function HotspotTooltip({
 
 export function FileHotspots() {
   const { t } = useT();
-  const { tick } = useLive();
   const { setQuery } = useSearch();
   const [range, setRange] = useState<Range>("30");
-  const [files, setFiles] = useState<FileHotspot[] | null>(null);
+  const q = usePluginQuery<{ files: FileHotspot[] }>(`/api/files?days=${range}&limit=60`, { pollMs: 30_000 });
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch(`/api/files?days=${range}&limit=60`)
-        .then((r) => r.json())
-        .then((d: { files: FileHotspot[] }) => {
-          if (!cancelled) setFiles(d.files);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [range, tick]);
-
-  const data = useMemo(() => (files ?? []).map((f) => ({ ...f, size: Math.max(1, f.churn) })), [files]);
+  const data = useMemo(() => (q.data?.files ?? []).map((f) => ({ ...f, size: Math.max(1, f.churn) })), [q.data]);
   const max = useMemo(() => Math.max(1, ...data.map((d) => d.size)), [data]);
+  const vs = viewState(q, () => data.length === 0);
 
   return (
     <Panel
@@ -143,9 +127,11 @@ export function FileHotspots() {
         </div>
       }
     >
-      {!files ? (
+      {vs === "error" ? (
+        <WidgetState icon={FileCode2} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={FileCode2} title={t("common.loading")} loading />
-      ) : data.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={FileCode2} title={t("files.empty")} />
       ) : (
         <div className="h-full w-full p-2">
