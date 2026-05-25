@@ -1,13 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { formatCurrency, usdToEur, eurRate } from "@/lib/format";
+import { formatCurrency, usdToEur } from "@/lib/format";
 import { useT } from "@/lib/i18n";
 
 // One shared display-currency preference for the whole dashboard (Phase G money
 // consistency). Mirrors the i18n lang store: an external store over localStorage,
 // no provider — every money site reads the same value. Default USD (ccusage's
-// native/source-of-truth currency); EUR converts via usdToEur(eurRate()).
+// native/source-of-truth currency); EUR converts via usdToEur() at the server rate
+// (GET /api/rate — same EUR_PER_USD the server used for costEur, see useEurRate).
 
 export type Currency = "USD" | "EUR";
 const KEY = "mc-currency";
@@ -39,6 +40,40 @@ export function useCurrency(): { currency: Currency; setCurrency: (c: Currency) 
   return { currency, setCurrency: writeCurrency };
 }
 
+// EUR/USD rate — single source of truth = the SERVER's EUR_PER_USD via GET /api/rate
+// (Forge). Fetched once, shared across every useMoney consumer, so client-side USD→EUR
+// conversion uses the exact rate the server used for costEur (no divergence). Falls back
+// to 0.92 until the fetch resolves / on error. Lazy: the first subscriber triggers it.
+const RATE_FALLBACK = 0.92;
+let rateValue = RATE_FALLBACK;
+let rateFetchStarted = false;
+const rateListeners = new Set<() => void>();
+
+function subscribeRate(cb: () => void) {
+  rateListeners.add(cb);
+  if (!rateFetchStarted) {
+    rateFetchStarted = true;
+    fetch("/api/rate")
+      .then((r) => (r.ok ? (r.json() as Promise<{ eurPerUsd?: number }>) : Promise.reject(new Error("bad status"))))
+      .then((d) => {
+        if (typeof d.eurPerUsd === "number" && Number.isFinite(d.eurPerUsd) && d.eurPerUsd > 0) {
+          rateValue = d.eurPerUsd;
+          rateListeners.forEach((f) => f());
+        }
+      })
+      .catch(() => {
+        /* keep fallback */
+      });
+  }
+  return () => {
+    rateListeners.delete(cb);
+  };
+}
+
+export function useEurRate(): number {
+  return useSyncExternalStore(subscribeRate, () => rateValue, () => RATE_FALLBACK);
+}
+
 /**
  * Format a **USD** amount in the active display currency + language. Converts to
  * EUR (via the client rate) when the preference is EUR. This is what every money
@@ -47,8 +82,9 @@ export function useCurrency(): { currency: Currency; setCurrency: (c: Currency) 
 export function useMoney(): (usd: number) => string {
   const { currency } = useCurrency();
   const { lang } = useT();
+  const rate = useEurRate();
   return (usd: number) =>
-    formatCurrency(currency === "EUR" ? usdToEur(usd, eurRate()) : usd, currency, lang);
+    formatCurrency(currency === "EUR" ? usdToEur(usd, rate) : usd, currency, lang);
 }
 
 // Compact segmented $ / € switch for the header (sibling of LangToggle).
