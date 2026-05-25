@@ -1,28 +1,18 @@
 import { test, expect, type Page } from "@playwright/test";
 
 // Phase F — per-widget view variants: visual-regression + behaviour gate.
-// TEMPLATE spec (extended per widget during FC rollout). Reference widget:
-// tool-frequency (view ∈ {bars (default = today's look), table}).
-//
-// Hermetic by design: the `view` setting persists server-side via POST
-// /api/plugins/config, so we intercept that route — GET returns the view under
-// test, POST is a no-op — to pick a variant deterministically WITHOUT writing to
-// the shared e2e DB (no cross-spec pollution). Tool data is stubbed too.
-
-type ToolStat = { tool: string; count: number; failures: number; source: string | null; mcpServer: string | null; avgDurationMs: number | null };
-const b = (tool: string, count: number, failures = 0, avg = 30): ToolStat => ({ tool, count, failures, source: "builtin", mcpServer: null, avgDurationMs: avg });
-const TOOLS: ToolStat[] = [
-  b("Read", 120, 0, 42), b("Edit", 90, 0, 30), b("Bash", 75, 5, 820),
-  { tool: "mcp__github__search_issues", count: 48, failures: 1, source: "mcp", mcpServer: "github", avgDurationMs: 210 },
-  b("Grep", 33, 0, 18), b("Write", 21, 0, 25),
-];
+// One spec per pilot/rollout widget (cloned from the same template). Each asserts:
+// default variant === today's look, every variant renders in light AND dark, the
+// ViewSwitch carries DE+EN labels with correct aria-pressed, and the console stays
+// clean. Hermetic: the `view` setting persists via POST /api/plugins/config, so we
+// intercept that route (GET = the view under test, POST = no-op) to pick a variant
+// WITHOUT writing to the shared e2e DB — zero cross-spec pollution.
 
 const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i, /reading 'tick'/];
 function watchConsole(page: Page, errors: string[]) {
   page.on("console", (m) => { if (m.type() === "error" && !IGNORE.some((re) => re.test(m.text()))) errors.push(m.text()); });
   page.on("pageerror", (e) => { if (!IGNORE.some((re) => re.test(e.message))) errors.push(e.message); });
 }
-
 function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
   return page.addInitScript(([m, l]) => {
     try {
@@ -32,84 +22,308 @@ function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
     } catch { /* ignore */ }
   }, [mode, lang] as const);
 }
-
-// Stub tool data + pin tool-frequency's view via the config route (no DB write).
-async function stub(page: Page, view?: "bars" | "table") {
-  await page.route("**/api/tools*", (route) => route.fulfill({ json: { tools: TOOLS } }));
-  await page.route("**/api/plugins/config**", (route) => {
-    if (route.request().method() === "POST") return route.fulfill({ json: { ok: true } });
-    return route.fulfill({ json: { config: view ? { "tool-frequency": { view } } : {} } });
-  });
-}
-
 async function gotoDashboard(page: Page) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 }
+// Pin a widget's `view` deterministically via the config route — no DB write.
+async function stubPluginConfig(page: Page, config: Record<string, Record<string, unknown>> = {}) {
+  await page.route("**/api/plugins/config**", (route) => {
+    if (route.request().method() === "POST") return route.fulfill({ json: { ok: true } });
+    return route.fulfill({ json: { config } });
+  });
+}
+const widget = (page: Page, id: string) => page.locator(`#mc-widget-${id}`);
+const viewSwitchOf = (w: ReturnType<typeof widget>) => w.getByRole("group", { name: /^(Ansicht|View)$/ });
 
-const tf = (page: Page) => page.locator("#mc-widget-tool-frequency");
-const bars = (page: Page) => tf(page).locator("li div.h-full");
-const viewSwitch = (page: Page) => tf(page).getByRole("group", { name: /^(Ansicht|View)$/ });
+// ── F4 reference (tool-frequency): bars (default) ↔ table ─────────────────────
+type ToolStat = { tool: string; count: number; failures: number; source: string | null; mcpServer: string | null; avgDurationMs: number | null };
+const b = (tool: string, count: number, failures = 0, avg = 30): ToolStat => ({ tool, count, failures, source: "builtin", mcpServer: null, avgDurationMs: avg });
+const TOOLS: ToolStat[] = [
+  b("Read", 120, 0, 42), b("Edit", 90, 0, 30), b("Bash", 75, 5, 820),
+  { tool: "mcp__github__search_issues", count: 48, failures: 1, source: "mcp", mcpServer: "github", avgDurationMs: 210 },
+  b("Grep", 33, 0, 18), b("Write", 21, 0, 25),
+];
+async function stubToolFreq(page: Page, view?: "bars" | "table") {
+  await page.route("**/api/tools*", (route) => route.fulfill({ json: { tools: TOOLS } }));
+  await stubPluginConfig(page, view ? { "tool-frequency": { view } } : {});
+}
 
-test.describe("tool-frequency view variants (FA reference widget)", () => {
-  test("default view is bars (today's look) with a localized ViewSwitch (DE)", async ({ page }) => {
+test.describe("view variant — tool-frequency (bars↔table)", () => {
+  const tf = (page: Page) => widget(page, "tool-frequency");
+  const bars = (page: Page) => tf(page).locator("li div.h-full");
+
+  test("default = bars (today's look), ViewSwitch labelled DE", async ({ page }) => {
     const errors: string[] = [];
     watchConsole(page, errors);
-    await stub(page); // no view → default
+    await stubToolFreq(page);
     await prime(page, "dark", "de");
     await gotoDashboard(page);
     const w = tf(page);
     await w.scrollIntoViewIfNeeded();
-
-    // Default == bars: the original list of proportional bars renders, no table.
     await expect(bars(page).first()).toBeVisible({ timeout: 15_000 });
     await expect(w.locator("table")).toHaveCount(0);
-
-    // ViewSwitch present, DE labels, bars is the pressed option.
-    const sw = viewSwitch(page);
-    await expect(sw).toBeVisible();
+    const sw = viewSwitchOf(w);
     await expect(sw.getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
     await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
-    expect(errors, `console errors:\n${errors.join("\n")}`).toEqual([]);
+    expect(errors, errors.join("\n")).toEqual([]);
   });
 
-  test("ViewSwitch labels are localized (EN)", async ({ page }) => {
-    await stub(page);
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubToolFreq(page);
     await prime(page, "dark", "en");
     await gotoDashboard(page);
-    const sw = viewSwitch(page);
+    const sw = viewSwitchOf(tf(page));
     await expect(sw.getByRole("button", { name: "Bars" })).toBeVisible();
     await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
   });
 
-  // Visual regression: each variant in light AND dark (default + table).
   for (const mode of ["dark", "light"] as const) {
     for (const view of ["bars", "table"] as const) {
       test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
         const errors: string[] = [];
         watchConsole(page, errors);
-        await stub(page, view);
+        await stubToolFreq(page, view);
         await prime(page, mode, "de");
         await gotoDashboard(page);
         const w = tf(page);
         await w.scrollIntoViewIfNeeded();
         await expect(w).toBeVisible({ timeout: 15_000 });
-
         if (view === "bars") {
           await expect(bars(page).first()).toBeVisible();
           await expect(w.locator("table")).toHaveCount(0);
-          await expect(viewSwitch(page).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
         } else {
           await expect(w.locator("table tbody tr").first()).toBeVisible();
           await expect(bars(page)).toHaveCount(0);
-          await expect(viewSwitch(page).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
         }
-
-        await page.waitForTimeout(250); // settle width/colour transitions before the shot
+        await page.waitForTimeout(250);
         const shot = await w.screenshot({ path: `test-results/view-variants-shots/tool-frequency-${view}-${mode}.png` });
         await testInfo.attach(`tool-frequency-${view}-${mode}`, { body: shot, contentType: "image/png" });
-        expect(errors, `console errors (${view}-${mode}):\n${errors.join("\n")}`).toEqual([]);
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// ── F1 pilot (token-chart): chart (default) ↔ table ───────────────────────────
+const USAGE = {
+  available: true,
+  months: [],
+  blocks: [],
+  burn: null,
+  // Populated for model-donut (F2, per-model share) as well as token-chart's days.
+  models: [
+    { model: "claude-opus-4-7", inputTokens: 200000, outputTokens: 120000, cacheTokens: 480000, totalTokens: 800000, costUsd: 12.5, costEur: 11.5 },
+    { model: "claude-sonnet-4-6", inputTokens: 400000, outputTokens: 300000, cacheTokens: 800000, totalTokens: 1500000, costUsd: 4.2, costEur: 3.86 },
+    { model: "claude-haiku-4-5", inputTokens: 200000, outputTokens: 100000, cacheTokens: 300000, totalTokens: 600000, costUsd: 0.8, costEur: 0.74 },
+  ],
+  totals: { inputTokens: 0, outputTokens: 0, cacheTokens: 0, totalTokens: 0, costUsd: 0, costEur: 0 },
+  days: Array.from({ length: 7 }, (_, i) => ({
+    date: `2026-05-0${i + 1}`,
+    inputTokens: 20000 + i * 3000,
+    outputTokens: 12000 + i * 2000,
+    cacheTokens: 40000 + i * 5000,
+    costEur: Number((1.2 + i * 0.3).toFixed(2)),
+    costUsd: Number((1.3 + i * 0.32).toFixed(2)),
+  })),
+};
+async function stubTokenChart(page: Page, view?: "chart" | "table") {
+  await page.route("**/api/usage", (route) => route.fulfill({ json: USAGE }));
+  await stubPluginConfig(page, view ? { "token-chart": { view } } : {});
+}
+
+test.describe("view variant — token-chart (chart↔table)", () => {
+  const tc = (page: Page) => widget(page, "token-chart");
+  const chart = (page: Page) => tc(page).locator(".recharts-responsive-container");
+
+  test("default = chart (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubTokenChart(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = tc(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(chart(page)).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Diagramm" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubTokenChart(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(tc(page));
+    await expect(sw.getByRole("button", { name: "Chart" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["chart", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubTokenChart(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = tc(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "chart") {
+          await expect(chart(page)).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Diagramm" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table tbody tr").first()).toBeVisible();
+          await expect(chart(page)).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/token-chart-${view}-${mode}.png` });
+        await testInfo.attach(`token-chart-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// ── F2 pilot (model-donut): donut (default) ↔ bars ────────────────────────────
+async function stubModelDonut(page: Page, view?: "donut" | "bars") {
+  await page.route("**/api/usage", (route) => route.fulfill({ json: USAGE }));
+  await stubPluginConfig(page, view ? { "model-donut": { view } } : {});
+}
+
+test.describe("view variant — model-donut (donut↔bars)", () => {
+  const md = (page: Page) => widget(page, "model-donut");
+  // donut variant renders a recharts pie; bars variant (DonutBars) has no recharts.
+  const donut = (page: Page) => md(page).locator(".recharts-responsive-container");
+
+  test("default = donut (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubModelDonut(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = md(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(donut(page)).toBeVisible({ timeout: 15_000 });
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Donut" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubModelDonut(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(md(page));
+    await expect(sw.getByRole("button", { name: "Donut" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Bars" })).toBeVisible();
+  });
+
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["donut", "bars"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubModelDonut(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = md(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "donut") {
+          await expect(donut(page)).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Donut" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(donut(page)).toHaveCount(0);
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/model-donut-${view}-${mode}.png` });
+        await testInfo.attach(`model-donut-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// ── F3 pilot (kanban): board (default) ↔ list ─────────────────────────────────
+const sess = (id: string, status: "active" | "waiting" | "ended", title: string, hh: string) => ({
+  id, project_path: `/home/user/projects/${title}`, project_name: "demo-bot", title, status,
+  source: "startup", first_seen: "2026-05-25 10:00:00", last_seen: `2026-05-25 ${hh}:00:00`,
+  ended_at: status === "ended" ? "2026-05-25 12:00:00" : null,
+  token_input: 1000, token_output: 800, token_cache: 2000, cost_usd: 0.5,
+  branch: "main", git_commit: null, remote_url: null, transcript_path: null, machine: null,
+  event_count: 12, tool_count: 5,
+});
+const SESSIONS = [sess("s-active", "active", "alpha", "11"), sess("s-wait", "waiting", "beta", "10"), sess("s-ended", "ended", "gamma", "12")];
+async function stubKanban(page: Page, view?: "board" | "list") {
+  await page.route("**/api/sessions*", (route) => route.fulfill({ json: { sessions: SESSIONS } }));
+  await stubPluginConfig(page, view ? { kanban: { view } } : {});
+}
+
+test.describe("view variant — kanban (board↔list)", () => {
+  const kb = (page: Page) => widget(page, "kanban");
+  // board variant is the 3-column grid; list variant (SessionList) is a flat <ul>.
+  const board = (page: Page) => kb(page).locator('[class*="grid-cols-3"]');
+  const listRows = (page: Page) => kb(page).locator("ul li button");
+
+  test("default = board (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubKanban(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = kb(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(board(page)).toBeVisible({ timeout: 15_000 });
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Board" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubKanban(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(kb(page));
+    await expect(sw.getByRole("button", { name: "Board" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "List" })).toBeVisible();
+  });
+
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["board", "list"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubKanban(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = kb(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "board") {
+          await expect(board(page)).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Board" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(board(page)).toHaveCount(0);
+          await expect(listRows(page).first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/kanban-${view}-${mode}.png` });
+        await testInfo.attach(`kanban-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
       });
     }
   }
