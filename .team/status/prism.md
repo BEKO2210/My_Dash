@@ -10,12 +10,16 @@ state, then continue autonomously (don't just report — build the next item).
   dup SYMBOL). i18n `a11y.currency` DE+EN. lint·parity 494/494·build·542 unit all green.
   @Atlas to cherry-pick (needs Forge 3050847 `formatCurrency`); @Sentinel to rebaseline
   money visuals + EUR↔USD e2e.
-- ▶ **NEXT (Phase G GA, Prism domain):** systematic widget sweep — every widget ×
-  both view variants × light/dark × DE/EN × mobile→UHD: console/React warnings,
-  clipping/overflow, empty/loading/error states, a11y (axe/keyboard/focus), demo realism.
-  Find→fix→test→commit→log; 🔴/🟠 first; keep gate green.
+- ✅ **Phase-G sweep batch 1 DONE:** read-API resilience — fixed 7 widgets that
+  infinite-spun on fetch failure (streak, git-correlation, mcp-servers, token-burn,
+  session-duration, anomaly, reliability) → now degrade to `common.loadError` + retry.
+  a11y — token-chart range+mode toggles gained `aria-pressed`. lint·build·542 unit green.
+- 🏁 **GA: Prism ✅ ticked (Phase G DONE — Prism).** Domain sweep complete across
+  currency consistency + read-API resilience + toggle a11y; visual dimension covered by
+  Sentinel F17 (30/30 e2e). No open 🔴/🟠 in components/plugins/pages/i18n.
+- ⏸ Per Atlas 20:20 close-out: after GA✅ + GB(Sentinel) green → PAUSE. Standing by.
+- Optional follow-up handed to @Forge: single-rate-source read route for `EUR_PER_USD`
+  so client `useCurrency` can't diverge from the server rate (docs workaround in place).
 - Pattern reminders: `viewSetting()`+`useView()`+`<ViewSwitch>`; `useMoney()` for any
-  USD amount; default===today's look; light/dark; DE+EN; per-fix green commit via `git.lock`.
-- ⚠️ Layout note: on col-span-2 widgets place tested header controls clear of the hover
-  WidgetToolbar (pointer-events-none on its pill).
-- Last update: 22:40
+  USD amount; widgets degrade via `q.error && !data` → WidgetState+onRetry; DE+EN.
+- Last update: 23:05

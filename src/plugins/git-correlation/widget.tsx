@@ -11,7 +11,8 @@ import type { BranchCorrelation } from "@/lib/git-correlation";
 
 export function GitCorrelation() {
   const { t, lang } = useT();
-  const { data } = usePluginQuery<{ branches: BranchCorrelation[] }>("/api/git/branches", { pollMs: 30_000 });
+  const q = usePluginQuery<{ branches: BranchCorrelation[] }>("/api/git/branches", { pollMs: 30_000 });
+  const data = q.data;
 
   return (
     <Panel
@@ -19,7 +20,9 @@ export function GitCorrelation() {
       icon={<GitPullRequest className="h-4 w-4 text-accent" />}
       info={t("gitcorr.info")}
     >
-      {!data ? (
+      {q.error && !data ? (
+        <WidgetState icon={GitPullRequest} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !data ? (
         <WidgetState icon={GitPullRequest} title={t("common.loading")} loading />
       ) : data.branches.length === 0 ? (
         <WidgetState icon={GitBranch} title={t("gitcorr.empty")} />
