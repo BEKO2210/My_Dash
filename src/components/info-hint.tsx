@@ -2,6 +2,7 @@
 
 import { Info } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/i18n";
 
 // Small, unobtrusive info affordance: a muted ℹ️ icon that reveals a short
 // explanation on hover or keyboard focus. Pure CSS (no state) so it's cheap to
@@ -15,11 +16,12 @@ export function InfoHint({
   align?: "left" | "right";
   className?: string;
 }) {
+  const { t } = useT();
   return (
     <span className={cn("group/info relative inline-flex align-middle", className)}>
       <button
         type="button"
-        aria-label="Info"
+        aria-label={t("a11y.info")}
         className="text-muted outline-none transition-colors hover:text-muted focus-visible:text-accent"
       >
         <Info className="h-3.5 w-3.5" />

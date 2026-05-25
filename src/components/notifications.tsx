@@ -29,6 +29,8 @@ export function Notifications() {
   const seenMaxId = useRef<number | null>(null);
   const desktopRef = useRef(false);
   const quietRef = useRef<QuietConfig>({ enabled: false, start: "22:00", end: "07:00" });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/alerts/quiet")
@@ -144,13 +146,42 @@ export function Notifications() {
     });
   };
 
+  // While the dropdown is open: close on Esc / outside click, move focus into the
+  // panel, and return focus to the bell when it closes.
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.focus();
+    const close = () => {
+      setOpen(false);
+      btnRef.current?.focus();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (!panelRef.current?.contains(target) && !btnRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
   return (
     <>
       <div className="relative hidden sm:block">
         <button
+          ref={btnRef}
           type="button"
           onClick={toggle}
           aria-label={t("notif.title")}
+          aria-haspopup="dialog"
+          aria-expanded={open}
           title={t("notif.title")}
           className="relative flex items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
         >
@@ -162,7 +193,13 @@ export function Notifications() {
           )}
         </button>
         {open && (
-          <div className="absolute right-0 top-9 z-50 w-80 overflow-hidden rounded-lg border border-panel-border bg-panel shadow-2xl shadow-black/50">
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label={t("notif.title")}
+            tabIndex={-1}
+            className="absolute right-0 top-9 z-50 w-80 overflow-hidden rounded-lg border border-panel-border bg-panel shadow-2xl shadow-black/50 outline-none"
+          >
             <header className="flex items-center justify-between border-b border-panel-border px-3 py-2 text-sm font-semibold text-foreground">
               <span className="flex items-center gap-1.5">
                 <Bell className="h-3.5 w-3.5 text-accent" />
@@ -173,6 +210,7 @@ export function Notifications() {
                   type="button"
                   onClick={toggleDesktop}
                   aria-pressed={desktop}
+                  aria-label={t("notif.desktop")}
                   title={t("notif.desktop")}
                   className={`transition-colors ${desktop ? "text-accent" : "text-muted hover:text-foreground"}`}
                 >
