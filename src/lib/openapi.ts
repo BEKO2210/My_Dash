@@ -1,6 +1,12 @@
 // Hand-maintained OpenAPI 3.1 description of the dashboard's HTTP surface: every
 // read path plus the single write path (/api/ingest). Built from a compact route
 // table so it stays close to the code and easy to extend. Served by /api/openapi.
+import pkg from "../../package.json";
+
+// The local server's port, matching electron/main.js + the launch scripts.
+function serverPort(): string {
+  return process.env.MC_PORT || process.env.PORT || "3000";
+}
 
 interface RouteDef {
   method: "get" | "post";
@@ -227,7 +233,7 @@ function body(properties: Record<string, unknown>): Record<string, unknown> {
   return { required: true, content: { "application/json": { schema: { type: "object", properties } } } };
 }
 
-export function buildOpenApiSpec(version = process.env.npm_package_version ?? "1.0.0-beta"): Record<string, unknown> {
+export function buildOpenApiSpec(version = pkg.version): Record<string, unknown> {
   const paths: Record<string, Record<string, unknown>> = {};
   for (const r of ROUTES) {
     const parameters = [
@@ -253,7 +259,7 @@ export function buildOpenApiSpec(version = process.env.npm_package_version ?? "1
         "Local, read-only observability API for Claude Code. Every path is read-only except POST /api/ingest (hook events) and the opt-in OTLP/config writers. The server binds to 127.0.0.1.",
       license: { name: "PolyForm Noncommercial 1.0.0", url: "https://polyformproject.org/licenses/noncommercial/1.0.0" },
     },
-    servers: [{ url: "http://127.0.0.1:3000", description: "Local dashboard" }],
+    servers: [{ url: `http://127.0.0.1:${serverPort()}`, description: "Local dashboard" }],
     tags: [
       "overview",
       "sessions",

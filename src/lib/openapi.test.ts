@@ -71,6 +71,18 @@ describe("buildOpenApiSpec", () => {
     }
   });
 
+  it("server URL reflects the configured MC_PORT", () => {
+    const prev = process.env.MC_PORT;
+    process.env.MC_PORT = "3001";
+    try {
+      const s = buildOpenApiSpec("9.9.9") as Spec & { servers: { url: string }[] };
+      expect(s.servers[0].url).toBe("http://127.0.0.1:3001");
+    } finally {
+      if (prev === undefined) delete process.env.MC_PORT;
+      else process.env.MC_PORT = prev;
+    }
+  });
+
   it("documents its own /api/openapi route (self-describing)", () => {
     expect((spec.paths["/api/openapi"] as Record<string, unknown> | undefined)?.get).toBeTruthy();
   });

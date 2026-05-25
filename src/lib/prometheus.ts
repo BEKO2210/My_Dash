@@ -1,4 +1,5 @@
 import type Database from "better-sqlite3";
+import pkg from "../../package.json";
 
 // Prometheus text exposition format (version 0.0.4) so Grafana/Prometheus can scrape
 // the dashboard's aggregates alongside the OTLP path. Read-only and local-only (the
@@ -80,7 +81,7 @@ export function collectMetrics(db: Database.Database): PromMetric[] {
       name: "mc_build_info",
       help: "Build metadata; value is always 1.",
       type: "gauge",
-      samples: [{ value: 1, labels: { version: process.env.npm_package_version ?? "unknown" } }],
+      samples: [{ value: 1, labels: { version: pkg.version } }],
     },
     {
       name: "mc_sessions",

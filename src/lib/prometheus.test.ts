@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
 import { collectMetrics, renderPrometheus, type PromMetric } from "@/lib/prometheus";
 import { migrate } from "@/lib/migrations";
+import pkg from "../../package.json";
 
 let open: Database.Database | null = null;
 afterEach(() => {
@@ -91,5 +92,13 @@ describe("collectMetrics", () => {
 
     // Renders cleanly end to end.
     expect(renderPrometheus(collectMetrics(db))).toContain("# TYPE mc_up gauge");
+  });
+
+  it("reports the real package version in mc_build_info (#85, not 'unknown')", () => {
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    const build = collectMetrics(db).find((m) => m.name === "mc_build_info")!;
+    expect(build.samples[0].labels?.version).toBe(pkg.version);
+    expect(build.samples[0].labels?.version).not.toBe("unknown");
   });
 });
