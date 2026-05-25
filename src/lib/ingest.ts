@@ -190,11 +190,16 @@ const bumpActivity = db.prepare<[string, string]>(`
 
 const getSession = db.prepare<[string]>(`SELECT * FROM sessions WHERE id = ?`);
 
-// Error rate over the most recent tool calls — feeds the error-spike alert rule.
-const recentErrorRateStmt = db.prepare(
+// Error rate over a session's most recent tool calls — feeds the error-spike alert.
+// Scoped per session so a noisy project can't trip the alert for an unrelated one.
+const recentErrorRateStmt = db.prepare<[string]>(
   `SELECT AVG(CASE WHEN success = 0 THEN 1.0 ELSE 0 END) AS r
-   FROM (SELECT success FROM tool_calls ORDER BY id DESC LIMIT 50)`,
+   FROM (SELECT success FROM tool_calls WHERE session_id = ? ORDER BY id DESC LIMIT 50)`,
 );
+
+export function recentSessionErrorRate(sessionId: string): number {
+  return (recentErrorRateStmt.get(sessionId) as { r: number | null }).r ?? 0;
+}
 
 const lastPreToolTime = db.prepare<[string, string]>(`
   SELECT created_at FROM events
@@ -451,10 +456,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   try {
     const startMs = parseDbTime(result.session.first_seen)?.getTime();
     const durationMin = startMs ? Math.max(0, (Date.now() - startMs) / 60_000) : 0;
-    const recentErrorRate =
-      eventType === "PostToolUse"
-        ? ((recentErrorRateStmt.get() as { r: number | null }).r ?? 0)
-        : 0;
+    const recentErrorRate = eventType === "PostToolUse" ? recentSessionErrorRate(sessionId) : 0;
     const fired = processAlerts(db, {
       eventType,
       toolName,

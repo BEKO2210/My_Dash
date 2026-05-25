@@ -19,6 +19,7 @@ import type {
 // so the real schema + prepared statements are used — just on a disposable file.
 let ingest: (typeof import("@/lib/ingest"))["ingest"];
 let fallbackDuration: (typeof import("@/lib/ingest"))["fallbackDuration"];
+let recentSessionErrorRate: (typeof import("@/lib/ingest"))["recentSessionErrorRate"];
 let db: (typeof import("@/lib/db"))["db"];
 let updateSessionUsage: (typeof import("@/lib/transcript-sync"))["updateSessionUsage"];
 let updateSessionGit: (typeof import("@/lib/git-sync"))["updateSessionGit"];
@@ -27,7 +28,7 @@ let dataDir: string;
 beforeAll(async () => {
   dataDir = mkdtempSync(path.join(tmpdir(), "mc-ingest-test-"));
   process.env.MC_DATA_DIR = dataDir;
-  ({ ingest, fallbackDuration } = await import("@/lib/ingest"));
+  ({ ingest, fallbackDuration, recentSessionErrorRate } = await import("@/lib/ingest"));
   ({ db } = await import("@/lib/db"));
   ({ updateSessionUsage } = await import("@/lib/transcript-sync"));
   ({ updateSessionGit } = await import("@/lib/git-sync"));
@@ -328,6 +329,18 @@ describe("ingest — prompt redaction & storage", () => {
   it("does not create a prompt row for non-prompt events", () => {
     send("SessionStart", { session_id: "s1" });
     expect(prompts("s1")).toHaveLength(0);
+  });
+});
+
+describe("ingest — recent error rate is per session", () => {
+  // #24 — a noisy session must not trip the error-spike alert for an unrelated one.
+  it("scopes the recent error rate to the given session", () => {
+    send("PostToolUse", { session_id: "A", tool_name: "Bash", tool_input: { command: "x" }, tool_response: { is_error: true } });
+    send("PostToolUse", { session_id: "A", tool_name: "Bash", tool_input: { command: "y" }, tool_response: { is_error: true } });
+    send("PostToolUse", { session_id: "B", tool_name: "Read", tool_input: { file_path: "/a" }, tool_response: { ok: true } });
+    send("PostToolUse", { session_id: "B", tool_name: "Read", tool_input: { file_path: "/b" }, tool_response: { ok: true } });
+    expect(recentSessionErrorRate("A")).toBe(1); // both A calls failed
+    expect(recentSessionErrorRate("B")).toBe(0); // B clean despite A's errors in the table
   });
 });
 
