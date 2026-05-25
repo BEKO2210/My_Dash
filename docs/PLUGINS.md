@@ -84,7 +84,7 @@ export const plugin: Widget = {
 |---|---|---|---|---|---|
 | Tool-Graph (3D) | `tool-graph` | 3/6 | standard | — | Relationships session → tool → target (file, command, URL, pattern). Equal targets across sessions share a node. Active sessions glow. Click a node for details; fullscreen top-right. |
 | Top-Tools | `tool-frequency` | 2/6 | standard | yes | Most-used tools in the range. Violet = MCP, blue = built-in. ✗ = errors. |
-| Datei-Hotspots | `file-hotspots` | 3/6 | standard | — | Most-edited files (area & color = changed lines) in the range. |
+| Datei-Hotspots | `file-hotspots` | 3/6 | standard | yes | Most-edited files (area & color = changed lines) in the range. |
 | Fluss | `sankey-flow` | 3/6 | standard | — | Flow of project → tool → resource kind from tool calls. |
 | MCP-Server | `mcp-servers` | 3/6 | standard | — | Activity per MCP server: calls, error rate and average latency. |
 | Themen-Cloud | `tag-cloud` | 3/6 | standard | yes | Frequent terms from your prompts — computed locally, no LLM. Size = frequency. |
@@ -93,8 +93,8 @@ export const plugin: Widget = {
 
 | Widget | id | Width | Height | Settings | Description |
 |---|---|---|---|---|---|
-| Tool-Latenz | `latency` | 3/6 | standard | — | Distribution of tool durations (log buckets) with p50/p95/p99. |
-| Fehlerrate | `error-rate` | 3/6 | standard | — | Share of failed tool calls, the trend, and the most failure-prone tools. |
+| Tool-Latenz | `latency` | 3/6 | standard | yes | Distribution of tool durations (log buckets) with p50/p95/p99. |
+| Fehlerrate | `error-rate` | 3/6 | standard | yes | Share of failed tool calls, the trend, and the most failure-prone tools. |
 | Kompaktierungen | `compaction-timeline` | 3/6 | standard | — | When and how often the context was compacted (auto vs. manual). |
 | Zuverlässigkeit je Projekt | `reliability` | 3/6 | standard | — | Share of successful tool calls per project. Green ≥95%, amber ≥85%, else red. |
 | Was lief schief | `incidents` | 3/6 | standard | — | Latest failed tool calls. Click to reveal the input and error text. |
