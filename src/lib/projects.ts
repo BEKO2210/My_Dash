@@ -1,4 +1,6 @@
 import type Database from "better-sqlite3";
+import type { UsageSession } from "./ccusage";
+import { reconcileSessions } from "./reconcile";
 
 // Per-project rollup over sessions (cost, tokens, session count) plus tool calls.
 export interface ProjectUsage {
@@ -46,4 +48,34 @@ export function projectUsage(db: Database.Database, limit = 100): ProjectUsage[]
     tools: toolMap.get(r.project) ?? 0,
     totalTokens: r.tokenInput + r.tokenOutput + r.tokenCache,
   }));
+}
+
+// Per-project cost reconciled to ccusage (ccusage > otlp > transcript, per session),
+// so the leaderboard shows the authoritative figure instead of the raw transcript
+// estimate (which diverges several-fold). A session with no ccusage match keeps its
+// transcript estimate, so this degrades gracefully when ccusage is unavailable.
+// Returns project → reconciled costUsd.
+export function reconciledProjectCostUsd(
+  db: Database.Database,
+  ccusage: UsageSession[],
+): Map<string, number> {
+  const sessions = db
+    .prepare(
+      `SELECT id, COALESCE(NULLIF(project_name, ''), '(unknown)') AS project, cost_usd FROM sessions`,
+    )
+    .all() as { id: string; project: string; cost_usd: number }[];
+
+  const costById = new Map(
+    reconcileSessions(
+      sessions.map((s) => ({ id: s.id, cost_usd: s.cost_usd })),
+      ccusage,
+    ).map((r) => [r.sessionId, r.costUsd]),
+  );
+
+  const byProject = new Map<string, number>();
+  for (const s of sessions) {
+    const cost = costById.get(s.id) ?? s.cost_usd;
+    byProject.set(s.project, (byProject.get(s.project) ?? 0) + cost);
+  }
+  return byProject;
 }

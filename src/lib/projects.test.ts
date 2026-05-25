@@ -1,7 +1,8 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/lib/migrations";
-import { projectUsage } from "@/lib/projects";
+import { projectUsage, reconciledProjectCostUsd } from "@/lib/projects";
+import type { UsageSession } from "@/lib/ccusage";
 
 let open: Database.Database | null = null;
 afterEach(() => {
@@ -54,5 +55,36 @@ describe("projectUsage", () => {
 
   it("respects the limit", () => {
     expect(projectUsage(seed(), 1)).toHaveLength(1);
+  });
+});
+
+describe("reconciledProjectCostUsd", () => {
+  const ccusageSession = (sessionId: string, costUsd: number): UsageSession => ({
+    sessionId,
+    models: [],
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheTokens: 0,
+    totalTokens: 0,
+    costUsd,
+    costEur: 0,
+    lastActivity: null,
+  });
+
+  it("uses ccusage cost per session where matched, transcript estimate otherwise", () => {
+    const db = seed(); // A: a1=$3 a2=$2 (est $5); B: b1=$8 (est); (unknown): u1=$0
+    // ccusage knows a1 + b1 only (much lower, authoritative); a2/u1 fall back to estimate.
+    const ccusage = [ccusageSession("a1", 0.5), ccusageSession("b1", 1.2)];
+    const byProject = reconciledProjectCostUsd(db, ccusage);
+    expect(byProject.get("A")).toBeCloseTo(2.5); // ccusage a1 0.5 + transcript a2 2.0
+    expect(byProject.get("B")).toBeCloseTo(1.2); // ccusage b1 (replaces $8 estimate)
+    expect(byProject.get("(unknown)")).toBeCloseTo(0); // u1 estimate 0
+  });
+
+  it("equals the transcript estimate when ccusage has no matching sessions", () => {
+    const db = seed();
+    const byProject = reconciledProjectCostUsd(db, []);
+    expect(byProject.get("A")).toBeCloseTo(5); // unchanged: 3 + 2
+    expect(byProject.get("B")).toBeCloseTo(8);
   });
 });
