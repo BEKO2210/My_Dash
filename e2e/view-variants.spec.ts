@@ -114,3 +114,195 @@ test.describe("tool-frequency view variants (FA reference widget)", () => {
     }
   }
 });
+
+// ── F5 (project-leaderboard): table (default) ↔ bars ──────────────────────────
+const PROJECTS = { projects: [
+  { project: "alpha", sessions: 2, tools: 40, costUsd: 10, tokenInput: 0, tokenOutput: 0, tokenCache: 0, totalTokens: 500000 },
+  { project: "beta", sessions: 9, tools: 20, costUsd: 5, tokenInput: 0, tokenOutput: 0, tokenCache: 0, totalTokens: 300000 },
+  { project: "gamma", sessions: 5, tools: 60, costUsd: 8, tokenInput: 0, tokenOutput: 0, tokenCache: 0, totalTokens: 900000 },
+] };
+async function stubLeaderboard(page: Page, view?: "table" | "bars") {
+  await page.route("**/api/usage/projects*", (route) => route.fulfill({ json: PROJECTS }));
+  await stubPluginConfig(page, view ? { "project-leaderboard": { view } } : {});
+}
+
+test.describe("view variant — project-leaderboard (table↔bars)", () => {
+  const pl = (page: Page) => widget(page, "project-leaderboard");
+  test("default = table (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubLeaderboard(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = pl(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(w.locator("table")).toBeVisible({ timeout: 15_000 });
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubLeaderboard(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(pl(page));
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Bars" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["table", "bars"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubLeaderboard(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = pl(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "table") {
+          await expect(w.locator("table")).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/project-leaderboard-${view}-${mode}.png` });
+        await testInfo.attach(`project-leaderboard-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// ── F6 (tag-cloud): cloud (default) ↔ list ────────────────────────────────────
+const TAGS = { terms: [
+  { term: "dashboard", count: 20 }, { term: "widget", count: 16 }, { term: "refactor", count: 12 },
+  { term: "tooltip", count: 9 }, { term: "sankey", count: 7 }, { term: "audit", count: 6 },
+  { term: "theme", count: 5 }, { term: "hover", count: 3 }, { term: "empty", count: 2 },
+] };
+async function stubTagCloud(page: Page, view?: "cloud" | "list") {
+  await page.route("**/api/tags*", (route) => route.fulfill({ json: TAGS }));
+  await stubPluginConfig(page, view ? { "tag-cloud": { view } } : {});
+}
+
+test.describe("view variant — tag-cloud (cloud↔list)", () => {
+  const tg = (page: Page) => widget(page, "tag-cloud");
+  const cloud = (page: Page) => tg(page).locator('[class*="flex-wrap"]');
+  test("default = cloud (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubTagCloud(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = tg(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(cloud(page)).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("ul")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Cloud" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubTagCloud(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(tg(page));
+    await expect(sw.getByRole("button", { name: "Cloud" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "List" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["cloud", "list"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubTagCloud(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = tg(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "cloud") {
+          await expect(cloud(page)).toBeVisible();
+          await expect(w.locator("ul")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Cloud" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/tag-cloud-${view}-${mode}.png` });
+        await testInfo.attach(`tag-cloud-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// ── F7 (latency): histogram (default) ↔ table ─────────────────────────────────
+const LAT = { stats: { count: 100, p50: 40, p95: 200, p99: 500, max: 800, buckets: [
+  { label: "0–50ms", count: 60 }, { label: "50–100ms", count: 25 }, { label: "100–500ms", count: 12 }, { label: "500ms+", count: 3 },
+] }, tools: ["Read", "Bash", "Edit"] };
+async function stubLatency(page: Page, view?: "histogram" | "table") {
+  await page.route("**/api/tools/latency*", (route) => route.fulfill({ json: LAT }));
+  await stubPluginConfig(page, view ? { latency: { view } } : {});
+}
+
+test.describe("view variant — latency (histogram↔table)", () => {
+  const lt = (page: Page) => widget(page, "latency");
+  const hist = (page: Page) => lt(page).locator(".recharts-responsive-container");
+  test("default = histogram (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubLatency(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = lt(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(hist(page)).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Histogramm" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubLatency(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(lt(page));
+    await expect(sw.getByRole("button", { name: "Histogram" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["histogram", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubLatency(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = lt(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "histogram") {
+          await expect(hist(page)).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Histogramm" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table")).toBeVisible();
+          await expect(hist(page)).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/latency-${view}-${mode}.png` });
+        await testInfo.attach(`latency-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
