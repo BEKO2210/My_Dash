@@ -3,6 +3,21 @@
 All notable changes to Claude Mission Control are documented here. This project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added — Phase F (UI/UX)
+- **Per-widget view variants** — 16 widgets now offer a 2nd view (chart↔table,
+  board↔list, treemap↔list, compact, …), switchable in the widget settings drawer
+  or its header `<ViewSwitch>`, persisted per-widget. Default view is unchanged.
+- **Consistent currency formatting** — `formatCurrency` (locale + thousands via
+  `Intl.NumberFormat`) + `usdToEur`; a shared currency preference so money shows the
+  same way across all widgets.
+
+### Fixed
+- WidgetToolbar no longer intercepts a widget's own header controls (`pointer-events`).
+- Panel header wraps so header controls never overflow/clip on narrow widgets.
+- Tool-call cost no longer over-counted (transcript usage deduped by message id).
+
 ## [1.0.0-beta.2] — 2026-05-25
 
 > **Still a beta.** Roll-up of the 100-item beta→release hardening roadmap

@@ -71,6 +71,15 @@ Build double-click installers for your OS with `npm run dist` (or the targeted
 `dist:win` / `dist:mac` / `dist:linux`). See the README for the per-OS first-run
 notes on the unsigned beta installers.
 
+
+### View variants (per-widget)
+
+A widget can offer multiple **views** (e.g. chart ↔ table). Add a `view` setting via
+`viewSetting([...])` in its manifest, read it with `useView(id, VALUES, default)`, and
+render the chosen branch; optionally add a header `<ViewSwitch>`. **The default view must
+match the widget's current look** (zero regression). Add DE+EN labels for each view in
+`i18n.tsx`, then run `npm run docs:plugins`.
+
 ## Conventions
 
 - **TypeScript + React 19 + Next.js** with Tailwind CSS for styling.
