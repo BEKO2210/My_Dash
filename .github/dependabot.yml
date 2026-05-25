@@ -1,0 +1,24 @@
+# Keep dependencies and GitHub Actions patched automatically so the clean
+# `npm audit` baseline (0 vulnerabilities) doesn't quietly rot. Grouped minor/patch
+# PRs keep the noise down; majors come through individually for manual review.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
