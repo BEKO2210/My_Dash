@@ -27,38 +27,6 @@ import type { EventRow, SessionRow, StreamMessage, ToolCallRow } from "./types";
 export const DEMO =
   typeof process !== "undefined" && process.env.NEXT_PUBLIC_MC_DEMO === "1";
 
-const PROJECTS = ["mission-control", "shopify-bot", "api-gateway", "ml-pipeline", "docs-site"];
-const PROMPTS = [
-  "Fix the login redirect bug",
-  "Add a dark-mode toggle",
-  "Refactor the payment API",
-  "Write tests for the parser",
-  "Optimize the slow DB queries",
-  "Add i18n (DE/EN) to the UI",
-  "Build the 3D tool-call graph",
-  "Set up CI on GitHub Actions",
-  "Investigate the memory leak",
-  "Polish the dashboard UI/UX",
-  "Wire the webhook handler",
-  "Cache the product listing",
-];
-const FILES = [
-  "src/app/page.tsx",
-  "src/lib/ingest.ts",
-  "src/components/dashboard.tsx",
-  "src/plugins/tool-graph/widget.tsx",
-  "src/lib/db.ts",
-  "src/api/orders.ts",
-  "src/hooks/useCart.ts",
-  "lib/auth/session.ts",
-  "components/Chart.tsx",
-  "server/routes/webhook.ts",
-];
-const COMMANDS = ["npm run build", "npm test", "git status", "git commit -m wip", "grep -r TODO src", "node scripts/seed.mjs", "npx tsc --noEmit", "npm install", "git push"];
-const URLS = ["https://nextjs.org/docs", "https://react.dev/reference", "https://shopify.dev/api", "https://developer.mozilla.org", "https://docs.github.com/actions"];
-const PATTERNS = ["TODO", "useEffect", "createOrder", "function ", "export const"];
-const TOOLS = ["Read", "Edit", "Write", "Bash", "Grep", "WebFetch", "Task"];
-
 type Kind = "file" | "command" | "url" | "pattern";
 interface DTool {
   tool: string;
@@ -93,13 +61,11 @@ let started = false;
 // tab left open for hours can't leak memory) does the very oldest ended one drop.
 // The 3D graph renders only the most recent GRAPH_WINDOW sessions so it stays
 // legible/epic even as the history list grows long.
-const MAX_LIVE = 5;
-const MAX_ENDED = 300;
 const GRAPH_WINDOW = 14;
-// Z-Demo-3 — calmer cadence. A slower tick (was 1100ms) so the dashboard breathes
-// instead of flickering; values are carried forward in small increments rather
-// than re-rolled, so nothing jumps.
-export const TICK_MS = 2400;
+// Live cadence. The simulation runs at ~2× real time: the two active sessions
+// emit a tool call roughly every 1.2s, so the stream/economy feel lively without
+// the picture ever restructuring (the workflow is fixed).
+export const TICK_MS = 1200;
 
 // Live economy — strictly monotonic. Each completed tool call accrues a small,
 // always-positive amount of tokens/cost, so the demo's figures only ever climb in
@@ -139,8 +105,6 @@ const seedSnap = (n: number) => {
 let sidCounter = 0;
 const demoId = () => "demo-" + (sidCounter++).toString(36).padStart(6, "0");
 
-const pick = <T,>(a: T[]): T => a[Math.floor(liveRng() * a.length)];
-const chance = (p: number) => liveRng() < p;
 const dbNow = () => new Date().toISOString().slice(0, 19).replace("T", " ");
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
@@ -151,26 +115,6 @@ function programName(cmd: string): string {
   let p = tok[i] || cmd;
   if (p === "cd" && tok[i + 1]) p = tok[i + 1];
   return p.includes("/") ? p.split("/").pop() || p : p;
-}
-
-function describeTarget(tool: string): { target: DTool; summary: string } {
-  if (tool === "Bash") {
-    const full = pick(COMMANDS);
-    return { target: { tool, key: `cmd:${programName(full)}`, label: programName(full), kind: "command", full }, summary: clip(full, 60) };
-  }
-  if (tool === "WebFetch") {
-    const full = pick(URLS);
-    const host = new URL(full).host;
-    return { target: { tool, key: `u:${host}`, label: host, kind: "url", full }, summary: host };
-  }
-  if (tool === "Grep") {
-    const full = pick(PATTERNS);
-    return { target: { tool, key: `q:${full}`, label: full, kind: "pattern", full }, summary: full };
-  }
-  // Read/Edit/Write/Task → a file (Task handled separately for graph prompts)
-  const full = pick(FILES);
-  const label = full.split("/").slice(-2).join("/");
-  return { target: { tool, key: `f:${full}`, label, kind: "file", full }, summary: label };
 }
 
 function toRow(s: DSession): SessionRow {
@@ -215,43 +159,134 @@ function emit(s: DSession, eventType: string, toolName: string | null, summary: 
   for (const l of listeners) l({ event: ev, session });
 }
 
-function newSession() {
-  const project = pick(PROJECTS);
-  const title = pick(PROMPTS);
-  const now = dbNow();
-  const s: DSession = {
-    id: demoId(),
-    project,
-    title,
-    status: "active",
-    first_seen: now,
-    last_seen: now,
-    ended_at: null,
-    events: [],
-    tools: [],
-    prompts: [],
-  };
-  sessions.push(s);
-  // Z-Demo-2: ended sessions must never disappear (history persists). We cap only
-  // the *live* (active/waiting) set so the dashboard stays calm; ended sessions
-  // are kept indefinitely. To bound a long-open tab we keep at most the newest
-  // MAX_ENDED ended sessions, dropping only the very oldest ended ones.
-  const liveCount = sessions.filter((x) => x.status !== "ended").length;
-  if (liveCount > MAX_LIVE) {
-    const oldestLive = sessions.find((x) => x.status !== "ended");
-    if (oldestLive) {
-      oldestLive.status = "ended";
-      oldestLive.ended_at = dbNow();
+// ── Curated workflow scenario ────────────────────────────────────────────────
+// One coherent story instead of random churn: exactly 2 active, 1 waiting and 3
+// ended sessions of a real "ship the release" workflow. Every session has a
+// matching prompt + tool sequence, so the kanban, sessions, stream, prompts,
+// subagents and 3D graph all tell the same story.
+interface SpecTool { tool: string; kind: Kind | "task"; full: string }
+interface SessionSpec {
+  project: string;
+  title: string;
+  status: "active" | "waiting" | "ended";
+  agoMin: number; // minutes ago the session started
+  durMin: number; // duration (ignored for active → runs until now)
+  tools: SpecTool[];
+}
+
+const SCENARIO: SessionSpec[] = [
+  // 3 ended (earlier today)
+  {
+    project: "api-gateway", title: "Set up CI on GitHub Actions", status: "ended", agoMin: 320, durMin: 42,
+    tools: [
+      { tool: "Read", kind: "file", full: ".github/workflows/ci.yml" },
+      { tool: "Edit", kind: "file", full: ".github/workflows/ci.yml" },
+      { tool: "Bash", kind: "command", full: "npm run lint" },
+      { tool: "Bash", kind: "command", full: "npm test" },
+      { tool: "WebFetch", kind: "url", full: "https://docs.github.com/actions" },
+    ],
+  },
+  {
+    project: "ml-pipeline", title: "Write tests for the parser", status: "ended", agoMin: 232, durMin: 36,
+    tools: [
+      { tool: "Read", kind: "file", full: "src/parser/tokenize.ts" },
+      { tool: "Grep", kind: "pattern", full: "describe(" },
+      { tool: "Edit", kind: "file", full: "src/parser/tokenize.test.ts" },
+      { tool: "Bash", kind: "command", full: "npm test" },
+    ],
+  },
+  {
+    project: "shopify-bot", title: "Fix the login redirect bug", status: "ended", agoMin: 148, durMin: 27,
+    tools: [
+      { tool: "Grep", kind: "pattern", full: "redirect" },
+      { tool: "Read", kind: "file", full: "lib/auth/session.ts" },
+      { tool: "Edit", kind: "file", full: "lib/auth/session.ts" },
+      { tool: "Task", kind: "task", full: "Subagent: review the auth flow" },
+      { tool: "Bash", kind: "command", full: "npm test" },
+    ],
+  },
+  // 1 waiting
+  {
+    project: "docs-site", title: "Add a dark-mode toggle", status: "waiting", agoMin: 46, durMin: 31,
+    tools: [
+      { tool: "Read", kind: "file", full: "src/lib/theme.ts" },
+      { tool: "Edit", kind: "file", full: "src/app/globals.css" },
+      { tool: "Edit", kind: "file", full: "components/ThemeToggle.tsx" },
+      { tool: "Bash", kind: "command", full: "npm run build" },
+    ],
+  },
+  // 2 active (now)
+  {
+    project: "mission-control", title: "Build the 3D tool-call graph", status: "active", agoMin: 19, durMin: 0,
+    tools: [
+      { tool: "Read", kind: "file", full: "src/plugins/tool-graph/widget.tsx" },
+      { tool: "WebFetch", kind: "url", full: "https://react.dev/reference" },
+      { tool: "Grep", kind: "pattern", full: "ForceGraph" },
+      { tool: "Edit", kind: "file", full: "src/plugins/tool-graph/widget.tsx" },
+      { tool: "Edit", kind: "file", full: "src/plugins/tool-graph/force-graph.tsx" },
+    ],
+  },
+  {
+    project: "shopify-bot", title: "Refactor the payment API", status: "active", agoMin: 8, durMin: 0,
+    tools: [
+      { tool: "Read", kind: "file", full: "src/api/orders.ts" },
+      { tool: "Grep", kind: "pattern", full: "createOrder" },
+      { tool: "Edit", kind: "file", full: "src/api/orders.ts" },
+      { tool: "Task", kind: "task", full: "Subagent: audit payment edge cases" },
+      { tool: "Bash", kind: "command", full: "npx tsc --noEmit" },
+    ],
+  },
+];
+
+function mkTool(t: SpecTool, sid: string, i: number): DTool {
+  if (t.tool === "Task") return { tool: "Task", key: `pa:${sid}:${i}`, label: clip(t.full, 32), kind: "file", full: t.full };
+  if (t.kind === "command") { const p = programName(t.full); return { tool: t.tool, key: `cmd:${p}`, label: p, kind: "command", full: t.full }; }
+  if (t.kind === "url") { const host = new URL(t.full).host; return { tool: t.tool, key: `u:${host}`, label: host, kind: "url", full: t.full }; }
+  if (t.kind === "pattern") return { tool: t.tool, key: `q:${t.full}`, label: t.full, kind: "pattern", full: t.full };
+  return { tool: t.tool, key: `f:${t.full}`, label: t.full.split("/").slice(-2).join("/"), kind: "file", full: t.full };
+}
+
+// Build the fixed scenario once. Events carry real, staggered timestamps so the
+// timeline/stream read like a genuine workday.
+function buildScenario() {
+  const now = Date.now();
+  const fmt = (ms: number) => new Date(ms).toISOString().slice(0, 19).replace("T", " ");
+  for (const spec of SCENARIO) {
+    const s: DSession = {
+      id: demoId(), project: spec.project, title: spec.title, status: spec.status,
+      first_seen: "", last_seen: "", ended_at: null, events: [], tools: [], prompts: [],
+    };
+    const startMs = now - spec.agoMin * 60_000;
+    const endMs = spec.status === "active" ? now : startMs + spec.durMin * 60_000;
+    const dt = Math.max(1, (endMs - startMs) / (spec.tools.length + 2));
+    let t = startMs;
+    const push = (type: string, tool: string | null, summary: string, ms: number) => {
+      const ev: EventRow = { id: eid++, session_id: s.id, event_type: type, tool_name: tool, model: null, summary, payload_json: "{}", created_at: fmt(ms) };
+      s.events.push(ev);
+      allEvents.push(ev);
+    };
+    s.first_seen = fmt(startMs);
+    push("SessionStart", null, "Session started (demo)", startMs);
+    s.prompts.push({ text: spec.title, created_at: fmt(startMs) });
+    push("UserPromptSubmit", null, "Prompt: " + clip(spec.title, 70), startMs + 1500);
+    spec.tools.forEach((spt, i) => {
+      t += dt;
+      const tool = mkTool(spt, s.id, i);
+      s.tools.push(tool);
+      const summary = spt.tool === "Task" ? "Task: " + clip(spt.full, 60) : `${spt.tool}: ${tool.label}`;
+      push("PreToolUse", spt.tool, summary, t);
+      push("PostToolUse", spt.tool, `${spt.tool} ✓ ${tool.label}`, t + 400);
+    });
+    if (spec.status !== "active") push("Stop", null, "Response complete — waiting for input", endMs - 2000);
+    if (spec.status === "ended") {
+      push("SessionEnd", null, "Session ended (clear)", endMs);
+      s.ended_at = fmt(endMs);
     }
+    s.last_seen = fmt(endMs);
+    sessions.push(s);
   }
-  const ended = sessions.filter((x) => x.status === "ended");
-  if (ended.length > MAX_ENDED) {
-    const drop = new Set(ended.slice(0, ended.length - MAX_ENDED));
-    for (let i = sessions.length - 1; i >= 0; i--) if (drop.has(sessions[i])) sessions.splice(i, 1);
-  }
-  emit(s, "SessionStart", null, "Session started (demo)");
-  s.prompts.push({ text: title, created_at: now });
-  emit(s, "UserPromptSubmit", null, "Prompt: " + clip(title, 70));
+  allEvents.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  if (allEvents.length > 800) allEvents.splice(0, allEvents.length - 800);
 }
 
 // Accrue a small, always-positive amount of tokens/cost for one tool call, so the
@@ -267,44 +302,18 @@ function accrue() {
 }
 
 function step() {
-  const live = sessions.filter((s) => s.status !== "ended");
-  // Spawn new sessions sparingly so the picture evolves gently (was 0.14).
-  if (live.length < 3 || chance(0.07)) {
-    newSession();
-    return;
-  }
-  const s = pick(live);
-  const r = liveRng();
-  // Bias toward smooth tool-call progression over lifecycle flips: most ticks
-  // just advance existing work (was 0.68 / 0.80 / 0.87).
-  if (r < 0.75) {
-    accrue();
-    const tool = pick(TOOLS);
-    if (tool === "Task") {
-      const text = "Subagent: " + pick(PROMPTS);
-      emit(s, "PreToolUse", "Task", "Task: " + clip(text, 60));
-      emit(s, "PostToolUse", "Task", "Task ✓ " + clip(text, 60));
-      s.tools.push({ tool: "Task", key: `pa:${s.id}:${eid}`, label: clip(text, 32), kind: "file", full: text });
-    } else {
-      const { target, summary } = describeTarget(tool);
-      emit(s, "PreToolUse", tool, `${tool}: ${summary}`);
-      emit(s, "PostToolUse", tool, `${tool} ✓ ${summary}`);
-      s.tools.push(target);
-    }
-    s.status = "active";
-  } else if (r < 0.85) {
-    emit(s, "Stop", null, "Response complete — waiting for input");
-    s.status = "waiting";
-  } else if (r < 0.9) {
-    emit(s, "SessionEnd", null, "Session ended (clear)");
-    s.status = "ended";
-    s.ended_at = dbNow();
-  } else {
-    const text = pick(PROMPTS);
-    s.prompts.push({ text, created_at: dbNow() });
-    emit(s, "UserPromptSubmit", null, "Prompt: " + clip(text, 70));
-    s.status = "active";
-  }
+  // Only the active sessions keep working, re-using their own tool targets — the
+  // live stream + economy advance (2× speed) while the workflow graph stays
+  // structurally stable (no new nodes → no jumping). The 2/1/3 counts never change.
+  const active = sessions.filter((s) => s.status === "active");
+  if (active.length === 0) return;
+  const s = active[Math.floor(liveRng() * active.length)];
+  if (s.tools.length === 0) return;
+  accrue();
+  const dt = s.tools[Math.floor(liveRng() * s.tools.length)];
+  const summary = dt.tool === "Task" ? "Task: " + clip(dt.full, 60) : `${dt.tool}: ${dt.label}`;
+  emit(s, "PreToolUse", dt.tool, summary);
+  emit(s, "PostToolUse", dt.tool, `${dt.tool} ✓ ${dt.label}`);
 }
 
 // A spread of past (ended) sessions so time-based widgets — above all the session
@@ -312,75 +321,16 @@ function step() {
 // Deterministic (own seeded stream) and added BEFORE the live sessions, banded so
 // the 24h / 7d / 30d ranges are all populated. Synthetic events are NOT pushed to
 // the live stream (allEvents), so the event feed and graph stay "now".
-function seedHistory() {
-  const rng = mulberry32((SEED ^ 0x415c) >>> 0);
-  const nowMs = Date.now();
-  const HOUR = 3_600_000;
-  const fmt = (ms: number) => new Date(ms).toISOString().slice(0, 19).replace("T", " ");
-  const bands = [
-    { count: 8, minH: 0.5, maxH: 24 }, // last 24h
-    { count: 10, minH: 24, maxH: 24 * 7 }, // 1–7 days
-    { count: 8, minH: 24 * 7, maxH: 24 * 30 }, // 7–30 days
-  ];
-  const past: DSession[] = [];
-  for (const band of bands) {
-    for (let i = 0; i < band.count; i++) {
-      const ageH = band.minH + rng() * (band.maxH - band.minH);
-      const startMs = nowMs - ageH * HOUR;
-      const durMs = Math.min((4 + rng() * 150) * 60_000, ageH * HOUR * 0.9); // never end in the future
-      const endMs = startMs + durMs;
-      const project = PROJECTS[Math.floor(rng() * PROJECTS.length)];
-      const title = PROMPTS[Math.floor(rng() * PROMPTS.length)];
-      const evN = 6 + Math.floor(rng() * 40);
-      const events: EventRow[] = Array.from({ length: evN }, (_, k) => ({
-        id: eid++,
-        session_id: "",
-        event_type: "PostToolUse",
-        tool_name: null,
-        model: null,
-        summary: null,
-        payload_json: "{}",
-        created_at: fmt(startMs + (durMs * k) / evN),
-      }));
-      const toolN = 3 + Math.floor(rng() * 14);
-      const tools: DTool[] = Array.from({ length: toolN }, () => {
-        const tn = TOOLS[Math.floor(rng() * (TOOLS.length - 1))]; // skip "Task"
-        const full = FILES[Math.floor(rng() * FILES.length)];
-        const label = full.split("/").slice(-2).join("/");
-        return { tool: tn, key: `f:${full}`, label, kind: "file", full };
-      });
-      const s: DSession = {
-        id: demoId(),
-        project,
-        title,
-        status: "ended",
-        first_seen: fmt(startMs),
-        last_seen: fmt(endMs),
-        ended_at: fmt(endMs),
-        events,
-        tools,
-        prompts: [{ text: title, created_at: fmt(startMs) }],
-      };
-      for (const e of events) e.session_id = s.id;
-      past.push(s);
-    }
-  }
-  past.sort((a, b) => a.first_seen.localeCompare(b.first_seen));
-  sessions.push(...past);
-}
-
 export function startDemo() {
   if (started) return;
   started = true;
-  // Deterministic start: same seed → same live evolution every reload.
+  // Deterministic start: same seed → same evolution every reload.
   liveRng = mulberry32(SEED);
   econRng = mulberry32((SEED ^ 0xec04) >>> 0);
   liveInput = liveOutput = liveCache = 0;
   liveCostUsd = 0;
   sidCounter = 0;
-  seedHistory(); // backdated ended sessions first, so the timeline has real spread
-  for (let i = 0; i < 4; i++) newSession();
-  for (let i = 0; i < 30; i++) step(); // pre-warm so the graph isn't empty
+  buildScenario(); // fixed 2 active · 1 waiting · 3 ended workflow
   setInterval(step, TICK_MS);
 }
 
