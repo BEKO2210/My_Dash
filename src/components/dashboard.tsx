@@ -53,7 +53,7 @@ import {
   SPAN_PRESETS,
   type SizeMap,
 } from "@/lib/layout";
-import { widgets, type WidgetCategory } from "@/plugins/registry";
+import { widgets, widgetTitle, type WidgetCategory } from "@/plugins/registry";
 
 // In the static demo build, start the in-browser engine + patch fetch before any
 // widget mounts. No-op in the real (server-backed) app.
@@ -289,7 +289,7 @@ export function Dashboard() {
                   onSettings={() => setSettingsFor(w.id)}
                 />
                 <WidgetErrorBoundary
-                  label={w.title}
+                  label={widgetTitle(w, t)}
                   couldNotLoad={t("error.couldNotLoad")}
                   genericText={t("error.generic")}
                   retryLabel={t("common.retry")}
@@ -914,7 +914,7 @@ function WidgetGallery({
                           <span className="min-w-0 flex-1">
                             <span className={`flex items-center gap-1.5 text-sm ${isHidden ? "text-muted line-through" : "text-foreground"}`}>
                               <Icon className="h-3.5 w-3.5 shrink-0 text-muted" />
-                              <span className="truncate">{w.title}</span>
+                              <span className="truncate">{widgetTitle(w, t)}</span>
                             </span>
                             <span className="mt-0.5 line-clamp-2 block text-[11px] text-muted">{t(w.description)}</span>
                           </span>

@@ -1097,8 +1097,16 @@ const EN: Record<string, string> = {
 
 const T: Record<Lang, Record<string, string>> = { de: DE, en: EN };
 
+/**
+ * Pure, non-hook translation lookup — for tests, SSR and non-React callers.
+ * Falls back to the German string, then the raw key, mirroring `useT().t`.
+ */
+export function translate(lang: Lang, key: string): string {
+  return T[lang][key] ?? DE[key] ?? key;
+}
+
 export function useT() {
   const lang = useSyncExternalStore(subscribe, readLang, () => "de" as Lang);
-  const t = (key: string) => T[lang][key] ?? DE[key] ?? key;
+  const t = (key: string) => translate(lang, key);
   return { lang, t, setLang: writeLang };
 }
