@@ -52,7 +52,7 @@ export const plugin: Widget = {
 |---|---|---|---|---|---|
 | Sessions | `kanban` | 4/6 | standard | yes | All Claude Code sessions by status: Active (working now), Waiting (for your input), Ended. Inactive sessions are auto-ended after 30 min. Filter by project on the right. |
 | Live Stream | `live-stream` | 2/6 | standard | yes | Live stream of all hook events in real time (newest on top): session start/end, prompts, tool calls and stops. Fed via SSE from the Claude Code hooks. |
-| Session-Timeline | `session-timeline` | 3/6 | standard | — | Sessions as time bars (start to end), colored by status. |
+| Session-Timeline | `session-timeline` | 3/6 | standard | yes | Sessions as time bars (start to end), colored by status. |
 | Jetzt live | `live-now` | 3/6 | standard | — | The active session in real time: elapsed time, key metrics and the latest actions. |
 | Prompt-Verlauf | `prompt-history` | 3/6 | standard | — | Chronological, searchable list of your prompts (secrets are stripped before storage). |
 | Subagent-Baum | `subagent-tree` | 3/6 | standard | — | Which sessions spawned subagents via Task — expand to see the individual subagents. |
