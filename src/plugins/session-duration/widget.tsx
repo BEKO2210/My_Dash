@@ -18,11 +18,14 @@ const tooltipStyle = {
 
 export function SessionDuration() {
   const { t } = useT();
-  const { data: stats } = usePluginQuery<DurationStats>("/api/session-duration", { pollMs: 30_000 });
+  const q = usePluginQuery<DurationStats>("/api/session-duration", { pollMs: 30_000 });
+  const stats = q.data;
 
   return (
     <Panel title={t("sessionDur.title")} icon={<Hourglass className="h-4 w-4 text-accent" />} info={t("sessionDur.info")}>
-      {!stats ? (
+      {q.error && !stats ? (
+        <WidgetState icon={Hourglass} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !stats ? (
         <WidgetState icon={Hourglass} title={t("common.loading")} loading />
       ) : stats.count === 0 ? (
         <WidgetState icon={Hourglass} title={t("sessionDur.empty")} />

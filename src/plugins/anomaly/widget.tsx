@@ -47,11 +47,14 @@ function Row({
 
 export function Anomaly() {
   const { t } = useT();
-  const { data } = usePluginQuery<AnomalyReport>("/api/anomaly", { pollMs: 30_000 });
+  const q = usePluginQuery<AnomalyReport>("/api/anomaly", { pollMs: 30_000 });
+  const data = q.data;
 
   return (
     <Panel title={t("anomaly.title")} icon={<Activity className="h-4 w-4 text-accent" />} info={t("anomaly.info")}>
-      {!data ? (
+      {q.error && !data ? (
+        <WidgetState icon={Activity} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !data ? (
         <WidgetState icon={Activity} title={t("common.loading")} loading />
       ) : data.recentSamples === 0 && data.baselineSamples === 0 ? (
         <WidgetState icon={Activity} title={t("anomaly.empty")} />

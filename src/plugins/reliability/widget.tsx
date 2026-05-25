@@ -18,14 +18,16 @@ function rateColor(rate: number): { bar: string; text: string } {
 export function Reliability() {
   const { query } = useSearch();
   const { t } = useT();
-  const { data } = usePluginQuery<{ projects: ProjectReliability[] }>("/api/reliability?limit=100");
-  const projects = data?.projects ?? null;
+  const q = usePluginQuery<{ projects: ProjectReliability[] }>("/api/reliability?limit=100");
+  const projects = q.data?.projects ?? null;
 
   const filtered = (projects ?? []).filter((p) => matchesQuery(query, p.project));
 
   return (
     <Panel title={t("reliability.title")} icon={<ShieldCheck className="h-4 w-4 text-accent" />} info={t("reliability.info")}>
-      {!projects ? (
+      {q.error && !projects ? (
+        <WidgetState icon={ShieldCheck} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !projects ? (
         <WidgetState icon={ShieldCheck} title={t("common.loading")} loading />
       ) : projects.length === 0 ? (
         <WidgetState icon={ShieldCheck} title={t("reliability.empty")} />

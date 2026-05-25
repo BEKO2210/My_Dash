@@ -16,13 +16,16 @@ interface StreakData {
 
 export function Streak() {
   const { t } = useT();
-  const { data } = usePluginQuery<StreakData>("/api/streak?days=30");
+  const q = usePluginQuery<StreakData>("/api/streak?days=30");
+  const data = q.data;
 
   const empty = data && data.streak.totalSessions === 0;
 
   return (
     <Panel title={t("streak.title")} icon={<Flame className="h-4 w-4 text-accent" />} info={t("streak.info")}>
-      {!data ? (
+      {q.error && !data ? (
+        <WidgetState icon={Flame} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !data ? (
         <WidgetState icon={Flame} title={t("common.loading")} loading />
       ) : empty ? (
         <WidgetState icon={Flame} title={t("streak.empty")} />

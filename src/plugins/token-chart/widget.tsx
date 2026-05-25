@@ -105,6 +105,7 @@ export function TokenChart() {
               <button
                 key={r}
                 onClick={() => setRange(r)}
+                aria-pressed={range === r}
                 className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
               >
                 {t(RANGE_LABELS[r])}
@@ -117,6 +118,7 @@ export function TokenChart() {
                 <button
                   key={m}
                   onClick={() => setMode(m)}
+                  aria-pressed={mode === m}
                   className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
                 >
                   {m === "tokens" ? t("tokens.modeTokens") : t("tokens.modeCost")}

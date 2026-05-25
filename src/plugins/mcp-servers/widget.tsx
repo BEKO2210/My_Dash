@@ -19,15 +19,17 @@ function errorColor(rate: number): string {
 export function McpServers() {
   const { query } = useSearch();
   const { t, lang } = useT();
-  const { data } = usePluginQuery<{ servers: McpServerUsage[] }>("/api/mcp?limit=50");
-  const servers = data?.servers ?? null;
+  const q = usePluginQuery<{ servers: McpServerUsage[] }>("/api/mcp?limit=50");
+  const servers = q.data?.servers ?? null;
 
   const filtered = (servers ?? []).filter((s) => matchesQuery(query, s.server));
   const max = filtered.reduce((m, s) => Math.max(m, s.calls), 0) || 1;
 
   return (
     <Panel title={t("mcp.title")} icon={<Plug className="h-4 w-4 text-accent" />} info={t("mcp.info")}>
-      {!servers ? (
+      {q.error && !servers ? (
+        <WidgetState icon={Plug} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !servers ? (
         <WidgetState icon={Plug} title={t("common.loading")} loading />
       ) : servers.length === 0 ? (
         <WidgetState icon={Plug} title={t("mcp.empty")} description={t("mcp.emptyHint")} />

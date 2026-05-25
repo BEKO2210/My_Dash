@@ -21,8 +21,8 @@ export const TOKEN_BURN_VIEWS: ViewOption[] = [
 export function TokenBurn() {
   const { t } = useT();
   const view = useView(WIDGET_ID, VIEW_VALUES, "bars");
-  const { data } = usePluginQuery<{ tools: ToolTokenBurn[] }>("/api/token-burn?limit=8");
-  const tools = data?.tools ?? null;
+  const q = usePluginQuery<{ tools: ToolTokenBurn[] }>("/api/token-burn?limit=8");
+  const tools = q.data?.tools ?? null;
 
   const empty = tools && (tools.length === 0 || tools.every((t) => t.tokens === 0));
   const max = (tools ?? []).reduce((m, t) => Math.max(m, t.tokens), 0) || 1;
@@ -34,7 +34,9 @@ export function TokenBurn() {
       info={t("burn.info")}
       right={<ViewSwitch widgetId={WIDGET_ID} options={TOKEN_BURN_VIEWS} value={view} t={t} />}
     >
-      {!tools ? (
+      {q.error && !tools ? (
+        <WidgetState icon={Flame} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !tools ? (
         <WidgetState icon={Flame} title={t("common.loading")} loading />
       ) : empty ? (
         <WidgetState icon={Flame} title={t("burn.empty")} />
