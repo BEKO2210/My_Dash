@@ -12,11 +12,9 @@
 </p>
 
 <p align="center">
-  <video src="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4"
-         poster="https://github.com/BEKO2210/My_Dash/raw/main/public/demo-poster.jpg"
-         autoplay loop muted playsinline width="800">
-    <a href="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4">▶ Watch the demo</a>
-  </video>
+  <img src="public/demo.gif" alt="Claude Mission Control — live demo" width="760">
+  <br>
+  <sub><a href="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4">▶ Watch the full-resolution video</a></sub>
 </p>
 
 <p align="center">
