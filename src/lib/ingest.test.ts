@@ -405,8 +405,10 @@ describe("ingest — tool I/O redaction", () => {
     expect(io.input_json).toContain("[REDACTED]");
     expect(io.input_json).not.toContain(token);
     expect(call.target).not.toContain(token); // target is derived from the command
+    // payload_json no longer carries tool_input at all (#88 — it lives in tool_io),
+    // so the secret can't leak there.
     expect(event.payload_json).not.toContain(token);
-    expect(event.payload_json).toContain("[REDACTED]");
+    expect(JSON.parse(event.payload_json).tool_input).toBeUndefined();
   });
 
   it("redacts a secret in tool_response across tool_io and payload_json", () => {
@@ -420,6 +422,24 @@ describe("ingest — tool I/O redaction", () => {
     expect(io.output_json).toContain("[REDACTED]");
     expect(io.output_json).not.toContain(token);
     expect(event.payload_json).not.toContain(token);
+    expect(JSON.parse(event.payload_json).tool_response).toBeUndefined(); // #88
+  });
+
+  it("does not duplicate tool_input/tool_response in events.payload_json (#88)", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: { content: "hello" },
+    });
+    const payload = JSON.parse(event.payload_json);
+    expect(payload.tool_input).toBeUndefined();
+    expect(payload.tool_response).toBeUndefined();
+    expect(payload.tool_name).toBe("Read"); // other fields still present
+    // …but tool_io retains the full I/O.
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(JSON.parse(io.input_json!)).toEqual({ file_path: "/a.ts" });
+    expect(JSON.parse(io.output_json!)).toEqual({ content: "hello" });
   });
 
   it("redacts a secret in a tool error message", () => {

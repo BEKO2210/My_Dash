@@ -21,6 +21,10 @@ function createDb(): Database.Database {
   mkdirSync(dataDir, { recursive: true });
   const db = new Database(path.join(dataDir, "mission-control.db"));
   db.pragma("journal_mode = WAL");
+  // NORMAL is the recommended durability level under WAL — it drops an fsync per
+  // commit on the hot ingest path while staying crash-safe (only a power loss can
+  // lose the last committed transaction, which for an observability log is fine).
+  db.pragma("synchronous = NORMAL");
   db.pragma("busy_timeout = 5000");
   migrate(db);
   return db;

@@ -297,6 +297,9 @@ function maybePrune(): void {
   sinceLastPrune = 0;
   try {
     pruneAll(db);
+    // Fold the WAL back into the main db file so -wal doesn't grow without bound on
+    // a long-running server. TRUNCATE resets it after checkpointing.
+    db.pragma("wal_checkpoint(TRUNCATE)");
   } catch (err) {
     log.error("retention prune failed", err);
   }
@@ -332,11 +335,12 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   const redactedToolResponse =
     payload.tool_response !== undefined ? redactValue(payload.tool_response) : undefined;
 
-  // payload_json carries the redacted prompt and now redacted tool I/O. Built from
-  // a plain object so the typed HookPayload fields don't fight the redacted values.
+  // payload_json carries the redacted prompt. tool_input/tool_response are NOT
+  // duplicated here — they're stored (full + redacted) in tool_io and surfaced via
+  // the tool inspector — so the highest-volume rows don't pay for them twice.
   const storedForJson: Record<string, unknown> = { ...stored };
-  if (redactedToolInput !== undefined) storedForJson.tool_input = redactedToolInput;
-  if (redactedToolResponse !== undefined) storedForJson.tool_response = redactedToolResponse;
+  delete storedForJson.tool_input;
+  delete storedForJson.tool_response;
   const payloadJson = JSON.stringify(storedForJson);
 
   // The summary is derived from tool_input (e.g. a Bash command) → redact it so no
