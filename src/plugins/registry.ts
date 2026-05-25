@@ -49,7 +49,7 @@ import { ProjectLeaderboard, PROJECT_LEADERBOARD_VIEWS } from "./project-leaderb
 import { LiveNow } from "./live-now/widget";
 import { PromptHistory, PROMPT_HISTORY_VIEWS } from "./prompt-history/widget";
 import { Streak } from "./streak/widget";
-import { SubagentTree } from "./subagent-tree/widget";
+import { SubagentTree, SUBAGENT_TREE_VIEWS } from "./subagent-tree/widget";
 import { McpServers } from "./mcp-servers/widget";
 import { CompactionTimeline } from "./compaction-timeline/widget";
 import { TagCloud, TAG_CLOUD_VIEWS } from "./tag-cloud/widget";
@@ -131,7 +131,7 @@ export const widgets: Widget[] = [
   { id: "live-now", title: "Jetzt live", titleKey: "now.title", span: "lg:col-span-3", height: H, icon: Radio, category: "sessions", description: "now.info", component: LiveNow },
   { id: "prompt-history", title: "Prompt-Verlauf", titleKey: "prompts.title", span: "lg:col-span-3", height: H, icon: MessageSquare, category: "sessions", description: "prompts.info", settings: [viewSetting(PROMPT_HISTORY_VIEWS)], component: PromptHistory },
   { id: "streak", title: "Streak & Produktivität", titleKey: "streak.title", span: "lg:col-span-3", height: H, icon: Flame, category: "activity", description: "streak.info", component: Streak },
-  { id: "subagent-tree", title: "Subagent-Baum", titleKey: "subagents.title", span: "lg:col-span-3", height: H, icon: GitBranch, category: "sessions", description: "subagents.info", component: SubagentTree },
+  { id: "subagent-tree", title: "Subagent-Baum", titleKey: "subagents.title", span: "lg:col-span-3", height: H, icon: GitBranch, category: "sessions", description: "subagents.info", settings: [viewSetting(SUBAGENT_TREE_VIEWS)], component: SubagentTree },
   { id: "mcp-servers", title: "MCP-Server", titleKey: "mcp.title", span: "lg:col-span-3", height: H, icon: Plug, category: "tools", description: "mcp.info", component: McpServers },
   { id: "compaction-timeline", title: "Kompaktierungen", titleKey: "compaction.title", span: "lg:col-span-3", height: H, icon: Layers, category: "quality", description: "compaction.info", component: CompactionTimeline },
   { id: "tag-cloud", title: "Themen-Cloud", titleKey: "tags.title", span: "lg:col-span-3", height: H, icon: Hash, category: "tools", description: "tags.info", settings: [viewSetting(TAG_CLOUD_VIEWS)], component: TagCloud },
