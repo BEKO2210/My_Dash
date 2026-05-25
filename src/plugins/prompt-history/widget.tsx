@@ -6,14 +6,25 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
 import { viewState } from "@/components/widget-view";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { formatCompact, relativeTime } from "@/lib/format";
 import type { PromptHistoryItem } from "@/lib/prompts";
 
+// Phase F (F15): timeline (default, today's rail+dots) ↔ compact (dense rows).
+const WIDGET_ID = "prompt-history";
+const VIEW_VALUES = ["timeline", "compact"] as const;
+export const PROMPT_HISTORY_VIEWS: ViewOption[] = [
+  { value: "timeline", label: "view.timeline" },
+  { value: "compact", label: "view.compact" },
+];
+
 export function PromptHistory() {
   const { query } = useSearch();
   const { t, lang } = useT();
+  const view = useView(WIDGET_ID, VIEW_VALUES, "timeline");
   const q = usePluginQuery<{ prompts: PromptHistoryItem[] }>("/api/prompts?limit=100");
 
   const prompts = q.data?.prompts ?? [];
@@ -25,6 +36,7 @@ export function PromptHistory() {
       title={t("prompts.title")}
       icon={<MessageSquare className="h-4 w-4 text-accent" />}
       info={t("prompts.info")}
+      right={<ViewSwitch widgetId={WIDGET_ID} options={PROMPT_HISTORY_VIEWS} value={view} t={t} />}
     >
       {vs === "error" ? (
         <WidgetState icon={MessageSquare} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
@@ -34,6 +46,20 @@ export function PromptHistory() {
         <WidgetState icon={MessageSquare} title={t("prompts.empty")} />
       ) : filtered.length === 0 ? (
         <WidgetState icon={MessageSquare} title={t("common.noResults")} />
+      ) : view === "compact" ? (
+        <ul tabIndex={0} className="flex h-full flex-col divide-y divide-panel-border/50 overflow-auto outline-none">
+          {filtered.map((p) => (
+            <li key={p.id} className="mc-stream-in">
+              <Link
+                href={`/session?id=${encodeURIComponent(p.session_id)}`}
+                className="flex items-baseline gap-2 px-3 py-1.5 transition-colors hover:bg-white/[0.03]"
+              >
+                <span className="min-w-0 flex-1 truncate text-xs text-foreground">{p.text}</span>
+                <span className="shrink-0 whitespace-nowrap text-[10px] text-muted">{relativeTime(p.created_at, lang)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : (
         <ol className="relative ml-4 border-l border-panel-border/70 py-2 pr-4">
           {filtered.map((p) => (
