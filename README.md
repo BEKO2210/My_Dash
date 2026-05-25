@@ -96,7 +96,7 @@ UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
 
 - **Live stream** — every tool call, prompt and lifecycle event in real time (SSE), virtualized for long histories.
 - **Session Kanban** — sessions flow through `Aktiv → Wartet → Beendet`, filterable by project, with full session detail + transcript pages.
-- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and 30+ widgets (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…).
+- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and **30 built-in widgets** (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…) — extensible via the plugin registry.
 - **3D tool-call graph** — Session → Tool → File, revealing structure across sessions.
 - **Alerts & notifications** — rule-based alerts at ingest, in-app inbox + toasts, desktop notifications, optional Slack/Discord webhook, quiet hours and a daily/weekly digest.
 - **Themes & i18n** — light/dark plus accent colours; full German/English UI.

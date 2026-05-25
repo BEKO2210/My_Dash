@@ -51,6 +51,26 @@ The dashboard is a plugin grid. To add a panel:
 
 The grid renders it automatically.
 
+After changing the registry, regenerate the widget catalogue so
+`docs/PLUGINS.md` stays in sync (CI verifies it is up to date):
+
+```bash
+npm run docs:plugins     # regenerates docs/PLUGINS.md from src/plugins/registry.ts
+```
+
+## Desktop app (Electron) development
+
+Besides the web dev server, the dashboard ships as a desktop app (tray icon +
+background ingest server). To build and run the Electron shell locally:
+
+```bash
+npm run electron:dev     # packs the standalone build and launches Electron
+```
+
+Build double-click installers for your OS with `npm run dist` (or the targeted
+`dist:win` / `dist:mac` / `dist:linux`). See the README for the per-OS first-run
+notes on the unsigned beta installers.
+
 ## Conventions
 
 - **TypeScript + React 19 + Next.js** with Tailwind CSS for styling.
