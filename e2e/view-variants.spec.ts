@@ -447,3 +447,80 @@ test.describe("view variant — file-hotspots (treemap↔list)", () => {
     }
   }
 });
+
+// ── F10 (session-timeline): timeline (default) ↔ list ─────────────────────────
+// Gantt bars only render for sessions inside the [now−Nd, now] window, so build
+// timestamps RELATIVE to now (DB format "YYYY-MM-DD HH:MM:SS", UTC).
+const dbTs = (msAgo: number) => new Date(Date.now() - msAgo).toISOString().slice(0, 19).replace("T", " ");
+const stRow = (id: string, status: "active" | "waiting" | "ended", title: string, startAgo: number, endAgo: number) => ({
+  id, project_path: `/home/user/projects/${title}`, project_name: "demo-bot", title, status,
+  source: "startup", first_seen: dbTs(startAgo), last_seen: dbTs(endAgo),
+  ended_at: status === "ended" ? dbTs(endAgo) : null,
+  token_input: 1000, token_output: 800, token_cache: 2000, cost_usd: 0.5,
+  branch: "main", git_commit: null, remote_url: null, transcript_path: null, machine: null,
+  event_count: 12, tool_count: 5,
+});
+const TIMELINE_SESSIONS = {
+  sessions: [
+    stRow("st-1", "active", "alpha", 60 * 60_000, 5 * 60_000),
+    stRow("st-2", "waiting", "beta", 120 * 60_000, 30 * 60_000),
+    stRow("st-3", "ended", "gamma", 180 * 60_000, 90 * 60_000),
+  ],
+};
+async function stubTimeline(page: Page, view?: "timeline" | "list") {
+  await page.route("**/api/sessions*", (route) => route.fulfill({ json: TIMELINE_SESSIONS }));
+  await stubPluginConfig(page, view ? { "session-timeline": { view } } : {});
+}
+
+test.describe("view variant — session-timeline (timeline↔list)", () => {
+  const st = (page: Page) => widget(page, "session-timeline");
+  const ganttBars = (page: Page) => st(page).locator("ul > li div.absolute"); // gantt bars; list view has none
+  test("default = timeline (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubTimeline(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = st(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(ganttBars(page).first()).toBeVisible({ timeout: 15_000 });
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Timeline" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubTimeline(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(st(page));
+    await expect(sw.getByRole("button", { name: "Timeline" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "List" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["timeline", "list"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubTimeline(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = st(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "timeline") {
+          await expect(ganttBars(page).first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Timeline" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(ganttBars(page)).toHaveCount(0);
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/session-timeline-${view}-${mode}.png` });
+        await testInfo.attach(`session-timeline-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
