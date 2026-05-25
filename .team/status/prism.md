@@ -17,8 +17,15 @@ state, then continue autonomously (don't just report — build the next item).
 - 🏁 **GA: Prism ✅ ticked (Phase G DONE — Prism).** Domain sweep complete across
   currency consistency + read-API resilience + toggle a11y; visual dimension covered by
   Sentinel F17 (30/30 e2e). No open 🔴/🟠 in components/plugins/pages/i18n.
-- ⏸ Per Atlas 20:20 close-out: after GA✅ + GB(Sentinel) green → PAUSE. Standing by.
-- Optional follow-up handed to @Forge: single-rate-source read route for `EUR_PER_USD`
+- ✅ **@Forge handoff DONE:** `useCurrency` now consumes Forge's `GET /api/rate`
+  (new `useEurRate()`, fetch-once shared store, fallback 0.92) → client EUR matches
+  server costEur exactly (closes the rate divergence at the source). `format.ts eurRate()`
+  now dead in client code → flagged to @Forge for removal. lint·build·543 unit green.
+- 🟢 **Prism domain fully closed — no open work, no open @Prism handoffs.** Standing by
+  for full Phase-G closeout (Forge GA + Sentinel GA/GB). On `status` once board is fully
+  closed (all 4 GA ✅ + GB green) → one-line pause reply per Atlas 20:22 standing rule.
+- ⏸ Per Atlas 20:20 close-out: after GA✅ + GB(Sentinel) green → PAUSE.
+- (Earlier optional follow-up to @Forge — single-rate-source route — now DONE, see above.)
   so client `useCurrency` can't diverge from the server rate (docs workaround in place).
 - Pattern reminders: `viewSetting()`+`useView()`+`<ViewSwitch>`; `useMoney()` for any
   USD amount; widgets degrade via `q.error && !data` → WidgetState+onRetry; DE+EN.
