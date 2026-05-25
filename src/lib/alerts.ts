@@ -75,14 +75,15 @@ export function evaluateRules(ctx: RuleCtx, rules: Rule[]): AlertFire[] {
         break;
       case "session_long":
         if (ctx.sessionDurationMin >= r.threshold && r.threshold > 0) {
-          const min = Math.round(ctx.sessionDurationMin);
+          const minutes = Math.round(ctx.sessionDurationMin);
           fires.push({
             ruleId: r.id,
             type: r.type,
             sessionId: ctx.sessionId,
             dedupKey: ctx.sessionId,
-            message: `Session running ${min} min (≥ ${r.threshold})`,
-            params: { min, threshold: r.threshold },
+            message: `Session running ${minutes} min (≥ ${r.threshold})`,
+            // key matches the i18n template alert.session_long → {minutes}
+            params: { minutes, threshold: r.threshold },
           });
         }
         break;

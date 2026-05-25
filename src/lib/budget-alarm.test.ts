@@ -7,6 +7,7 @@ import { budgetAlarmFires, checkBudgetAlarms } from "@/lib/budget-alarm";
 import { dayElapsedFraction, type BudgetProjection, type BudgetProjections } from "@/lib/budget";
 import { setConfig } from "@/lib/config";
 import { migrate } from "@/lib/migrations";
+import { translate } from "@/lib/i18n";
 
 const ENV = { ...process.env };
 let open: Database.Database | null = null;
@@ -47,6 +48,16 @@ describe("budgetAlarmFires (pure)", () => {
     expect(fires[0].dedupKey).toBe("cost:daily:2026-05-25");
     expect(fires[0].message).toBe("Projected daily spend $40.00 over $10 budget");
     expect(fires[0].params).toEqual({ period: "daily", projected: "40.00", budget: "10" });
+  });
+
+  it("params cover every placeholder in the cost_projection i18n template (#30 contract)", () => {
+    const [fire] = budgetAlarmFires({ daily: proj(true, 40, 10), monthly: proj(false, 0, 0) }, "2026-05-25");
+    const keys = Object.keys(fire.params ?? {});
+    for (const lang of ["en", "de"] as const) {
+      for (const ph of [...translate(lang, "alert.cost_projection").matchAll(/\{(\w+)\}/g)].map((m) => m[1])) {
+        expect(keys, `${lang} alert.cost_projection needs {${ph}}`).toContain(ph);
+      }
+    }
   });
 
   it("raises both daily and monthly when both are over", () => {
