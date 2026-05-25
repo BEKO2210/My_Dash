@@ -1,0 +1,116 @@
+import { test, expect, type Page } from "@playwright/test";
+
+// Phase F — per-widget view variants: visual-regression + behaviour gate.
+// TEMPLATE spec (extended per widget during FC rollout). Reference widget:
+// tool-frequency (view ∈ {bars (default = today's look), table}).
+//
+// Hermetic by design: the `view` setting persists server-side via POST
+// /api/plugins/config, so we intercept that route — GET returns the view under
+// test, POST is a no-op — to pick a variant deterministically WITHOUT writing to
+// the shared e2e DB (no cross-spec pollution). Tool data is stubbed too.
+
+type ToolStat = { tool: string; count: number; failures: number; source: string | null; mcpServer: string | null; avgDurationMs: number | null };
+const b = (tool: string, count: number, failures = 0, avg = 30): ToolStat => ({ tool, count, failures, source: "builtin", mcpServer: null, avgDurationMs: avg });
+const TOOLS: ToolStat[] = [
+  b("Read", 120, 0, 42), b("Edit", 90, 0, 30), b("Bash", 75, 5, 820),
+  { tool: "mcp__github__search_issues", count: 48, failures: 1, source: "mcp", mcpServer: "github", avgDurationMs: 210 },
+  b("Grep", 33, 0, 18), b("Write", 21, 0, 25),
+];
+
+const IGNORE = [/WebGL/i, /THREE\.WebGLRenderer/i, /Download the React DevTools/i, /reading 'tick'/];
+function watchConsole(page: Page, errors: string[]) {
+  page.on("console", (m) => { if (m.type() === "error" && !IGNORE.some((re) => re.test(m.text()))) errors.push(m.text()); });
+  page.on("pageerror", (e) => { if (!IGNORE.some((re) => re.test(e.message))) errors.push(e.message); });
+}
+
+function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
+  return page.addInitScript(([m, l]) => {
+    try {
+      localStorage.setItem("mc-onboarded", "1");
+      localStorage.setItem("mc-theme", JSON.stringify({ mode: m, accent: "#4f8cff" }));
+      localStorage.setItem("mc-lang", l);
+    } catch { /* ignore */ }
+  }, [mode, lang] as const);
+}
+
+// Stub tool data + pin tool-frequency's view via the config route (no DB write).
+async function stub(page: Page, view?: "bars" | "table") {
+  await page.route("**/api/tools*", (route) => route.fulfill({ json: { tools: TOOLS } }));
+  await page.route("**/api/plugins/config**", (route) => {
+    if (route.request().method() === "POST") return route.fulfill({ json: { ok: true } });
+    return route.fulfill({ json: { config: view ? { "tool-frequency": { view } } : {} } });
+  });
+}
+
+async function gotoDashboard(page: Page) {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
+}
+
+const tf = (page: Page) => page.locator("#mc-widget-tool-frequency");
+const bars = (page: Page) => tf(page).locator("li div.h-full");
+const viewSwitch = (page: Page) => tf(page).getByRole("group", { name: /^(Ansicht|View)$/ });
+
+test.describe("tool-frequency view variants (FA reference widget)", () => {
+  test("default view is bars (today's look) with a localized ViewSwitch (DE)", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stub(page); // no view → default
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = tf(page);
+    await w.scrollIntoViewIfNeeded();
+
+    // Default == bars: the original list of proportional bars renders, no table.
+    await expect(bars(page).first()).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+
+    // ViewSwitch present, DE labels, bars is the pressed option.
+    const sw = viewSwitch(page);
+    await expect(sw).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, `console errors:\n${errors.join("\n")}`).toEqual([]);
+  });
+
+  test("ViewSwitch labels are localized (EN)", async ({ page }) => {
+    await stub(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitch(page);
+    await expect(sw.getByRole("button", { name: "Bars" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+
+  // Visual regression: each variant in light AND dark (default + table).
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["bars", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stub(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = tf(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+
+        if (view === "bars") {
+          await expect(bars(page).first()).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitch(page).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table tbody tr").first()).toBeVisible();
+          await expect(bars(page)).toHaveCount(0);
+          await expect(viewSwitch(page).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+
+        await page.waitForTimeout(250); // settle width/colour transitions before the shot
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/tool-frequency-${view}-${mode}.png` });
+        await testInfo.attach(`tool-frequency-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, `console errors (${view}-${mode}):\n${errors.join("\n")}`).toEqual([]);
+      });
+    }
+  }
+});
