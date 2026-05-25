@@ -99,6 +99,7 @@ UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
 - **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and **30 built-in widgets** (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…) — extensible via the plugin registry.
 - **3D tool-call graph** — Session → Tool → File, revealing structure across sessions.
 - **Alerts & notifications** — rule-based alerts at ingest, in-app inbox + toasts, desktop notifications, optional Slack/Discord webhook, quiet hours and a daily/weekly digest.
+- **Per-widget views** — many widgets offer a 2nd view (chart↔table, board↔list, …), switchable from the widget and remembered per widget.
 - **Themes & i18n** — light/dark plus accent colours; full German/English UI.
 - **Plugin platform** — widgets are registry entries; drop external ones into `plugins.local/` (see [docs/PLUGINS.md](docs/PLUGINS.md)).
 - **Open data hub** — read-only `/api/*` routes, CSV/JSON export, an OpenAPI 3.1 spec (`/api/openapi`), a Prometheus endpoint (`/api/metrics`) and an optional OTLP receiver.
