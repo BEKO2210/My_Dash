@@ -352,10 +352,13 @@ function WidgetToolbar({
   onHeight: () => void;
   onSettings: () => void;
 }) {
+  // The pill floats over the top-center of the widget (incl. the panel header). Make
+  // the container pass clicks through (pointer-events-none) and re-enable only the
+  // actual icon buttons, so it never blocks a widget's own header controls beneath it.
   const btn =
-    "rounded p-0.5 text-muted transition-colors hover:text-foreground focus-visible:text-foreground";
+    "pointer-events-auto rounded p-0.5 text-muted transition-colors hover:text-foreground focus-visible:text-foreground";
   return (
-    <div className="absolute left-1/2 top-1 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-md border border-panel-border bg-panel/90 px-1 py-0.5 opacity-0 shadow-md shadow-black/30 backdrop-blur transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
+    <div className="pointer-events-none absolute left-1/2 top-1 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-md border border-panel-border bg-panel/90 px-1 py-0.5 opacity-0 shadow-md shadow-black/30 backdrop-blur transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
       <button
         type="button"
         draggable
