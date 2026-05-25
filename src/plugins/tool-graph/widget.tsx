@@ -472,6 +472,11 @@ export function ToolGraph() {
                 backgroundColor="#06070b"
                 controlType="orbit"
                 showNavInfo={false}
+                // Lay the graph out as a left→right workflow tree (Session → Prompt/
+                // Tool → File/Subagent) instead of a free cloud, so it reads as a
+                // coherent flow and the structure stays stable (no jumping).
+                dagMode="lr"
+                dagLevelDistance={70}
                 nodeLabel={(n: object) => {
                   const g = n as GraphNode;
                   return `<div style="font:12px sans-serif;color:#e5e7eb">${noun(g, t)}: ${g.label}</div>`;
