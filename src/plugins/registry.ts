@@ -32,18 +32,18 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { LiveStream } from "./live-stream/widget";
-import { Kanban } from "./kanban/widget";
-import { TokenChart } from "./token-chart/widget";
+import { Kanban, KANBAN_VIEWS } from "./kanban/widget";
+import { TokenChart, TOKEN_CHART_VIEWS } from "./token-chart/widget";
 import { ToolGraph } from "./tool-graph/widget";
 import { BudgetGauge } from "./budget-gauge/widget";
 import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
-import { ToolFrequency } from "./tool-frequency/widget";
+import { ToolFrequency, TOOL_FREQ_VIEWS } from "./tool-frequency/widget";
 import { FileHotspots } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
 import { Latency } from "./latency/widget";
 import { ErrorRate } from "./error-rate/widget";
-import { ModelDonut } from "./model-donut/widget";
+import { ModelDonut, MODEL_DONUT_VIEWS } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
 import { ProjectLeaderboard } from "./project-leaderboard/widget";
 import { LiveNow } from "./live-now/widget";
@@ -114,18 +114,18 @@ const H_TALL = "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]";
 
 export const widgets: Widget[] = [
   { id: "kpi-bar", title: "Übersicht", titleKey: "kpi.title", span: "lg:col-span-6", height: "h-auto", icon: LayoutDashboard, category: "overview", description: "kpi.info", component: KpiBar },
-  { id: "kanban", title: "Sessions", titleKey: "kanban.title", span: "lg:col-span-4", height: H_TALL, icon: KanbanSquare, category: "sessions", description: "kanban.info", component: Kanban },
+  { id: "kanban", title: "Sessions", titleKey: "kanban.title", span: "lg:col-span-4", height: H_TALL, icon: KanbanSquare, category: "sessions", description: "kanban.info", settings: [viewSetting(KANBAN_VIEWS)], component: Kanban },
   { id: "live-stream", title: "Live Stream", titleKey: "stream.title", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", settings: [{ key: "limit", type: "number", label: "stream.setLimit", default: 100, min: 10, max: 300 }], component: LiveStream },
-  { id: "token-chart", title: "Tokens & Kosten", titleKey: "tokens.title", span: "lg:col-span-3", height: H, icon: Coins, category: "economy", description: "tokens.info", component: TokenChart },
+  { id: "token-chart", title: "Tokens & Kosten", titleKey: "tokens.title", span: "lg:col-span-3", height: H, icon: Coins, category: "economy", description: "tokens.info", settings: [viewSetting(TOKEN_CHART_VIEWS)], component: TokenChart },
   { id: "tool-graph", title: "Tool-Graph (3D)", titleKey: "graph.title", span: "lg:col-span-3", height: H, icon: Boxes, category: "tools", description: "graph.info", component: ToolGraph },
   { id: "budget-gauge", title: "Budget", titleKey: "budget.title", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },
   { id: "heatmap", title: "Aktivität", titleKey: "heatmap.title", span: "lg:col-span-4", height: H, icon: CalendarClock, category: "activity", description: "heatmap.info", component: Heatmap },
-  { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", component: ToolFrequency },
+  { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", settings: [viewSetting(TOOL_FREQ_VIEWS)], component: ToolFrequency },
   { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
   { id: "session-timeline", title: "Session-Timeline", titleKey: "timeline.title", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
   { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", component: Latency },
   { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", component: ErrorRate },
-  { id: "model-donut", title: "Modelle", titleKey: "donut.title", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", component: ModelDonut },
+  { id: "model-donut", title: "Modelle", titleKey: "donut.title", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", settings: [viewSetting(MODEL_DONUT_VIEWS)], component: ModelDonut },
   { id: "sankey-flow", title: "Fluss", titleKey: "sankey.title", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
   { id: "project-leaderboard", title: "Projekt-Rangliste", titleKey: "leaderboard.title", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", component: ProjectLeaderboard },
   { id: "live-now", title: "Jetzt live", titleKey: "now.title", span: "lg:col-span-3", height: H, icon: Radio, category: "sessions", description: "now.info", component: LiveNow },
@@ -155,4 +155,32 @@ export const widgets: Widget[] = [
  */
 export function widgetTitle(w: Widget, t: (key: string) => string): string {
   return w.titleKey ? t(w.titleKey) : w.title;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase F — per-widget VIEW VARIANTS
+// A widget can offer 2–3 switchable views via a standard "view" setting (a plain
+// `select`, so it renders in the settings drawer and persists in plugin_config —
+// no new write path). The DEFAULT value MUST equal the widget's current look.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** A selectable view value (e.g. "chart", "table"). */
+export type ViewVariant = string;
+/** One view option: its value + an i18n key for its label. */
+export interface ViewOption {
+  value: ViewVariant;
+  label: string;
+}
+
+/** Build the standard `view` manifest setting. First option is the default look. */
+export function viewSetting(options: ViewOption[], def: ViewVariant = options[0]?.value ?? ""): PluginSetting {
+  return { key: "view", type: "select", label: "view.label", default: def, options };
+}
+
+/**
+ * Resolve a persisted view value to a known option, falling back to the default.
+ * Pure + defensive: an unknown/legacy/corrupt stored value can never break render.
+ */
+export function resolveView<T extends ViewVariant>(stored: unknown, options: readonly T[], def: T): T {
+  return typeof stored === "string" && (options as readonly string[]).includes(stored) ? (stored as T) : def;
 }
