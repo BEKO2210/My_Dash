@@ -18,6 +18,8 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
 import { viewState } from "@/components/widget-view";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
 import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
@@ -33,6 +35,23 @@ const RANGE_LABELS: Record<Range, string> = {
   monthly: "tokens.rangeMonthly",
 };
 
+// Phase F (F1): chart (default, today's look) ↔ table (per-period numeric rows).
+const WIDGET_ID = "token-chart";
+const VIEW_VALUES = ["chart", "table"] as const;
+export const TOKEN_CHART_VIEWS: ViewOption[] = [
+  { value: "chart", label: "view.chart" },
+  { value: "table", label: "view.table" },
+];
+
+interface Row {
+  date: string;
+  input: number;
+  output: number;
+  cache: number;
+  costEur: number;
+  costUsd: number;
+}
+
 const hhmm = (iso: string) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -43,6 +62,7 @@ export function TokenChart() {
   const [mode, setMode] = useState<Mode>("tokens");
   const [range, setRange] = useState<Range>("daily");
   const [currency, setCurrency] = useState<Currency>("EUR");
+  const view = useView(WIDGET_ID, VIEW_VALUES, "chart");
   const q = usePluginQuery<UsageReport>("/api/usage", { pollMs: 30_000 });
   const usage = q.data;
 
@@ -92,18 +112,20 @@ export function TokenChart() {
               </button>
             ))}
           </div>
-          <div className="flex rounded-md border border-panel-border text-xs">
-            {(["tokens", "cost"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
-              >
-                {m === "tokens" ? t("tokens.modeTokens") : t("tokens.modeCost")}
-              </button>
-            ))}
-          </div>
-          {mode === "cost" && (
+          {view === "chart" && (
+            <div className="flex rounded-md border border-panel-border text-xs">
+              {(["tokens", "cost"] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`px-2 py-1 ${mode === m ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+                >
+                  {m === "tokens" ? t("tokens.modeTokens") : t("tokens.modeCost")}
+                </button>
+              ))}
+            </div>
+          )}
+          {((view === "chart" && mode === "cost") || view === "table") && (
             <div className="flex rounded-md border border-panel-border text-xs">
               {(["EUR", "USD"] as Currency[]).map((c) => (
                 <button
@@ -117,6 +139,7 @@ export function TokenChart() {
               ))}
             </div>
           )}
+          <ViewSwitch widgetId={WIDGET_ID} options={TOKEN_CHART_VIEWS} value={view} t={t} />
         </div>
       }
     >
@@ -126,6 +149,8 @@ export function TokenChart() {
         <WidgetState icon={Coins} title={t("common.loading")} loading />
       ) : vs === "empty" ? (
         <WidgetState icon={Coins} title={emptyMessage(t, usage?.available ?? false, range)} />
+      ) : view === "table" ? (
+        <TokenTable rows={data} currency={currency} t={t} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -202,4 +227,35 @@ const tooltipStyle = {
 function emptyMessage(t: (key: string) => string, available: boolean, range: Range): string {
   if (!available) return t("tokens.emptyUnavailable");
   return range === "24h" ? t("tokens.empty24h") : t("tokens.emptyNone");
+}
+
+// Table view: the same per-period data as the chart, as precise numeric rows.
+function TokenTable({ rows, currency, t }: { rows: Row[]; currency: Currency; t: (key: string) => string }) {
+  const costKey = currency === "EUR" ? "costEur" : "costUsd";
+  return (
+    <div tabIndex={0} className="h-full overflow-auto outline-none">
+      <table className="w-full text-xs">
+        <thead className="sticky top-0 bg-panel/95 text-muted backdrop-blur">
+          <tr>
+            <th className="px-3 py-2 text-left font-medium">{t("tokens.colDate")}</th>
+            <th className="px-2 py-2 text-right font-medium">{t("tokens.input")}</th>
+            <th className="px-2 py-2 text-right font-medium">{t("tokens.output")}</th>
+            <th className="px-2 py-2 text-right font-medium">{t("tokens.cache")}</th>
+            <th className="px-3 py-2 text-right font-medium">{t("tokens.cost")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.date} className="border-t border-panel-border/50 transition-colors hover:bg-white/[0.03]">
+              <td className="whitespace-nowrap px-3 py-1.5 font-mono text-foreground">{r.date}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums text-sky-400">{formatCompact(r.input)}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums text-emerald-400">{formatCompact(r.output)}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums text-violet-400">{formatCompact(r.cache)}</td>
+              <td className="px-3 py-1.5 text-right tabular-nums text-foreground">{formatMoney(r[costKey], currency)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
