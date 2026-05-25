@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // electron-builder output (packaged app + unpacked runtime).
     "dist/**",
+    // v8 coverage HTML report (generated; ships its own vendored JS).
+    "coverage/**",
   ]),
 ]);
 

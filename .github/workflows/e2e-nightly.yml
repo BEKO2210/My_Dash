@@ -1,0 +1,49 @@
+name: E2E (full matrix, nightly)
+
+# The per-PR CI runs the critical-path e2e matrix (functional + mobile/desktop
+# visuals). This nightly run exercises the FULL matrix including the heavy
+# high-DPI qhd/uhd screenshot permutations (MC_E2E_FULL=1), so high-DPI coverage
+# is preserved without slowing the green gate. Also runnable on demand.
+
+on:
+  schedule:
+    - cron: "17 4 * * *" # nightly 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (full matrix incl. qhd/uhd)
+        run: npm run test:e2e
+        env:
+          MC_E2E_FULL: "1"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-nightly-results
+          path: test-results
+          if-no-files-found: ignore

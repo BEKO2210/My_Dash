@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Hammer } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { formatCompact } from "@/lib/format";
 import { parseMcpTool } from "@/lib/mcp";
@@ -36,31 +37,20 @@ function label(t: ToolStat): string {
 
 export function ToolFrequency() {
   const { t } = useT();
-  const { tick } = useLive();
   const [range, setRange] = useState<Range>("30");
-  const [tools, setTools] = useState<ToolStat[] | null>(null);
   const [grown, setGrown] = useState(false);
+  const q = usePluginQuery<{ tools: ToolStat[] }>(`/api/tools?days=${range}&limit=12`, { pollMs: 30_000 });
 
+  // Grow the bars from 0 once data has painted.
   useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch(`/api/tools?days=${range}&limit=12`)
-        .then((r) => r.json())
-        .then((d: { tools: ToolStat[] }) => {
-          if (cancelled) return;
-          setTools(d.tools);
-          requestAnimationFrame(() => requestAnimationFrame(() => setGrown(true)));
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [range, tick]);
+    if (!q.data) return;
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setGrown(true)));
+    return () => cancelAnimationFrame(id);
+  }, [q.data]);
 
-  const max = Math.max(1, ...(tools ?? []).map((x) => x.count));
+  const tools = q.data?.tools ?? [];
+  const max = Math.max(1, ...tools.map((x) => x.count));
+  const vs = viewState(q, () => tools.length === 0);
 
   return (
     <Panel
@@ -82,9 +72,11 @@ export function ToolFrequency() {
         </div>
       }
     >
-      {!tools ? (
+      {vs === "error" ? (
+        <WidgetState icon={Hammer} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Hammer} title={t("common.loading")} loading />
-      ) : tools.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Hammer} title={t("tools.empty")} />
       ) : (
         <ul tabIndex={0} className="flex h-full flex-col justify-center gap-2 overflow-auto p-4 outline-none">

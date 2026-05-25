@@ -11,6 +11,7 @@ export const HookPayloadSchema = z.looseObject({
   cwd: z.string().optional(),
   hook_event_name: z.string().optional(),
   tool_name: z.string().optional(),
+  tool_use_id: z.string().optional(),
   tool_input: z.record(z.string(), z.unknown()).optional(),
   tool_response: z.unknown().optional(),
   prompt: z.string().optional(),

@@ -10,11 +10,54 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Least privilege by default; only the installer job needs write (to attach to
+# the Release). The gate job runs with read-only.
 permissions:
-  contents: write
+  contents: read
+
+# Serialize per ref; never cancel an in-flight release (a half-published set of
+# installers is worse than waiting).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  # Green gate — a tagged release must NOT ship installers that never passed the
+  # gate (lint · unit · build · e2e). Runs once on Linux before the per-OS
+  # installer matrix; if it fails, `build` is skipped, so no `dist`/release
+  # attach happens. This is the safety net for #12.
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Production build first so the e2e web server (`npm run start`) has something to serve.
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (smoke + a11y + widget audits)
+        run: npm run test:e2e
+
   build:
+    needs: gate
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -59,3 +102,31 @@ jobs:
             dist/*.dmg
             dist/*.AppImage
             dist/*.deb
+
+  # Integrity: collect every built installer and publish one SHA256SUMS.txt so
+  # users can verify the (unsigned, beta) downloads. Runs after all OS builds.
+  checksums:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: installers
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS.txt
+        run: |
+          cd installers
+          sha256sum * > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+
+      - name: Attach checksums to release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          files: SHA256SUMS.txt

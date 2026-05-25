@@ -1,6 +1,12 @@
 // Hand-maintained OpenAPI 3.1 description of the dashboard's HTTP surface: every
 // read path plus the single write path (/api/ingest). Built from a compact route
 // table so it stays close to the code and easy to extend. Served by /api/openapi.
+import pkg from "../../package.json";
+
+// The local server's port, matching electron/main.js + the launch scripts.
+function serverPort(): string {
+  return process.env.MC_PORT || process.env.PORT || "3000";
+}
 
 interface RouteDef {
   method: "get" | "post";
@@ -29,6 +35,7 @@ const ROUTES: RouteDef[] = [
   // Overview / system
   { method: "get", path: "/api/stats", tag: "overview", summary: "Headline KPIs for the status strip." },
   { method: "get", path: "/api/health", tag: "system", summary: "Liveness + basic DB stats." },
+  { method: "get", path: "/api/openapi", tag: "system", summary: "This OpenAPI 3.1 document (the API's self-description)." },
   {
     method: "get",
     path: "/api/metrics",
@@ -96,7 +103,14 @@ const ROUTES: RouteDef[] = [
     params: ["id"],
   },
   { method: "get", path: "/api/events", tag: "sessions", summary: "Recent events.", params: ["limit"], inline: [{ name: "since", in: "query", schema: { type: "integer" } }, { name: "session", in: "query", schema: { type: "string" } }] },
-  { method: "get", path: "/api/events/{id}", tag: "sessions", summary: "One event.", params: ["id"] },
+  {
+    method: "get",
+    path: "/api/events/{id}",
+    tag: "sessions",
+    summary: "One event.",
+    params: ["id"],
+    responses: { ...ok("The event."), "400": { description: "Invalid id." }, "404": { description: "Event not found." } },
+  },
   { method: "get", path: "/api/prompts", tag: "sessions", summary: "Recent prompts (redacted).", params: ["limit"] },
   { method: "get", path: "/api/subagents", tag: "sessions", summary: "Subagent tree.", params: ["limit"] },
   { method: "get", path: "/api/session-duration", tag: "sessions", summary: "Session-duration distribution." },
@@ -127,7 +141,14 @@ const ROUTES: RouteDef[] = [
   // Tools
   { method: "get", path: "/api/tools", tag: "tools", summary: "Top tools.", params: ["limit", "days"] },
   { method: "get", path: "/api/tools/latency", tag: "tools", summary: "Tool latency.", inline: [{ name: "tool", in: "query", schema: { type: "string" } }] },
-  { method: "get", path: "/api/tool-calls/{id}", tag: "tools", summary: "One tool call's I/O.", params: ["id"] },
+  {
+    method: "get",
+    path: "/api/tool-calls/{id}",
+    tag: "tools",
+    summary: "One tool call's I/O.",
+    params: ["id"],
+    responses: { ...ok("The tool call."), "400": { description: "Invalid id." }, "404": { description: "Tool call not found." } },
+  },
   { method: "get", path: "/api/files", tag: "tools", summary: "File hotspots.", params: ["limit", "days"] },
   { method: "get", path: "/api/graph", tag: "tools", summary: "Tool-call graph.", inline: [{ name: "sessions", in: "query", schema: { type: "string" } }] },
   { method: "get", path: "/api/sankey", tag: "tools", summary: "Tool flow (sankey)." },
@@ -212,7 +233,7 @@ function body(properties: Record<string, unknown>): Record<string, unknown> {
   return { required: true, content: { "application/json": { schema: { type: "object", properties } } } };
 }
 
-export function buildOpenApiSpec(version = process.env.npm_package_version ?? "1.0.0-beta"): Record<string, unknown> {
+export function buildOpenApiSpec(version = pkg.version): Record<string, unknown> {
   const paths: Record<string, Record<string, unknown>> = {};
   for (const r of ROUTES) {
     const parameters = [
@@ -238,7 +259,7 @@ export function buildOpenApiSpec(version = process.env.npm_package_version ?? "1
         "Local, read-only observability API for Claude Code. Every path is read-only except POST /api/ingest (hook events) and the opt-in OTLP/config writers. The server binds to 127.0.0.1.",
       license: { name: "PolyForm Noncommercial 1.0.0", url: "https://polyformproject.org/licenses/noncommercial/1.0.0" },
     },
-    servers: [{ url: "http://127.0.0.1:3000", description: "Local dashboard" }],
+    servers: [{ url: `http://127.0.0.1:${serverPort()}`, description: "Local dashboard" }],
     tags: [
       "overview",
       "sessions",

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Layers } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
 import { compactionDaily, compactionSummary, type Compaction } from "@/lib/compaction";
@@ -15,36 +15,22 @@ const TRIGGER_COLOR: Record<string, string> = {
 };
 
 export function CompactionTimeline() {
-  const { tick } = useLive();
   const { t, lang } = useT();
-  const [compactions, setCompactions] = useState<Compaction[] | null>(null);
+  const q = usePluginQuery<{ compactions: Compaction[] }>("/api/compactions?limit=100");
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/compactions?limit=100")
-        .then((r) => r.json())
-        .then((d: { compactions: Compaction[] }) => {
-          if (!cancelled) setCompactions(d.compactions);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const summary = compactionSummary(compactions ?? []);
-  const days = compactionDaily(compactions ?? [], 14);
+  const compactions = q.data?.compactions ?? [];
+  const summary = compactionSummary(compactions);
+  const days = compactionDaily(compactions, 14);
   const max = days.reduce((m, d) => Math.max(m, d.count), 0) || 1;
+  const vs = viewState(q, () => compactions.length === 0);
 
   return (
     <Panel title={t("compaction.title")} icon={<Layers className="h-4 w-4 text-accent" />} info={t("compaction.info")}>
-      {!compactions ? (
+      {vs === "error" ? (
+        <WidgetState icon={Layers} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Layers} title={t("common.loading")} loading />
-      ) : compactions.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Layers} title={t("compaction.empty")} description={t("compaction.emptyHint")} />
       ) : (
         <div className="flex h-full flex-col gap-3 p-4">

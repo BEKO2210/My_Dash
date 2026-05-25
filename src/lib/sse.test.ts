@@ -1,7 +1,14 @@
 import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/lib/migrations";
-import { eventsSince, parseLastEventId, sseFrame } from "@/lib/sse";
+import {
+  eventsSince,
+  gapTooLarge,
+  latestEventId,
+  parseLastEventId,
+  sseFrame,
+  sseResetFrame,
+} from "@/lib/sse";
 
 describe("parseLastEventId", () => {
   it("returns null for missing or invalid values", () => {
@@ -46,5 +53,38 @@ describe("eventsSince", () => {
 
     expect(eventsSince(db, 2, 2).map((r) => r.id)).toEqual([3, 4]); // limit respected
     expect(eventsSince(db, 5, 10)).toEqual([]); // nothing newer
+  });
+});
+
+describe("latestEventId", () => {
+  let open: Database.Database | null = null;
+  afterEach(() => {
+    open?.close();
+    open = null;
+  });
+
+  it("returns the highest id, or 0 for an empty table", () => {
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    expect(latestEventId(db)).toBe(0);
+    const ins = db.prepare("INSERT INTO events (session_id, event_type, payload_json) VALUES ('s','E','{}')");
+    ins.run();
+    ins.run();
+    expect(latestEventId(db)).toBe(2);
+  });
+});
+
+describe("gapTooLarge", () => {
+  it("is true only when the reconnect gap exceeds the replay limit", () => {
+    expect(gapTooLarge(2000, 500, 1000)).toBe(true); // gap 1500 > 1000
+    expect(gapTooLarge(1500, 500, 1000)).toBe(false); // gap exactly 1000, not >
+    expect(gapTooLarge(600, 500, 1000)).toBe(false); // small gap
+    expect(gapTooLarge(0, 0, 1000)).toBe(false); // fresh client
+  });
+});
+
+describe("sseResetFrame", () => {
+  it("is a no-id data frame that signals a resync", () => {
+    expect(sseResetFrame()).toBe('data: {"reset":true}\n\n');
   });
 });

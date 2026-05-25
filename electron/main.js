@@ -12,6 +12,7 @@ const http = require("node:http");
 const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
+const { isExternallyOpenable, isInternalNavigation } = require("./url-safety");
 
 const PORT = process.env.MC_PORT || "3000";
 const HOST = "127.0.0.1";
@@ -92,10 +93,19 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
   win.loadURL(BASE_URL);
-  // Open external links in the user's browser, not a new Electron window.
+  // Open external links in the user's browser, not a new Electron window — but only
+  // safe schemes (http/https/mailto); never hand file:/custom protocols to the OS.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (isExternallyOpenable(url)) shell.openExternal(url);
     return { action: "deny" };
+  });
+  // Keep in-window navigation on the local dashboard origin. Anything else is
+  // blocked from loading and opened in the browser instead when it's a safe scheme.
+  win.webContents.on("will-navigate", (e, url) => {
+    if (!isInternalNavigation(url, BASE_URL)) {
+      e.preventDefault();
+      if (isExternallyOpenable(url)) shell.openExternal(url);
+    }
   });
   // Close hides to tray so the ingest server keeps running in the background.
   win.on("close", (e) => {

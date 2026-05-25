@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 // Lightweight i18n: a flat dictionary + a hook backed by an external store over
 // localStorage (hydration-safe, default German). No provider needed — every
@@ -154,6 +154,15 @@ const DE: Record<string, string> = {
   "common.retry": "Erneut versuchen",
   "common.noResults": "Keine Treffer.",
   "common.loading": "Lädt…",
+  "common.loadError": "Daten konnten nicht geladen werden.",
+  "a11y.language": "Sprache",
+  "a11y.info": "Info",
+  "header.menu": "Menü",
+  "alert.mcp_error": "MCP-Tool fehlgeschlagen: {tool}",
+  "alert.error_spike": "Fehlerrate {rate}% (≥ {threshold}%)",
+  "alert.session_long": "Session läuft seit {minutes} min (≥ {threshold})",
+  "alert.cost_session": "Session-Kosten ${cost} (≥ ${threshold})",
+  "alert.cost_projection": "Voraussichtliche {period}-Kosten ${projected} (Budget ${budget})",
   "kpi.title": "Übersicht",
   "kpi.active": "Aktive Sessions",
   "kpi.events": "Events heute",
@@ -684,6 +693,15 @@ const EN: Record<string, string> = {
   "common.retry": "Retry",
   "common.noResults": "No matches.",
   "common.loading": "Loading…",
+  "common.loadError": "Couldn’t load data.",
+  "a11y.language": "Language",
+  "a11y.info": "Info",
+  "header.menu": "Menu",
+  "alert.mcp_error": "MCP tool failed: {tool}",
+  "alert.error_spike": "Error rate {rate}% (≥ {threshold}%)",
+  "alert.session_long": "Session running {minutes} min (≥ {threshold})",
+  "alert.cost_session": "Session cost ${cost} (≥ ${threshold})",
+  "alert.cost_projection": "Projected {period} cost ${projected} (budget ${budget})",
   "kpi.title": "Overview",
   "kpi.active": "Active sessions",
   "kpi.events": "Events today",
@@ -1097,8 +1115,35 @@ const EN: Record<string, string> = {
 
 const T: Record<Lang, Record<string, string>> = { de: DE, en: EN };
 
+/**
+ * Pure, non-hook translation lookup — for tests, SSR and non-React callers.
+ * Falls back to the German string, then the raw key, mirroring `useT().t`.
+ */
+export function translate(lang: Lang, key: string): string {
+  return T[lang][key] ?? DE[key] ?? key;
+}
+
+/**
+ * Interpolate `{name}` placeholders in a (usually translated) template string.
+ * Unknown placeholders are left intact. Used for parameterized strings like
+ * alert messages, e.g. `tFormat(t("alert.error_spike"), { rate: 45, threshold: 30 })`.
+ */
+export function tFormat(template: string, params: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (m, k: string) => (k in params ? String(params[k]) : m));
+}
+
 export function useT() {
   const lang = useSyncExternalStore(subscribe, readLang, () => "de" as Lang);
-  const t = (key: string) => T[lang][key] ?? DE[key] ?? key;
+  const t = (key: string) => translate(lang, key);
   return { lang, t, setLang: writeLang };
+}
+
+// Keeps the document's <html lang> attribute in sync with the active UI language
+// (WCAG 3.1.1 Language of Page). Rendered once near the app root.
+export function LangSync() {
+  const { lang } = useT();
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+  return null;
 }

@@ -62,9 +62,33 @@ describe("buildOpenApiSpec", () => {
     }
   });
 
+  it("documents 400 + 404 for single-resource [id] routes", () => {
+    for (const p of ["/api/events/{id}", "/api/tool-calls/{id}"]) {
+      const op = spec.paths[p].get as { responses: Record<string, unknown> };
+      expect(op.responses["200"], `${p} 200`).toBeTruthy();
+      expect(op.responses["400"], `${p} 400`).toBeTruthy();
+      expect(op.responses["404"], `${p} 404`).toBeTruthy();
+    }
+  });
+
+  it("server URL reflects the configured MC_PORT", () => {
+    const prev = process.env.MC_PORT;
+    process.env.MC_PORT = "3001";
+    try {
+      const s = buildOpenApiSpec("9.9.9") as Spec & { servers: { url: string }[] };
+      expect(s.servers[0].url).toBe("http://127.0.0.1:3001");
+    } finally {
+      if (prev === undefined) delete process.env.MC_PORT;
+      else process.env.MC_PORT = prev;
+    }
+  });
+
+  it("documents its own /api/openapi route (self-describing)", () => {
+    expect((spec.paths["/api/openapi"] as Record<string, unknown> | undefined)?.get).toBeTruthy();
+  });
+
   it("documents every real API route (no drift)", () => {
     const real = new Set(discoverRoutes(path.join(process.cwd(), "src/app/api")));
-    real.delete("/api/openapi"); // self
     const documented = new Set(Object.keys(spec.paths));
     const missing = [...real].filter((p) => !documented.has(p));
     const extra = [...documented].filter((p) => !real.has(p));

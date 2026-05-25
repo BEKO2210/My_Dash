@@ -1,38 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Hash } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import type { TermCount } from "@/lib/tags";
 
 export function TagCloud() {
-  const { tick } = useLive();
   const { query, setQuery } = useSearch();
   const { t } = useT();
-  const [terms, setTerms] = useState<TermCount[] | null>(null);
+  const q = usePluginQuery<{ terms: TermCount[] }>("/api/tags?limit=40");
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/tags?limit=40")
-        .then((r) => r.json())
-        .then((d: { terms: TermCount[] }) => {
-          if (!cancelled) setTerms(d.terms);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const filtered = (terms ?? []).filter((t) => matchesQuery(query, t.term));
+  const terms = q.data?.terms ?? [];
+  const vs = viewState(q, () => terms.length === 0);
+  const filtered = terms.filter((tc) => matchesQuery(query, tc.term));
   const max = filtered.reduce((m, t) => Math.max(m, t.count), 0) || 1;
   const min = filtered.reduce((m, t) => Math.min(m, t.count), max);
 
@@ -41,9 +25,11 @@ export function TagCloud() {
 
   return (
     <Panel title={t("tags.title")} icon={<Hash className="h-4 w-4 text-accent" />} info={t("tags.info")}>
-      {!terms ? (
+      {vs === "error" ? (
+        <WidgetState icon={Hash} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Hash} title={t("common.loading")} loading />
-      ) : terms.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Hash} title={t("tags.empty")} description={t("tags.emptyHint")} />
       ) : filtered.length === 0 ? (
         <WidgetState icon={Hash} title={t("common.noResults")} />

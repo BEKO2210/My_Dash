@@ -83,7 +83,9 @@ test("language toggle switches the whole UI (de ↔ en)", async ({ page }) => {
 
   // Witness the language switch on the footer tagline: it's unique, language-specific
   // and always rendered (the header subtitle truncates when the bar is crowded).
-  const langGroup = page.getByRole("group", { name: "Language" });
+  // The toggle group's accessible name is itself localized (DE "Sprache" / EN
+  // "Language"), so match either — the locator is re-evaluated after the switch.
+  const langGroup = page.getByRole("group", { name: /^(Sprache|Language)$/ });
   await expect(langGroup.getByRole("button", { name: "de" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText("Lokales, read-only Dashboard für Claude Code.")).toBeVisible();
 
@@ -176,7 +178,12 @@ for (const mode of ["dark", "light"] as const) {
       await page.setViewportSize({ width: 1440, height: 900 });
       await prime(page, mode, lang);
       await gotoDashboard(page);
-      await page.waitForTimeout(1200);
+      // Web-first: wait for the widget grid to actually mount (a bare sleep can't —
+      // and networkidle is unusable here because the SSE stream never goes idle).
+      await expect
+        .poll(() => page.locator("section").count(), { timeout: 15_000 })
+        .toBeGreaterThanOrEqual(29);
+      await page.waitForTimeout(300); // brief settle for fade-in/chart-grow before the overview shot
       const shot = await page.screenshot({ path: `test-results/global-shots/${label}.png`, fullPage: false });
       await testInfo.attach(label, { body: shot, contentType: "image/png" });
       expect(errors, `console errors (${label}):\n${errors.join("\n")}`).toEqual([]);

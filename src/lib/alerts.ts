@@ -27,12 +27,17 @@ export interface RuleCtx {
   hourBucket: string; // for spike dedup
 }
 
+// Values the UI interpolates into the localized alert template (keyed by type).
+// `message` stays the English fallback + webhook text.
+export type AlertParams = Record<string, string | number>;
+
 export interface AlertFire {
   ruleId: number;
   type: string;
   message: string;
   sessionId: string;
   dedupKey: string; // (ruleId, dedupKey) is unique → no flapping/spam
+  params?: AlertParams;
 }
 
 export function evaluateRules(ctx: RuleCtx, rules: Rule[]): AlertFire[] {
@@ -43,45 +48,55 @@ export function evaluateRules(ctx: RuleCtx, rules: Rule[]): AlertFire[] {
     switch (r.type) {
       case "mcp_error":
         if (isPost && ctx.toolSource === "mcp" && ctx.toolSuccess === 0) {
+          const tool = ctx.toolName ?? "?";
           fires.push({
             ruleId: r.id,
             type: r.type,
             sessionId: ctx.sessionId,
             dedupKey: `${ctx.sessionId}:${ctx.toolName}:${ctx.hourBucket}`,
-            message: `MCP tool failed: ${ctx.toolName ?? "?"}`,
+            message: `MCP tool failed: ${tool}`,
+            params: { tool },
           });
         }
         break;
       case "error_spike":
         if (isPost && ctx.recentErrorRate >= r.threshold && r.threshold > 0) {
+          const rate = Math.round(ctx.recentErrorRate * 100);
+          const threshold = Math.round(r.threshold * 100);
           fires.push({
             ruleId: r.id,
             type: r.type,
             sessionId: ctx.sessionId,
             dedupKey: ctx.hourBucket,
-            message: `Error rate ${Math.round(ctx.recentErrorRate * 100)}% (≥ ${Math.round(r.threshold * 100)}%)`,
+            message: `Error rate ${rate}% (≥ ${threshold}%)`,
+            params: { rate, threshold },
           });
         }
         break;
       case "session_long":
         if (ctx.sessionDurationMin >= r.threshold && r.threshold > 0) {
+          const minutes = Math.round(ctx.sessionDurationMin);
           fires.push({
             ruleId: r.id,
             type: r.type,
             sessionId: ctx.sessionId,
             dedupKey: ctx.sessionId,
-            message: `Session running ${Math.round(ctx.sessionDurationMin)} min (≥ ${r.threshold})`,
+            message: `Session running ${minutes} min (≥ ${r.threshold})`,
+            // key matches the i18n template alert.session_long → {minutes}
+            params: { minutes, threshold: r.threshold },
           });
         }
         break;
       case "cost_session":
         if (ctx.sessionCostUsd >= r.threshold && r.threshold > 0) {
+          const cost = ctx.sessionCostUsd.toFixed(2);
           fires.push({
             ruleId: r.id,
             type: r.type,
             sessionId: ctx.sessionId,
             dedupKey: ctx.sessionId,
-            message: `Session cost $${ctx.sessionCostUsd.toFixed(2)} (≥ $${r.threshold})`,
+            message: `Session cost $${cost} (≥ $${r.threshold})`,
+            params: { cost, threshold: r.threshold },
           });
         }
         break;
@@ -98,6 +113,7 @@ export interface AlertItem {
   session_id: string | null;
   read: number;
   created_at: string;
+  params: AlertParams | null; // localization values; null for pre-v20 rows
 }
 
 // Enabled rules, cached briefly so the hot ingest path doesn't re-query per event.
@@ -119,10 +135,17 @@ export function getEnabledRules(db: Database.Database): Rule[] {
 export function recordAlert(db: Database.Database, fire: AlertFire): boolean {
   const info = db
     .prepare(
-      `INSERT OR IGNORE INTO alerts (rule_id, type, message, session_id, dedup_key)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO alerts (rule_id, type, message, session_id, dedup_key, params)
+       VALUES (?, ?, ?, ?, ?, ?)`,
     )
-    .run(fire.ruleId, fire.type, fire.message, fire.sessionId, fire.dedupKey);
+    .run(
+      fire.ruleId,
+      fire.type,
+      fire.message,
+      fire.sessionId,
+      fire.dedupKey,
+      fire.params ? JSON.stringify(fire.params) : null,
+    );
   return info.changes > 0;
 }
 
@@ -137,12 +160,23 @@ export function processAlerts(db: Database.Database, ctx: RuleCtx): AlertFire[] 
 }
 
 export function recentAlerts(db: Database.Database, limit: number): AlertItem[] {
-  return db
+  const rows = db
     .prepare(
-      `SELECT id, rule_id, type, message, session_id, read, created_at
+      `SELECT id, rule_id, type, message, session_id, read, created_at, params
        FROM alerts ORDER BY id DESC LIMIT ?`,
     )
-    .all(limit) as AlertItem[];
+    .all(limit) as (Omit<AlertItem, "params"> & { params: string | null })[];
+  return rows.map((r) => ({ ...r, params: parseParams(r.params) }));
+}
+
+function parseParams(json: string | null): AlertParams | null {
+  if (!json) return null;
+  try {
+    const v = JSON.parse(json);
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as AlertParams) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function unreadAlertCount(db: Database.Database): number {

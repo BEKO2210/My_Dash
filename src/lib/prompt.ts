@@ -28,6 +28,22 @@ export function redactSecrets(text: string): string {
   return out;
 }
 
+// Recursively redact secrets in any JSON-ish value while preserving its shape, so
+// the result can still be stored as JSON or rendered as an object/array. Used for
+// tool_input/tool_response (ingest) and transcript tool blocks — they can carry
+// tokens just like a prompt. Strings go through redactSecrets; objects/arrays are
+// walked; other primitives pass through. Respects MC_REDACT=0 via redactSecrets.
+export function redactValue(value: unknown): unknown {
+  if (typeof value === "string") return redactSecrets(value);
+  if (Array.isArray(value)) return value.map(redactValue);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactValue(v);
+    return out;
+  }
+  return value;
+}
+
 export interface PreparedPrompt {
   redacted: string; // full, redacted (for payload_json/title/summary)
   capped: string; // redacted + length-capped (for the prompts table)

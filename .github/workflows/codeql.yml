@@ -1,0 +1,40 @@
+name: CodeQL
+
+# Static security analysis for the JS/TS codebase. Runs on PRs and pushes to main,
+# plus a weekly scheduled scan so newly-published query packs catch latent issues.
+# Findings surface under the repo's Security → Code scanning tab.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 3 * * 1" # Mondays 03:27 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Default + security-extended for a stricter security posture.
+          queries: security-extended
+
+      # No compiled build needed — CodeQL extracts JS/TS directly.
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"

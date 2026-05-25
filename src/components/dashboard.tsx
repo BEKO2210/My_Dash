@@ -1,6 +1,6 @@
 "use client";
 
-import { Profiler, useCallback, useEffect, useMemo, useState } from "react";
+import { Profiler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -12,6 +12,7 @@ import {
   GripHorizontal,
   LayoutGrid,
   Link2,
+  Menu,
   MessageSquare,
   Moon,
   MoveHorizontal,
@@ -53,7 +54,7 @@ import {
   SPAN_PRESETS,
   type SizeMap,
 } from "@/lib/layout";
-import { widgets, type WidgetCategory } from "@/plugins/registry";
+import { widgets, widgetTitle, type WidgetCategory } from "@/plugins/registry";
 
 // In the static demo build, start the in-browser engine + patch fetch before any
 // widget mounts. No-op in the real (server-backed) app.
@@ -289,7 +290,7 @@ export function Dashboard() {
                   onSettings={() => setSettingsFor(w.id)}
                 />
                 <WidgetErrorBoundary
-                  label={w.title}
+                  label={widgetTitle(w, t)}
                   couldNotLoad={t("error.couldNotLoad")}
                   genericText={t("error.generic")}
                   retryLabel={t("common.retry")}
@@ -386,6 +387,135 @@ function WidgetToolbar({
   );
 }
 
+// Mobile-only (<640px) overflow menu: the header's icon controls are hidden on
+// small screens, so this exposes search, the command palette, the gallery, theme
+// and layout reset behind a hamburger. Closes on Esc / outside click.
+function MobileMenu({
+  isCustomLayout,
+  onResetLayout,
+  onOpenGallery,
+}: {
+  isCustomLayout: boolean;
+  onResetLayout: () => void;
+  onOpenGallery: () => void;
+}) {
+  const { t } = useT();
+  const { query, setQuery } = useSearch();
+  const { mode, setMode } = useTheme();
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.focus();
+    const close = () => {
+      setOpen(false);
+      btnRef.current?.focus();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (!panelRef.current?.contains(target) && !btnRef.current?.contains(target)) setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open]);
+
+  const item =
+    "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-muted transition-colors hover:bg-white/[0.04] hover:text-foreground";
+  const modeTab = (active: boolean) =>
+    `flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs transition-colors ${active ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`;
+
+  return (
+    <div className="relative sm:hidden">
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={t("header.menu")}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="flex items-center rounded-full border border-panel-border bg-background/40 p-1.5 text-muted transition-colors hover:border-accent/50 hover:text-foreground"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-label={t("header.menu")}
+          tabIndex={-1}
+          className="absolute right-0 top-10 z-50 w-64 space-y-1 rounded-lg border border-panel-border bg-panel p-2 shadow-2xl shadow-black/50 outline-none"
+        >
+          <label className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-muted" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("search.placeholder")}
+              aria-label={t("search.label")}
+              className="w-full rounded-md border border-panel-border bg-background/40 py-1.5 pl-7 pr-2 text-xs text-foreground outline-none transition-colors focus:border-accent"
+            />
+          </label>
+          <button
+            type="button"
+            className={item}
+            onClick={() => {
+              window.dispatchEvent(new Event("mc:open-command"));
+              setOpen(false);
+            }}
+          >
+            <span className="w-3.5 text-center font-mono text-[11px]">⌘</span>
+            {t("cmd.title")}
+          </button>
+          <button
+            type="button"
+            className={item}
+            onClick={() => {
+              onOpenGallery();
+              setOpen(false);
+            }}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            {t("gallery.title")}
+          </button>
+          {isCustomLayout && (
+            <button
+              type="button"
+              className={item}
+              onClick={() => {
+                onResetLayout();
+                setOpen(false);
+              }}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              {t("layout.reset")}
+            </button>
+          )}
+          <div className="flex gap-1.5 pt-1">
+            <button type="button" onClick={() => setMode("dark")} aria-pressed={mode === "dark"} className={modeTab(mode === "dark")}>
+              <Moon className="h-3.5 w-3.5" />
+              {t("theme.dark")}
+            </button>
+            <button type="button" onClick={() => setMode("light")} aria-pressed={mode === "light"} className={modeTab(mode === "light")}>
+              <Sun className="h-3.5 w-3.5" />
+              {t("theme.light")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Header({
   isCustomLayout,
   onResetLayout,
@@ -452,6 +582,11 @@ function Header({
         </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-muted sm:gap-2.5">
+        <MobileMenu
+          isCustomLayout={isCustomLayout}
+          onResetLayout={onResetLayout}
+          onOpenGallery={onOpenGallery}
+        />
         <label className="relative hidden items-center sm:flex">
           <Search className="pointer-events-none absolute left-2 h-3.5 w-3.5 text-muted" />
           <input
@@ -914,7 +1049,7 @@ function WidgetGallery({
                           <span className="min-w-0 flex-1">
                             <span className={`flex items-center gap-1.5 text-sm ${isHidden ? "text-muted line-through" : "text-foreground"}`}>
                               <Icon className="h-3.5 w-3.5 shrink-0 text-muted" />
-                              <span className="truncate">{w.title}</span>
+                              <span className="truncate">{widgetTitle(w, t)}</span>
                             </span>
                             <span className="mt-0.5 line-clamp-2 block text-[11px] text-muted">{t(w.description)}</span>
                           </span>

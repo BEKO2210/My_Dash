@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Area,
   AreaChart,
@@ -16,6 +16,8 @@ import {
 import { Coins } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import type { UsageReport } from "@/lib/ccusage";
 import { formatCompact, formatMoney } from "@/lib/format";
@@ -38,27 +40,11 @@ const hhmm = (iso: string) => {
 
 export function TokenChart() {
   const { t } = useT();
-  const [usage, setUsage] = useState<UsageReport | null>(null);
   const [mode, setMode] = useState<Mode>("tokens");
   const [range, setRange] = useState<Range>("daily");
   const [currency, setCurrency] = useState<Currency>("EUR");
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/usage")
-        .then((r) => r.json())
-        .then((d: UsageReport) => {
-          if (!cancelled) setUsage(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, []);
+  const q = usePluginQuery<UsageReport>("/api/usage", { pollMs: 30_000 });
+  const usage = q.data;
 
   const data =
     range === "24h"
@@ -83,6 +69,7 @@ export function TokenChart() {
   // Totals reflect the selected range + currency.
   const shownCost = data.reduce((a, d) => a + d[costKey], 0);
   const shownTokens = data.reduce((a, d) => a + d.input + d.output + d.cache, 0);
+  const vs = viewState(q, (d) => !d.available || data.length === 0);
 
   return (
     <Panel
@@ -133,10 +120,12 @@ export function TokenChart() {
         </div>
       }
     >
-      {!usage ? (
+      {vs === "error" ? (
+        <WidgetState icon={Coins} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Coins} title={t("common.loading")} loading />
-      ) : !usage.available || data.length === 0 ? (
-        <WidgetState icon={Coins} title={emptyMessage(t, usage.available, range)} />
+      ) : vs === "empty" ? (
+        <WidgetState icon={Coins} title={emptyMessage(t, usage?.available ?? false, range)} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">

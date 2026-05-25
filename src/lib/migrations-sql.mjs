@@ -257,4 +257,11 @@ export const MIGRATIONS = [
   `
   CREATE INDEX IF NOT EXISTS idx_tool_calls_created ON tool_calls(created_at);
   `,
+
+  // v20 — structured params (JSON) per alert so the UI can localize the message
+  // (DE/EN) from the type + values, instead of the pre-rendered English `message`
+  // (which stays as the webhook text + fallback). Nullable; older rows have none.
+  `
+  ALTER TABLE alerts ADD COLUMN params TEXT;
+  `,
 ];

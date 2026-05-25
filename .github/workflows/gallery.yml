@@ -11,6 +11,11 @@ on:
 permissions:
   contents: read
 
+# A newer manual run supersedes an in-flight one (screenshots are regenerated wholesale).
+concurrency:
+  group: gallery-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   gallery:
     runs-on: ubuntu-latest

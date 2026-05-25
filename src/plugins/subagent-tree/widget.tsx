@@ -1,38 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Bot, ChevronDown, ChevronRight, GitBranch, Layers } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
 import type { SubagentGroup } from "@/lib/subagents";
 
 export function SubagentTree() {
-  const { tick } = useLive();
   const { query } = useSearch();
   const { t, lang } = useT();
-  const [groups, setGroups] = useState<SubagentGroup[] | null>(null);
+  const q = usePluginQuery<{ groups: SubagentGroup[] }>("/api/subagents?limit=200");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/subagents?limit=200")
-        .then((r) => r.json())
-        .then((d: { groups: SubagentGroup[] }) => {
-          if (!cancelled) setGroups(d.groups);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const groups = q.data?.groups ?? [];
+  const vs = viewState(q, () => groups.length === 0);
 
   const toggle = (id: string) =>
     setCollapsed((prev) => {
@@ -42,15 +28,17 @@ export function SubagentTree() {
       return next;
     });
 
-  const filtered = (groups ?? []).filter((g) =>
+  const filtered = groups.filter((g) =>
     matchesQuery(query, g.title, g.project, ...g.tasks.map((tk) => tk.label)),
   );
 
   return (
     <Panel title={t("subagents.title")} icon={<GitBranch className="h-4 w-4 text-accent" />} info={t("subagents.info")}>
-      {!groups ? (
+      {vs === "error" ? (
+        <WidgetState icon={GitBranch} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={GitBranch} title={t("common.loading")} loading />
-      ) : groups.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={GitBranch} title={t("subagents.empty")} description={t("subagents.emptyHint")} />
       ) : filtered.length === 0 ? (
         <WidgetState icon={GitBranch} title={t("common.noResults")} />

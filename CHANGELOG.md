@@ -3,6 +3,31 @@
 All notable changes to Claude Mission Control are documented here. This project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] — Unreleased
+
+> 🚧 **In progress (beta → release).** Roll-up of the 100-item release-hardening
+> roadmap (`.team/roadmap.md`); finalised at release sign-off (GATE-E). Sections
+> are filled in as items land.
+
+### Fixed
+- Enforced the one-way data contract — read routes no longer write to the DB
+  (budget alerts moved off the `GET` path), guarded by a test.
+- Secret redaction now covers tool I/O (input/response) at ingest, in the
+  transcript view and in exports — not just prompts.
+- Correct tool-call durations for parallel / repeated same-tool calls.
+- Retention prunes derived/standalone tables (`search_fts`, `prompts`, `otlp_*`,
+  `alerts`) so the database can't grow unbounded.
+
+### Changed
+- Unified the default port across installer, scripts, hooks and docs.
+- Hardened CI/release — the release workflow passes the green gate before building
+  installers; checksums attached; dependency scanning added.
+
+### Internationalisation & UX
+- Widget names are translated (EN/DE) in the gallery and error states.
+- Consistent loading / empty / **error** states across all widgets.
+- Accessibility and mobile-reachability fixes for header controls and overlays.
+
 ## [1.0.0-beta] — 2026-05-24
 
 First public beta — local-first, read-only observability for Claude Code, plus a

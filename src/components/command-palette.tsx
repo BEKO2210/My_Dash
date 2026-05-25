@@ -8,7 +8,7 @@ import { useFacets } from "@/components/facets";
 import { useTimeRange } from "@/components/time-range";
 import { filterCommands, type CommandItem } from "@/lib/command-palette";
 import { TIME_RANGES } from "@/lib/time-range";
-import { widgets } from "@/plugins/registry";
+import { widgets, widgetTitle } from "@/plugins/registry";
 import type { SessionRow } from "@/lib/types";
 
 interface RunCommand extends CommandItem {
@@ -147,7 +147,7 @@ export function CommandPalette({
       list.push({
         id: `widget-${w.id}`,
         group: t("cmd.widgets"),
-        label: `${t("cmd.goto")}: ${w.title}`,
+        label: `${t("cmd.goto")}: ${widgetTitle(w, t)}`,
         run: () => {
           document.getElementById(`mc-widget-${w.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
           close();

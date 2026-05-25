@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { usePluginConfig } from "@/components/plugin-config";
-import { widgets, type PluginSetting } from "@/plugins/registry";
+import { widgets, widgetTitle, type PluginSetting } from "@/plugins/registry";
 
 export function SettingsDrawer({ widgetId, onClose }: { widgetId: string; onClose: () => void }) {
   const { t } = useT();
@@ -28,7 +28,7 @@ export function SettingsDrawer({ widgetId, onClose }: { widgetId: string; onClos
         <header className="flex items-center justify-between border-b border-panel-border px-4 py-3">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-wide text-muted">{t("settings.title")}</p>
-            <h2 className="truncate text-sm font-semibold text-foreground">{widget?.title ?? widgetId}</h2>
+            <h2 className="truncate text-sm font-semibold text-foreground">{widget ? widgetTitle(widget, t) : widgetId}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label={t("common.close")} title={t("common.close")} className="text-muted hover:text-foreground">
             <X className="h-4 w-4" />

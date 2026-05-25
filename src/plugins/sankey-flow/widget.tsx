@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ResponsiveContainer, Sankey, Tooltip } from "recharts";
 import { Workflow } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import type { SankeyData } from "@/lib/sankey";
 
@@ -43,37 +43,22 @@ function SankeyNode({ x = 0, y = 0, width = 0, height = 0, payload = {} }: NodeP
 
 export function SankeyFlow() {
   const { t } = useT();
-  const { tick } = useLive();
-  const [data, setData] = useState<SankeyData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/sankey")
-        .then((r) => r.json())
-        .then((d: SankeyData) => {
-          if (!cancelled) setData(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const q = usePluginQuery<SankeyData>("/api/sankey", { pollMs: 30_000 });
+  const vs = viewState(q, (d) => d.links.length === 0);
 
   return (
     <Panel title={t("sankey.title")} icon={<Workflow className="h-4 w-4 text-accent" />} info={t("sankey.info")}>
-      {!data ? (
+      {vs === "error" ? (
+        <WidgetState icon={Workflow} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Workflow} title={t("common.loading")} loading />
-      ) : data.links.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Workflow} title={t("sankey.empty")} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
             <Sankey
-              data={data}
+              data={q.data!}
               node={<SankeyNode />}
               nodePadding={18}
               nodeWidth={10}

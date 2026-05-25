@@ -2,13 +2,14 @@ import path from "node:path";
 import { db } from "./db";
 import { hourBucket } from "./activity";
 import { processAlerts } from "./alerts";
+import { checkBudgetAlarms } from "./budget-alarm";
 import { publish } from "./bus";
 import { describeFileEdit } from "./file-edit";
 import { parseDbTime } from "./format";
 import { scheduleGitUpdate } from "./git-sync";
 import { log } from "./log";
 import { parseMcpTool } from "./mcp";
-import { preparePrompt, type PreparedPrompt } from "./prompt";
+import { preparePrompt, redactSecrets, redactValue, type PreparedPrompt } from "./prompt";
 import { pruneAll } from "./retention";
 import { scheduleTranscriptUpdate } from "./transcript-sync";
 import { getQuietConfig, isSuppressed } from "./quiet";
@@ -189,15 +190,28 @@ const bumpActivity = db.prepare<[string, string]>(`
 
 const getSession = db.prepare<[string]>(`SELECT * FROM sessions WHERE id = ?`);
 
-// Error rate over the most recent tool calls — feeds the error-spike alert rule.
-const recentErrorRateStmt = db.prepare(
+// Error rate over a session's most recent tool calls — feeds the error-spike alert.
+// Scoped per session so a noisy project can't trip the alert for an unrelated one.
+const recentErrorRateStmt = db.prepare<[string]>(
   `SELECT AVG(CASE WHEN success = 0 THEN 1.0 ELSE 0 END) AS r
-   FROM (SELECT success FROM tool_calls ORDER BY id DESC LIMIT 50)`,
+   FROM (SELECT success FROM tool_calls WHERE session_id = ? ORDER BY id DESC LIMIT 50)`,
 );
+
+export function recentSessionErrorRate(sessionId: string): number {
+  return (recentErrorRateStmt.get(sessionId) as { r: number | null }).r ?? 0;
+}
 
 const lastPreToolTime = db.prepare<[string, string]>(`
   SELECT created_at FROM events
   WHERE session_id = ? AND event_type = 'PreToolUse' AND tool_name = ?
+  ORDER BY id DESC LIMIT 1
+`);
+
+// Most recent recorded tool_call (i.e. PostToolUse) time for a session+tool — used
+// to tell whether the last PreToolUse is still "open" in the DB fallback below.
+const lastToolCallTime = db.prepare<[string, string]>(`
+  SELECT created_at FROM tool_calls
+  WHERE session_id = ? AND tool_name = ?
   ORDER BY id DESC LIMIT 1
 `);
 
@@ -227,11 +241,46 @@ const insertFileEdit = db.prepare<[string, number, string, number, number]>(`
 
 // Millisecond-precise tool durations: SQLite's CURRENT_TIMESTAMP only has second
 // resolution, so we remember PreToolUse start times in memory (single process) and
-// pair them on PostToolUse. Falls back to the events table after a restart.
-const globalForPending = globalThis as unknown as { __mcPending?: Map<string, number> };
-const pendingStarts = globalForPending.__mcPending ?? new Map<string, number>();
+// pair them on PostToolUse. Each key holds a FIFO *queue* of starts, so two
+// concurrent calls of the same tool (Claude can issue parallel tool_use blocks) no
+// longer overwrite each other. With a tool_use_id the key is unique per call (exact
+// pairing, even out of order); otherwise it's per (session, tool), paired
+// oldest-first. Falls back to the events table after a restart.
+const globalForPending = globalThis as unknown as { __mcPending?: Map<string, number[]> };
+const pendingStarts = globalForPending.__mcPending ?? new Map<string, number[]>();
 globalForPending.__mcPending = pendingStarts;
-const startKey = (s: string, t: string) => `${s} ${t}`;
+// A space can't appear in a session id, tool name or tool_use_id, so it separates
+// the parts unambiguously.
+const startKey = (sessionId: string, toolName: string, toolUseId: string | null) =>
+  `${sessionId} ${toolUseId ?? `name:${toolName}`}`;
+
+function pushStart(key: string, at: number): void {
+  const q = pendingStarts.get(key);
+  if (q) q.push(at);
+  else pendingStarts.set(key, [at]);
+}
+
+function shiftStart(key: string): number | undefined {
+  const q = pendingStarts.get(key);
+  if (!q || q.length === 0) return undefined;
+  const at = q.shift();
+  if (q.length === 0) pendingStarts.delete(key);
+  return at;
+}
+
+// Duration for the DB fallback (used after a restart, when the in-memory start is
+// gone). Returns null when the most-recent PreToolUse was already consumed by an
+// earlier PostToolUse — i.e. it is no newer than the last recorded tool_call — so a
+// 2nd Post with no fresh Pre doesn't over-count from a stale start. Pure → testable.
+export function fallbackDuration(
+  nowMs: number,
+  preMs: number | null,
+  lastCallMs: number | null,
+): number | null {
+  if (preMs === null || !Number.isFinite(preMs)) return null;
+  if (lastCallMs !== null && preMs <= lastCallMs) return null; // Pre already paired
+  return Math.max(0, nowMs - preMs);
+}
 
 export interface IngestResult {
   event: EventRow;
@@ -248,6 +297,9 @@ function maybePrune(): void {
   sinceLastPrune = 0;
   try {
     pruneAll(db);
+    // Fold the WAL back into the main db file so -wal doesn't grow without bound on
+    // a long-running server. TRUNCATE resets it after checkpointing.
+    db.pragma("wal_checkpoint(TRUNCATE)");
   } catch (err) {
     log.error("retention prune failed", err);
   }
@@ -260,6 +312,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   const cwd = typeof payload.cwd === "string" ? payload.cwd : null;
   const projectName = cwd ? path.basename(cwd) : null;
   const toolName = typeof payload.tool_name === "string" ? payload.tool_name : null;
+  const toolUseId = typeof payload.tool_use_id === "string" ? payload.tool_use_id : null;
   const model = extractModel(payload);
 
   // Captured in the PostToolUse branch for the alert engine (after the tx).
@@ -275,7 +328,24 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
     stored = { ...payload, prompt: prepared.redacted };
   }
 
-  const summary = summarize(eventType, stored);
+  // Tool I/O can carry secrets too (a Bash command with a token, an env dump, a
+  // file read). Redact it before it's persisted to tool_io + payload_json or shown
+  // in the UI/export — the same guarantee the prompt already gets.
+  const redactedToolInput = payload.tool_input !== undefined ? redactValue(payload.tool_input) : undefined;
+  const redactedToolResponse =
+    payload.tool_response !== undefined ? redactValue(payload.tool_response) : undefined;
+
+  // payload_json carries the redacted prompt. tool_input/tool_response are NOT
+  // duplicated here — they're stored (full + redacted) in tool_io and surfaced via
+  // the tool inspector — so the highest-volume rows don't pay for them twice.
+  const storedForJson: Record<string, unknown> = { ...stored };
+  delete storedForJson.tool_input;
+  delete storedForJson.tool_response;
+  const payloadJson = JSON.stringify(storedForJson);
+
+  // The summary is derived from tool_input (e.g. a Bash command) → redact it so no
+  // secret leaks into events.summary / the search index / the live stream.
+  const summary = redactSecrets(summarize(eventType, stored));
 
   const tx = db.transaction(() => {
     upsertSession.run(sessionId, cwd, projectName, payload.source ?? null);
@@ -297,34 +367,35 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
 
     if (eventType === "PreToolUse" && toolName) {
       if (pendingStarts.size > 1000) pendingStarts.clear(); // guard against orphaned starts
-      pendingStarts.set(startKey(sessionId, toolName), Date.now());
+      pushStart(startKey(sessionId, toolName, toolUseId), Date.now());
     }
 
     if (eventType === "PostToolUse" && toolName) {
       let duration: number | null = null;
-      const key = startKey(sessionId, toolName);
-      const startedAt = pendingStarts.get(key);
+      const startedAt = shiftStart(startKey(sessionId, toolName, toolUseId));
       if (startedAt !== undefined) {
         duration = Date.now() - startedAt;
-        pendingStarts.delete(key);
       } else {
-        const pre = lastPreToolTime.get(sessionId, toolName) as
-          | { created_at: string }
-          | undefined;
-        if (pre)
-          duration = Math.max(
-            0,
-            Date.now() - new Date(pre.created_at.replace(" ", "T") + "Z").getTime(),
-          );
+        // No in-memory start (server restarted mid-call). Pair against the events
+        // table — but only if that PreToolUse is still "open" (newer than the last
+        // recorded tool_call), so a 2nd Post with no fresh Pre doesn't over-count.
+        const pre = lastPreToolTime.get(sessionId, toolName) as { created_at: string } | undefined;
+        const lastCall = lastToolCallTime.get(sessionId, toolName) as { created_at: string } | undefined;
+        duration = fallbackDuration(
+          Date.now(),
+          pre ? (parseDbTime(pre.created_at)?.getTime() ?? null) : null,
+          lastCall ? (parseDbTime(lastCall.created_at)?.getTime() ?? null) : null,
+        );
       }
       const { isError, errorText } = describeToolResult(payload.tool_response);
       const mcp = parseMcpTool(toolName);
       alertToolSource = mcp.isMcp ? "mcp" : "builtin";
       alertToolSuccess = isError ? 0 : 1;
+      const target = extractTarget(toolName, payload.tool_input);
       const info = insertToolCall.run(
         sessionId,
         toolName,
-        extractTarget(toolName, payload.tool_input),
+        target !== null ? redactSecrets(target) : null,
         duration,
         isError ? 0 : 1,
         mcp.isMcp ? "mcp" : "builtin",
@@ -332,10 +403,10 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       );
       insertToolIo.run(
         Number(info.lastInsertRowid),
-        payload.tool_input !== undefined ? JSON.stringify(payload.tool_input) : null,
-        payload.tool_response !== undefined ? JSON.stringify(payload.tool_response) : null,
+        redactedToolInput !== undefined ? JSON.stringify(redactedToolInput) : null,
+        redactedToolResponse !== undefined ? JSON.stringify(redactedToolResponse) : null,
         isError ? 1 : 0,
-        errorText,
+        errorText !== null ? redactSecrets(errorText) : null,
       );
 
       // A Task call spawned a subagent — record the parent→subagent link.
@@ -364,7 +435,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       toolName,
       model,
       summary,
-      JSON.stringify(stored),
+      payloadJson,
     ) as EventRow;
 
     if (summary) insertSearch.run(summary, "event", event.id, sessionId);
@@ -389,10 +460,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
   try {
     const startMs = parseDbTime(result.session.first_seen)?.getTime();
     const durationMin = startMs ? Math.max(0, (Date.now() - startMs) / 60_000) : 0;
-    const recentErrorRate =
-      eventType === "PostToolUse"
-        ? ((recentErrorRateStmt.get() as { r: number | null }).r ?? 0)
-        : 0;
+    const recentErrorRate = eventType === "PostToolUse" ? recentSessionErrorRate(sessionId) : 0;
     const fired = processAlerts(db, {
       eventType,
       toolName,
@@ -415,6 +483,13 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
           void sendAlertWebhook(wh.url, f.message).catch((err) => log.error("webhook failed", err));
         }
       }
+    }
+
+    // Budget over-spend alarm: a write, so it belongs here on the ingest path (not
+    // on the read-only /api/budget GET). Checked at turn boundaries, where spend
+    // changes; no-ops unless a budget is configured. Deduped per period/day.
+    if (eventType === "Stop" || eventType === "SessionEnd") {
+      checkBudgetAlarms(db);
     }
   } catch (err) {
     log.error("alert processing failed", err);

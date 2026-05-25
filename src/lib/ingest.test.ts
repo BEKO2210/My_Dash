@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { toJson } from "@/lib/export-format";
 import type {
   EventRow,
   FileEditRow,
@@ -17,6 +18,8 @@ import type {
 // the db module at a temp dir via MC_DATA_DIR *before* importing it (dynamic import),
 // so the real schema + prepared statements are used — just on a disposable file.
 let ingest: (typeof import("@/lib/ingest"))["ingest"];
+let fallbackDuration: (typeof import("@/lib/ingest"))["fallbackDuration"];
+let recentSessionErrorRate: (typeof import("@/lib/ingest"))["recentSessionErrorRate"];
 let db: (typeof import("@/lib/db"))["db"];
 let updateSessionUsage: (typeof import("@/lib/transcript-sync"))["updateSessionUsage"];
 let updateSessionGit: (typeof import("@/lib/git-sync"))["updateSessionGit"];
@@ -25,7 +28,7 @@ let dataDir: string;
 beforeAll(async () => {
   dataDir = mkdtempSync(path.join(tmpdir(), "mc-ingest-test-"));
   process.env.MC_DATA_DIR = dataDir;
-  ({ ingest } = await import("@/lib/ingest"));
+  ({ ingest, fallbackDuration, recentSessionErrorRate } = await import("@/lib/ingest"));
   ({ db } = await import("@/lib/db"));
   ({ updateSessionUsage } = await import("@/lib/transcript-sync"));
   ({ updateSessionGit } = await import("@/lib/git-sync"));
@@ -326,6 +329,148 @@ describe("ingest — prompt redaction & storage", () => {
   it("does not create a prompt row for non-prompt events", () => {
     send("SessionStart", { session_id: "s1" });
     expect(prompts("s1")).toHaveLength(0);
+  });
+});
+
+describe("ingest — recent error rate is per session", () => {
+  // #24 — a noisy session must not trip the error-spike alert for an unrelated one.
+  it("scopes the recent error rate to the given session", () => {
+    send("PostToolUse", { session_id: "A", tool_name: "Bash", tool_input: { command: "x" }, tool_response: { is_error: true } });
+    send("PostToolUse", { session_id: "A", tool_name: "Bash", tool_input: { command: "y" }, tool_response: { is_error: true } });
+    send("PostToolUse", { session_id: "B", tool_name: "Read", tool_input: { file_path: "/a" }, tool_response: { ok: true } });
+    send("PostToolUse", { session_id: "B", tool_name: "Read", tool_input: { file_path: "/b" }, tool_response: { ok: true } });
+    expect(recentSessionErrorRate("A")).toBe(1); // both A calls failed
+    expect(recentSessionErrorRate("B")).toBe(0); // B clean despite A's errors in the table
+  });
+});
+
+describe("ingest — tool duration pairing", () => {
+  // #6 — two parallel calls of the same tool (no tool_use_id) must not overwrite
+  // each other's start; they pair FIFO (oldest Pre ↔ oldest Post).
+  it("pairs two concurrent same-tool calls FIFO instead of overwriting", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-23T10:00:00Z"));
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "a" } }); // t=0
+    vi.advanceTimersByTime(100);
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "b" } }); // t=100
+    vi.advanceTimersByTime(400); // t=500
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "a" }, tool_response: {} });
+    vi.advanceTimersByTime(300); // t=800
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_input: { command: "b" }, tool_response: {} });
+    const calls = toolCalls("s1");
+    expect(calls).toHaveLength(2);
+    expect(calls[0].duration_ms).toBe(500); // first Post (t=500) ↔ first Pre (t=0)
+    expect(calls[1].duration_ms).toBe(700); // second Post (t=800) ↔ second Pre (t=100)
+  });
+
+  // #6 — with a tool_use_id, pairing is exact even when Posts arrive out of order.
+  it("pairs by tool_use_id exactly, even for out-of-order completion", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-23T10:00:00Z"));
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t1", tool_input: { command: "a" } }); // t=0
+    vi.advanceTimersByTime(100);
+    send("PreToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t2", tool_input: { command: "b" } }); // t=100
+    vi.advanceTimersByTime(400); // t=500 — t2 finishes first
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t2", tool_input: { command: "b" }, tool_response: {} });
+    vi.advanceTimersByTime(300); // t=800 — then t1
+    send("PostToolUse", { session_id: "s1", tool_name: "Bash", tool_use_id: "t1", tool_input: { command: "a" }, tool_response: {} });
+    const calls = toolCalls("s1");
+    expect(calls[0].duration_ms).toBe(400); // t2 Post (t=500) ↔ t2 Pre (t=100)
+    expect(calls[1].duration_ms).toBe(800); // t1 Post (t=800) ↔ t1 Pre (t=0)
+  });
+
+  // #7 — the pure DB-fallback decision: an open Pre pairs; a consumed one (no newer
+  // than the last tool_call) yields null instead of over-counting from a stale start.
+  it("fallbackDuration pairs an open Pre and rejects a consumed one", () => {
+    expect(fallbackDuration(5000, 3000, null)).toBe(2000); // no prior call → open
+    expect(fallbackDuration(5000, 3000, 1000)).toBe(2000); // Pre newer than last call → open
+    expect(fallbackDuration(60000, 3000, 4000)).toBeNull(); // last call newer → already paired
+    expect(fallbackDuration(60000, 3000, 3000)).toBeNull(); // same second → treat as paired
+    expect(fallbackDuration(5000, null, null)).toBeNull(); // no Pre at all
+  });
+});
+
+describe("ingest — tool I/O redaction", () => {
+  const token = "sk-ant-abcdefghijklmnop0123456789";
+
+  it("redacts a secret in tool_input across tool_io, target and payload_json", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: `curl -H "authorization: ${token}" https://example.com` },
+      tool_response: { ok: true },
+    });
+    const call = toolCalls("s1")[0];
+    const io = toolIo(call.id)!;
+    expect(io.input_json).toContain("[REDACTED]");
+    expect(io.input_json).not.toContain(token);
+    expect(call.target).not.toContain(token); // target is derived from the command
+    // payload_json no longer carries tool_input at all (#88 — it lives in tool_io),
+    // so the secret can't leak there.
+    expect(event.payload_json).not.toContain(token);
+    expect(JSON.parse(event.payload_json).tool_input).toBeUndefined();
+  });
+
+  it("redacts a secret in tool_response across tool_io and payload_json", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: { content: `export API_TOKEN=${token}` },
+    });
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(io.output_json).toContain("[REDACTED]");
+    expect(io.output_json).not.toContain(token);
+    expect(event.payload_json).not.toContain(token);
+    expect(JSON.parse(event.payload_json).tool_response).toBeUndefined(); // #88
+  });
+
+  it("does not duplicate tool_input/tool_response in events.payload_json (#88)", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: { content: "hello" },
+    });
+    const payload = JSON.parse(event.payload_json);
+    expect(payload.tool_input).toBeUndefined();
+    expect(payload.tool_response).toBeUndefined();
+    expect(payload.tool_name).toBe("Read"); // other fields still present
+    // …but tool_io retains the full I/O.
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(JSON.parse(io.input_json!)).toEqual({ file_path: "/a.ts" });
+    expect(JSON.parse(io.output_json!)).toEqual({ content: "hello" });
+  });
+
+  it("redacts a secret in a tool error message", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: "x" },
+      tool_response: { is_error: true, error: `auth failed for ${token}` },
+    });
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(io.is_error).toBe(1);
+    expect(io.error_text).not.toContain(token);
+    expect(io.error_text).toContain("[REDACTED]");
+  });
+
+  // #5 — what /api/export serializes (events + tool_calls + tool_io rows) must
+  // carry only redacted I/O, since those columns are written redacted at ingest.
+  it("export of events/tool_calls/tool_io contains no raw secret", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: `echo ${token}` },
+      tool_response: { out: token },
+    });
+    const dump = toJson({
+      events: db.prepare("SELECT * FROM events ORDER BY id DESC").all(),
+      tool_calls: db.prepare("SELECT * FROM tool_calls ORDER BY id DESC").all(),
+      tool_io: db.prepare("SELECT * FROM tool_io ORDER BY tool_call_id DESC").all(),
+    });
+    expect(dump).not.toContain(token);
+    expect(dump).toContain("[REDACTED]");
   });
 });
 

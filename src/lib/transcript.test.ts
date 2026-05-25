@@ -2,7 +2,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { parseTranscriptMessages, parseTranscriptUsage, summarizeTranscript } from "@/lib/transcript";
+import {
+  parseTranscriptMessages,
+  parseTranscriptUsage,
+  redactTranscriptMessages,
+  summarizeTranscript,
+  type TranscriptMessage,
+} from "@/lib/transcript";
 
 const TRANSCRIPT = [
   JSON.stringify({ type: "user", message: { role: "user", content: "hello" } }),
@@ -108,6 +114,41 @@ describe("parseTranscriptMessages", () => {
 
   it("returns an empty array for an empty transcript", () => {
     expect(parseTranscriptMessages("")).toEqual([]);
+  });
+});
+
+describe("redactTranscriptMessages", () => {
+  const token = "sk-ant-abcdefghijklmnop0123456789";
+
+  it("redacts text, tool_use input and tool_result output", () => {
+    const msgs: TranscriptMessage[] = [
+      {
+        role: "assistant",
+        blocks: [
+          { type: "text", text: `use ${token} please` },
+          { type: "tool_use", name: "Bash", input: { command: `echo ${token}` } },
+        ],
+      },
+      {
+        role: "user",
+        blocks: [{ type: "tool_result", output: [{ type: "text", text: `got ${token}` }], isError: false }],
+      },
+    ];
+    const out = redactTranscriptMessages(msgs);
+    const serialized = JSON.stringify(out);
+    expect(serialized).not.toContain(token);
+    expect(serialized).toContain("[REDACTED]");
+    // structure is preserved (not flattened to strings)
+    expect(out[0].blocks[1]).toMatchObject({ type: "tool_use", name: "Bash" });
+    expect(out[1].blocks[0].type).toBe("tool_result");
+  });
+
+  it("does not mutate the input messages", () => {
+    const input: TranscriptMessage[] = [
+      { role: "assistant", blocks: [{ type: "text", text: token }] },
+    ];
+    redactTranscriptMessages(input);
+    expect(input[0].blocks[0].text).toBe(token); // original untouched
   });
 });
 

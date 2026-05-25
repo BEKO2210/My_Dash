@@ -1019,9 +1019,9 @@ export function demoAlerts() {
   const now = Date.now();
   const at = (ms: number) => new Date(now - ms).toISOString().slice(0, 19).replace("T", " ");
   const alerts: AlertItem[] = [
-    { id: 3, rule_id: 2, type: "error_spike", message: "Error rate 33% (≥ 25%)", session_id: "demo-incident", read: 0, created_at: at(120_000) },
-    { id: 2, rule_id: 1, type: "mcp_error", message: "MCP tool failed: mcp__github__create_pr", session_id: "demo-incident", read: 0, created_at: at(3_600_000) },
-    { id: 1, rule_id: 4, type: "cost_session", message: "Session cost $6.20 (≥ $5)", session_id: "demo-bot", read: 1, created_at: at(7_200_000) },
+    { id: 3, rule_id: 2, type: "error_spike", message: "Error rate 33% (≥ 25%)", params: { rate: 33, threshold: 25 }, session_id: "demo-incident", read: 0, created_at: at(120_000) },
+    { id: 2, rule_id: 1, type: "mcp_error", message: "MCP tool failed: mcp__github__create_pr", params: { tool: "mcp__github__create_pr" }, session_id: "demo-incident", read: 0, created_at: at(3_600_000) },
+    { id: 1, rule_id: 4, type: "cost_session", message: "Session cost $6.20 (≥ $5)", params: { cost: "6.20", threshold: "5" }, session_id: "demo-bot", read: 1, created_at: at(7_200_000) },
   ];
   return { alerts, unread: alerts.filter((a) => !a.read).length };
 }

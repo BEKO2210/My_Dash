@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { subscribe } from "@/lib/bus";
-import { eventsSince, parseLastEventId, sseFrame } from "@/lib/sse";
+import { eventsSince, gapTooLarge, latestEventId, parseLastEventId, sseFrame, sseResetFrame } from "@/lib/sse";
 import type { StreamMessage } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -65,10 +65,19 @@ export async function GET(req: Request) {
       // Replay the gap (synchronous DB read — no live event can interleave).
       if (lastEventId) {
         try {
-          for (const e of eventsSince(db, lastEventId, REPLAY_LIMIT)) {
-            if (e.id <= lastSent) continue;
-            lastSent = e.id;
-            send(sseFrame(e.id, { event: e }));
+          const latest = latestEventId(db);
+          if (gapTooLarge(latest, lastEventId, REPLAY_LIMIT)) {
+            // Too many missed events to replay without dropping the middle — tell
+            // the client to refetch its backlog (/api/events), then deliver live
+            // from the newest id so nothing new is missed.
+            send(sseResetFrame());
+            lastSent = latest;
+          } else {
+            for (const e of eventsSince(db, lastEventId, REPLAY_LIMIT)) {
+              if (e.id <= lastSent) continue;
+              lastSent = e.id;
+              send(sseFrame(e.id, { event: e }));
+            }
           }
         } catch {
           /* a replay failure shouldn't tear down the live stream */

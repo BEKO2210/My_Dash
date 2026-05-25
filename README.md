@@ -96,7 +96,7 @@ UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
 
 - **Live stream** — every tool call, prompt and lifecycle event in real time (SSE), virtualized for long histories.
 - **Session Kanban** — sessions flow through `Aktiv → Wartet → Beendet`, filterable by project, with full session detail + transcript pages.
-- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and 30+ widgets (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…).
+- **Tokens & cost** — daily usage via [`ccusage`](https://github.com/ryoppippi/ccusage) in USD **and** EUR, budgets with burn-rate projection, and **30 built-in widgets** (heatmaps, latency, reliability, anomalies, model mix, git/PR correlation…) — extensible via the plugin registry.
 - **3D tool-call graph** — Session → Tool → File, revealing structure across sessions.
 - **Alerts & notifications** — rule-based alerts at ingest, in-app inbox + toasts, desktop notifications, optional Slack/Discord webhook, quiet hours and a daily/weekly digest.
 - **Themes & i18n** — light/dark plus accent colours; full German/English UI.
@@ -138,16 +138,16 @@ Double-click installers are built by the release workflow and attached to the
 
 | OS | Installer |
 |----|------|
-| Windows | `Claude.Mission.Control.Setup.<version>.exe` (NSIS installer) |
-| macOS | `Claude.Mission.Control-<version>-arm64.dmg` (Apple Silicon) / `-x64.dmg` (Intel) |
-| Linux | `.AppImage` (portable) or `.deb` |
+| Windows | `Claude-Mission-Control-Setup-<version>.exe` (NSIS installer) |
+| macOS | `Claude-Mission-Control-<version>-arm64.dmg` (Apple Silicon) / `Claude-Mission-Control-<version>-x64.dmg` (Intel) |
+| Linux | `Claude-Mission-Control-<version>-<arch>.AppImage` (portable) or `.deb` |
 
 > **Beta note — the installers are unsigned.** This is an early public beta, so your
 > OS will warn before running it:
 > - **Windows:** SmartScreen → *More info* → **Run anyway**.
 > - **macOS:** right-click the app → **Open** (the first launch only); or
 >   *System Settings → Privacy & Security → Open Anyway*.
-> - **Linux (AppImage):** `chmod +x Claude.Mission.Control-*.AppImage` then run it.
+> - **Linux (AppImage):** `chmod +x Claude-Mission-Control-*.AppImage` then run it.
 
 The app bundles its own Node runtime (nothing to install separately). It runs in the
 background with a tray icon — click the tray → **Connect Claude Code (install hooks)**,
