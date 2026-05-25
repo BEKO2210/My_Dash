@@ -46,6 +46,42 @@ export function formatMoney(n: number, currency: "USD" | "EUR"): string {
   return symbol + safe.toFixed(2);
 }
 
+// Locale-aware money formatter (the single money helper going forward): thousands
+// separators + correct symbol placement + decimals per the active language —
+// EN "$1,234.56", DE "1.234,56 €". Widgets migrate from formatMoney(n,cur) to this
+// (passing the active lang) in the currency-consistency pass so the whole dashboard
+// renders one consistent currency. NaN→0; defensive fallback keeps it from throwing.
+export function formatCurrency(
+  amount: number,
+  currency: "USD" | "EUR",
+  lang: "de" | "en" = "en",
+): string {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  try {
+    return new Intl.NumberFormat(lang === "de" ? "de-DE" : "en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safe);
+  } catch {
+    return (currency === "EUR" ? "€" : "$") + safe.toFixed(2);
+  }
+}
+
+// USD→EUR conversion (pure). `rate` = EUR per 1 USD.
+export function usdToEur(usd: number, rate: number): number {
+  const u = Number.isFinite(usd) ? usd : 0;
+  return u * (Number.isFinite(rate) && rate > 0 ? rate : 0);
+}
+
+// Client-visible EUR/USD rate, mirroring ccusage's server-side default. Override
+// with NEXT_PUBLIC_EUR_PER_USD (inlined at build); defaults to 0.92.
+export function eurRate(): number {
+  const r = Number(process.env.NEXT_PUBLIC_EUR_PER_USD);
+  return Number.isFinite(r) && r > 0 ? r : 0.92;
+}
+
 // Logical category for an event → drives colour + icon in the UI.
 export type EventKind =
   | "session-start"
