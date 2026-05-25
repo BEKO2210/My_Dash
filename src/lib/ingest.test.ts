@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { toJson } from "@/lib/export-format";
 import type {
   EventRow,
   FileEditRow,
@@ -326,6 +327,70 @@ describe("ingest — prompt redaction & storage", () => {
   it("does not create a prompt row for non-prompt events", () => {
     send("SessionStart", { session_id: "s1" });
     expect(prompts("s1")).toHaveLength(0);
+  });
+});
+
+describe("ingest — tool I/O redaction", () => {
+  const token = "sk-ant-abcdefghijklmnop0123456789";
+
+  it("redacts a secret in tool_input across tool_io, target and payload_json", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: `curl -H "authorization: ${token}" https://example.com` },
+      tool_response: { ok: true },
+    });
+    const call = toolCalls("s1")[0];
+    const io = toolIo(call.id)!;
+    expect(io.input_json).toContain("[REDACTED]");
+    expect(io.input_json).not.toContain(token);
+    expect(call.target).not.toContain(token); // target is derived from the command
+    expect(event.payload_json).not.toContain(token);
+    expect(event.payload_json).toContain("[REDACTED]");
+  });
+
+  it("redacts a secret in tool_response across tool_io and payload_json", () => {
+    const { event } = send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Read",
+      tool_input: { file_path: "/a.ts" },
+      tool_response: { content: `export API_TOKEN=${token}` },
+    });
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(io.output_json).toContain("[REDACTED]");
+    expect(io.output_json).not.toContain(token);
+    expect(event.payload_json).not.toContain(token);
+  });
+
+  it("redacts a secret in a tool error message", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: "x" },
+      tool_response: { is_error: true, error: `auth failed for ${token}` },
+    });
+    const io = toolIo(toolCalls("s1")[0].id)!;
+    expect(io.is_error).toBe(1);
+    expect(io.error_text).not.toContain(token);
+    expect(io.error_text).toContain("[REDACTED]");
+  });
+
+  // #5 — what /api/export serializes (events + tool_calls + tool_io rows) must
+  // carry only redacted I/O, since those columns are written redacted at ingest.
+  it("export of events/tool_calls/tool_io contains no raw secret", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Bash",
+      tool_input: { command: `echo ${token}` },
+      tool_response: { out: token },
+    });
+    const dump = toJson({
+      events: db.prepare("SELECT * FROM events ORDER BY id DESC").all(),
+      tool_calls: db.prepare("SELECT * FROM tool_calls ORDER BY id DESC").all(),
+      tool_io: db.prepare("SELECT * FROM tool_io ORDER BY tool_call_id DESC").all(),
+    });
+    expect(dump).not.toContain(token);
+    expect(dump).toContain("[REDACTED]");
   });
 });
 

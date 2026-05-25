@@ -8,7 +8,7 @@ import { parseDbTime } from "./format";
 import { scheduleGitUpdate } from "./git-sync";
 import { log } from "./log";
 import { parseMcpTool } from "./mcp";
-import { preparePrompt, type PreparedPrompt } from "./prompt";
+import { preparePrompt, redactSecrets, redactValue, type PreparedPrompt } from "./prompt";
 import { pruneAll } from "./retention";
 import { scheduleTranscriptUpdate } from "./transcript-sync";
 import { getQuietConfig, isSuppressed } from "./quiet";
@@ -275,7 +275,23 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
     stored = { ...payload, prompt: prepared.redacted };
   }
 
-  const summary = summarize(eventType, stored);
+  // Tool I/O can carry secrets too (a Bash command with a token, an env dump, a
+  // file read). Redact it before it's persisted to tool_io + payload_json or shown
+  // in the UI/export — the same guarantee the prompt already gets.
+  const redactedToolInput = payload.tool_input !== undefined ? redactValue(payload.tool_input) : undefined;
+  const redactedToolResponse =
+    payload.tool_response !== undefined ? redactValue(payload.tool_response) : undefined;
+
+  // payload_json carries the redacted prompt and now redacted tool I/O. Built from
+  // a plain object so the typed HookPayload fields don't fight the redacted values.
+  const storedForJson: Record<string, unknown> = { ...stored };
+  if (redactedToolInput !== undefined) storedForJson.tool_input = redactedToolInput;
+  if (redactedToolResponse !== undefined) storedForJson.tool_response = redactedToolResponse;
+  const payloadJson = JSON.stringify(storedForJson);
+
+  // The summary is derived from tool_input (e.g. a Bash command) → redact it so no
+  // secret leaks into events.summary / the search index / the live stream.
+  const summary = redactSecrets(summarize(eventType, stored));
 
   const tx = db.transaction(() => {
     upsertSession.run(sessionId, cwd, projectName, payload.source ?? null);
@@ -321,10 +337,11 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       const mcp = parseMcpTool(toolName);
       alertToolSource = mcp.isMcp ? "mcp" : "builtin";
       alertToolSuccess = isError ? 0 : 1;
+      const target = extractTarget(toolName, payload.tool_input);
       const info = insertToolCall.run(
         sessionId,
         toolName,
-        extractTarget(toolName, payload.tool_input),
+        target !== null ? redactSecrets(target) : null,
         duration,
         isError ? 0 : 1,
         mcp.isMcp ? "mcp" : "builtin",
@@ -332,10 +349,10 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       );
       insertToolIo.run(
         Number(info.lastInsertRowid),
-        payload.tool_input !== undefined ? JSON.stringify(payload.tool_input) : null,
-        payload.tool_response !== undefined ? JSON.stringify(payload.tool_response) : null,
+        redactedToolInput !== undefined ? JSON.stringify(redactedToolInput) : null,
+        redactedToolResponse !== undefined ? JSON.stringify(redactedToolResponse) : null,
         isError ? 1 : 0,
-        errorText,
+        errorText !== null ? redactSecrets(errorText) : null,
       );
 
       // A Task call spawned a subagent — record the parent→subagent link.
@@ -364,7 +381,7 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
       toolName,
       model,
       summary,
-      JSON.stringify(stored),
+      payloadJson,
     ) as EventRow;
 
     if (summary) insertSearch.run(summary, "event", event.id, sessionId);

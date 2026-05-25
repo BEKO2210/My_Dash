@@ -1,4 +1,5 @@
 import { open, readFile, stat } from "node:fs/promises";
+import { redactSecrets, redactValue } from "./prompt";
 
 // Reads Claude Code's per-session JSONL transcript and rolls up the billable token
 // usage (summed per assistant turn, like ccusage), the model, and the latest
@@ -144,6 +145,23 @@ export function parseTranscriptMessages(text: string, maxMessages = 400): Transc
     out.push({ role: msg.role, blocks });
   }
   return out.length > maxMessages ? out.slice(out.length - maxMessages) : out;
+}
+
+// Redact secrets from a parsed transcript before it leaves the server: text and
+// thinking blocks via redactSecrets, and tool_use input + tool_result output
+// recursively (they can carry tokens just like a prompt). Returns new objects;
+// the inputs are not mutated.
+export function redactTranscriptMessages(messages: TranscriptMessage[]): TranscriptMessage[] {
+  return messages.map((m) => ({
+    role: m.role,
+    blocks: m.blocks.map((b) => {
+      const nb: TranscriptBlock = { ...b };
+      if (nb.text != null) nb.text = redactSecrets(nb.text);
+      if (nb.input !== undefined) nb.input = redactValue(nb.input);
+      if (nb.output !== undefined) nb.output = redactValue(nb.output);
+      return nb;
+    }),
+  }));
 }
 
 const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;

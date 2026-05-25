@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { parseTranscriptMessages, readTranscriptText, type TranscriptMessage } from "@/lib/transcript";
-import { redactSecrets } from "@/lib/prompt";
+import { parseTranscriptMessages, readTranscriptText, redactTranscriptMessages } from "@/lib/transcript";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
@@ -21,19 +20,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!row.transcript_path) return NextResponse.json({ messages: [], available: false });
 
     const text = await readTranscriptText(row.transcript_path);
-    const messages = redactMessages(parseTranscriptMessages(text));
+    const messages = redactTranscriptMessages(parseTranscriptMessages(text));
     return NextResponse.json({ messages, available: true });
   } catch (err) {
     log.error("/api/sessions/[id]/transcript failed", err);
     return NextResponse.json({ messages: [], available: false });
   }
-}
-
-function redactMessages(messages: TranscriptMessage[]): TranscriptMessage[] {
-  return messages.map((m) => ({
-    role: m.role,
-    blocks: m.blocks.map((b) =>
-      b.text != null ? { ...b, text: redactSecrets(b.text) } : b,
-    ),
-  }));
 }
