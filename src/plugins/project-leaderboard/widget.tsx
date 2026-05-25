@@ -9,7 +9,8 @@ import { viewState } from "@/components/widget-view";
 import { useView, ViewSwitch } from "@/components/view-variant";
 import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
-import { formatCompact, formatMoney } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import type { ProjectUsage } from "@/lib/projects";
 
 type SortKey = "costUsd" | "sessions" | "tools" | "totalTokens";
@@ -33,6 +34,7 @@ export const PROJECT_LEADERBOARD_VIEWS: ViewOption[] = [
 
 export function ProjectLeaderboard() {
   const { t } = useT();
+  const money = useMoney();
   const [sort, setSort] = useState<SortKey>("costUsd");
   const view = useView(WIDGET_ID, VIEW_VALUES, "table");
   const q = usePluginQuery<{ projects: ProjectUsage[] }>("/api/usage/projects");
@@ -42,7 +44,7 @@ export function ProjectLeaderboard() {
 
   const cell = (p: ProjectUsage, key: SortKey) =>
     key === "costUsd"
-      ? formatMoney(p.costUsd, "USD")
+      ? money(p.costUsd)
       : key === "totalTokens"
         ? formatCompact(p.totalTokens)
         : String(p[key]);

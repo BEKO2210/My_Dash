@@ -12,7 +12,8 @@ import { useSearch, matchesQuery } from "@/components/search";
 import { useFacets } from "@/components/facets";
 import { useT } from "@/lib/i18n";
 import { sessionMatchesFacets } from "@/lib/facets";
-import { formatCompact, formatMoney, relativeTime, STATUS_META } from "@/lib/format";
+import { formatCompact, relativeTime, STATUS_META } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import type { ViewOption } from "@/plugins/registry";
 import type { EventRow, SessionRow, SessionStatus } from "@/lib/types";
 
@@ -129,6 +130,7 @@ function SessionList({
   onOpen: (s: SessionCard) => void;
 }) {
   const { t, lang } = useT();
+  const money = useMoney();
   if (sessions.length === 0) {
     return <WidgetState icon={KanbanSquare} title={query.trim() ? t("common.noResults") : t("kanban.empty")} />;
   }
@@ -168,7 +170,7 @@ function SessionList({
                 {s.cost_usd > 0 && (
                   <span className="flex items-center gap-1">
                     <Coins className="h-3 w-3" />
-                    {formatMoney(s.cost_usd, "USD")}
+                    {money(s.cost_usd)}
                   </span>
                 )}
               </span>
@@ -185,6 +187,7 @@ function SessionList({
 
 function Card({ s, onOpen }: { s: SessionCard; onOpen: () => void }) {
   const { t, lang } = useT();
+  const money = useMoney();
   return (
     <button
       type="button"
@@ -233,7 +236,7 @@ function Card({ s, onOpen }: { s: SessionCard; onOpen: () => void }) {
               title={`${formatCompact(s.token_input + s.token_output + s.token_cache)} tok`}
             >
               <Coins className="h-3 w-3" />
-              {formatMoney(s.cost_usd, "USD")}
+              {money(s.cost_usd)}
             </span>
           )}
         </span>

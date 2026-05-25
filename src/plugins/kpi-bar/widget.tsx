@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Activity, AlertTriangle, Coins, Hammer, Radio } from "lucide-react";
 import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
-import { formatCompact, formatMoney } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import { countUpValue, errorTone, sparklinePoints } from "@/lib/kpi";
 import { cn } from "@/lib/cn";
 
@@ -96,6 +97,7 @@ function Stat({
 
 export function KpiBar() {
   const { t } = useT();
+  const money = useMoney();
   const { tick } = useLive();
   const [s, setS] = useState<Stats | null>(null);
   const [error, setError] = useState(false);
@@ -169,7 +171,7 @@ export function KpiBar() {
         icon={Coins}
         label={t("kpi.cost")}
         value={d.costTodayUsd}
-        format={(n) => formatMoney(n, "USD")}
+        format={(n) => money(n)}
         tone="text-emerald-400"
         loading={loading}
         unavailable={unavailable}

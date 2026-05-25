@@ -20,14 +20,13 @@ import { usePluginQuery } from "@/components/plugin-data";
 import { viewState } from "@/components/widget-view";
 import { useView, ViewSwitch } from "@/components/view-variant";
 import type { ViewOption } from "@/plugins/registry";
-import { useT } from "@/lib/i18n";
+import { useT, type Lang } from "@/lib/i18n";
 import type { UsageReport } from "@/lib/ccusage";
-import { formatCompact, formatMoney } from "@/lib/format";
+import { formatCompact, formatCurrency } from "@/lib/format";
+import { useCurrency, type Currency } from "@/components/currency";
 
 type Mode = "tokens" | "cost";
 type Range = "24h" | "daily" | "monthly";
-type Currency = "EUR" | "USD";
-const SYMBOL: Record<Currency, string> = { EUR: "€", USD: "$" };
 
 const RANGE_LABELS: Record<Range, string> = {
   "24h": "tokens.range24h",
@@ -58,10 +57,10 @@ const hhmm = (iso: string) => {
 };
 
 export function TokenChart() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [mode, setMode] = useState<Mode>("tokens");
   const [range, setRange] = useState<Range>("daily");
-  const [currency, setCurrency] = useState<Currency>("EUR");
+  const { currency, setCurrency } = useCurrency();
   const view = useView(WIDGET_ID, VIEW_VALUES, "chart");
   const q = usePluginQuery<UsageReport>("/api/usage", { pollMs: 30_000 });
   const usage = q.data;
@@ -99,7 +98,7 @@ export function TokenChart() {
       right={
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-muted lg:inline">
-            {formatMoney(shownCost, currency)} · {formatCompact(shownTokens)} {t("tokens.tok")}
+            {formatCurrency(shownCost, currency, lang)} · {formatCompact(shownTokens)} {t("tokens.tok")}
           </span>
           <div className="flex rounded-md border border-panel-border text-xs">
             {(["24h", "daily", "monthly"] as Range[]).map((r) => (
@@ -150,7 +149,7 @@ export function TokenChart() {
       ) : vs === "empty" ? (
         <WidgetState icon={Coins} title={emptyMessage(t, usage?.available ?? false, range)} />
       ) : view === "table" ? (
-        <TokenTable rows={data} currency={currency} t={t} />
+        <TokenTable rows={data} currency={currency} lang={lang} t={t} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -200,12 +199,12 @@ export function TokenChart() {
                   stroke="#8b94a7"
                   fontSize={11}
                   tickLine={false}
-                  tickFormatter={(v) => SYMBOL[currency] + v}
+                  tickFormatter={(v) => (currency === "EUR" ? "€" : "$") + v}
                   width={56}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
-                  formatter={(value) => [formatMoney(Number(value), currency), t("tokens.cost")]}
+                  formatter={(value) => [formatCurrency(Number(value), currency, lang), t("tokens.cost")]}
                 />
                 <Bar dataKey={costKey} fill="#4f8cff" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -230,7 +229,17 @@ function emptyMessage(t: (key: string) => string, available: boolean, range: Ran
 }
 
 // Table view: the same per-period data as the chart, as precise numeric rows.
-function TokenTable({ rows, currency, t }: { rows: Row[]; currency: Currency; t: (key: string) => string }) {
+function TokenTable({
+  rows,
+  currency,
+  lang,
+  t,
+}: {
+  rows: Row[];
+  currency: Currency;
+  lang: Lang;
+  t: (key: string) => string;
+}) {
   const costKey = currency === "EUR" ? "costEur" : "costUsd";
   return (
     <div tabIndex={0} className="h-full overflow-auto outline-none">
@@ -251,7 +260,7 @@ function TokenTable({ rows, currency, t }: { rows: Row[]; currency: Currency; t:
               <td className="px-2 py-1.5 text-right tabular-nums text-sky-400">{formatCompact(r.input)}</td>
               <td className="px-2 py-1.5 text-right tabular-nums text-emerald-400">{formatCompact(r.output)}</td>
               <td className="px-2 py-1.5 text-right tabular-nums text-violet-400">{formatCompact(r.cache)}</td>
-              <td className="px-3 py-1.5 text-right tabular-nums text-foreground">{formatMoney(r[costKey], currency)}</td>
+              <td className="px-3 py-1.5 text-right tabular-nums text-foreground">{formatCurrency(r[costKey], currency, lang)}</td>
             </tr>
           ))}
         </tbody>

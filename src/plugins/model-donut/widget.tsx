@@ -10,7 +10,8 @@ import { viewState } from "@/components/widget-view";
 import { useView, ViewSwitch } from "@/components/view-variant";
 import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
-import { formatCompact, formatMoney } from "@/lib/format";
+import { formatCompact } from "@/lib/format";
+import { useMoney } from "@/components/currency";
 import { modelShare, OTHER, type ModelSlice } from "@/lib/model-usage";
 import type { UsageReport } from "@/lib/ccusage";
 
@@ -32,15 +33,16 @@ export const MODEL_DONUT_VIEWS: ViewOption[] = [
 
 export function ModelDonut() {
   const { t } = useT();
+  const money = useMoney();
   const [mode, setMode] = useState<Mode>("cost");
   const view = useView(WIDGET_ID, VIEW_VALUES, "donut");
   const q = usePluginQuery<UsageReport>("/api/usage", { pollMs: 30_000 });
 
   const { slices, total } = modelShare(q.data?.models ?? [], mode);
   const vs = viewState(q, () => slices.length === 0);
-  // modelShare uses ccusage's native USD for cost mode, so label it in USD (a € sign
-  // on a USD value would misstate the amount).
-  const fmt = (n: number) => (mode === "cost" ? formatMoney(n, "USD") : formatCompact(n));
+  // modelShare yields ccusage's native USD for cost mode; money() renders it in the
+  // shared display currency (converting USD→EUR when that's the active preference).
+  const fmt = (n: number) => (mode === "cost" ? money(n) : formatCompact(n));
   const label = (s: ModelSlice) => (s.full === OTHER ? t("donut.other") : s.name);
 
   return (
