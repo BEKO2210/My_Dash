@@ -15,6 +15,12 @@ on:
 permissions:
   contents: read
 
+# Serialize per ref; never cancel an in-flight release (a half-published set of
+# installers is worse than waiting).
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # Green gate — a tagged release must NOT ship installers that never passed the
   # gate (lint · unit · build · e2e). Runs once on Linux before the per-OS
@@ -96,3 +102,31 @@ jobs:
             dist/*.dmg
             dist/*.AppImage
             dist/*.deb
+
+  # Integrity: collect every built installer and publish one SHA256SUMS.txt so
+  # users can verify the (unsigned, beta) downloads. Runs after all OS builds.
+  checksums:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: installers
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS.txt
+        run: |
+          cd installers
+          sha256sum * > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+
+      - name: Attach checksums to release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          files: SHA256SUMS.txt
