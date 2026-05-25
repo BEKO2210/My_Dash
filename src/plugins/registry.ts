@@ -42,7 +42,7 @@ import { ToolFrequency, TOOL_FREQ_VIEWS } from "./tool-frequency/widget";
 import { FileHotspots } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
 import { Latency, LATENCY_VIEWS } from "./latency/widget";
-import { ErrorRate } from "./error-rate/widget";
+import { ErrorRate, ERROR_RATE_VIEWS } from "./error-rate/widget";
 import { ModelDonut, MODEL_DONUT_VIEWS } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
 import { ProjectLeaderboard, PROJECT_LEADERBOARD_VIEWS } from "./project-leaderboard/widget";
@@ -124,7 +124,7 @@ export const widgets: Widget[] = [
   { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
   { id: "session-timeline", title: "Session-Timeline", titleKey: "timeline.title", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
   { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", settings: [viewSetting(LATENCY_VIEWS)], component: Latency },
-  { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", component: ErrorRate },
+  { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", settings: [viewSetting(ERROR_RATE_VIEWS)], component: ErrorRate },
   { id: "model-donut", title: "Modelle", titleKey: "donut.title", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", settings: [viewSetting(MODEL_DONUT_VIEWS)], component: ModelDonut },
   { id: "sankey-flow", title: "Fluss", titleKey: "sankey.title", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
   { id: "project-leaderboard", title: "Projekt-Rangliste", titleKey: "leaderboard.title", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", settings: [viewSetting(PROJECT_LEADERBOARD_VIEWS)], component: ProjectLeaderboard },
