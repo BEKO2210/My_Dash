@@ -46,6 +46,9 @@
 </p>
 
 ---
+<video src=".../demo.mp4" poster=".../demo-poster.jpg"
+       autoplay loop muted playsinline width="800">
+---
 
 ## Demo
 
