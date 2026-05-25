@@ -5,6 +5,9 @@ import {
   formatCompact,
   formatDuration,
   formatMoney,
+  formatCurrency,
+  usdToEur,
+  eurRate,
   eventKind,
 } from "@/lib/format";
 
@@ -92,6 +95,49 @@ describe("formatMoney", () => {
 
   it("coerces non-finite amounts to 0", () => {
     expect(formatMoney(NaN, "EUR")).toBe("€0.00");
+  });
+});
+
+describe("formatCurrency (locale-aware)", () => {
+  it("adds thousands separators and 2 decimals (EN)", () => {
+    const s = formatCurrency(1234567.5, "USD", "en");
+    expect(s).toContain("$");
+    expect(s).toContain("1,234,567.50");
+  });
+
+  it("uses German grouping + decimal comma + symbol suffix (DE)", () => {
+    const s = formatCurrency(1234.56, "EUR", "de");
+    expect(s).toContain("1.234,56"); // dot thousands, comma decimal
+    expect(s).toContain("€");
+    expect(s.trim().endsWith("€")).toBe(true); // symbol after the number
+  });
+
+  it("defaults to EN and coerces NaN to 0", () => {
+    expect(formatCurrency(NaN, "USD")).toContain("0.00");
+    expect(formatCurrency(5, "USD")).toContain("$");
+  });
+});
+
+describe("usdToEur / eurRate", () => {
+  const ENV = { ...process.env };
+  afterEach(() => {
+    process.env = { ...ENV };
+  });
+
+  it("converts at the given rate, guarding bad inputs", () => {
+    expect(usdToEur(100, 0.92)).toBeCloseTo(92);
+    expect(usdToEur(NaN, 0.92)).toBe(0);
+    expect(usdToEur(100, 0)).toBe(0);
+    expect(usdToEur(100, NaN)).toBe(0);
+  });
+
+  it("eurRate reads NEXT_PUBLIC_EUR_PER_USD, else defaults to 0.92", () => {
+    delete process.env.NEXT_PUBLIC_EUR_PER_USD;
+    expect(eurRate()).toBe(0.92);
+    process.env.NEXT_PUBLIC_EUR_PER_USD = "0.88";
+    expect(eurRate()).toBe(0.88);
+    process.env.NEXT_PUBLIC_EUR_PER_USD = "garbage";
+    expect(eurRate()).toBe(0.92);
   });
 });
 
