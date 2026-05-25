@@ -83,7 +83,9 @@ test("language toggle switches the whole UI (de ↔ en)", async ({ page }) => {
 
   // Witness the language switch on the footer tagline: it's unique, language-specific
   // and always rendered (the header subtitle truncates when the bar is crowded).
-  const langGroup = page.getByRole("group", { name: "Language" });
+  // The toggle group's accessible name is itself localized (DE "Sprache" / EN
+  // "Language"), so match either — the locator is re-evaluated after the switch.
+  const langGroup = page.getByRole("group", { name: /^(Sprache|Language)$/ });
   await expect(langGroup.getByRole("button", { name: "de" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText("Lokales, read-only Dashboard für Claude Code.")).toBeVisible();
 
