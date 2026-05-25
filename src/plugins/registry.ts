@@ -41,7 +41,7 @@ import { Heatmap } from "./heatmap/widget";
 import { ToolFrequency, TOOL_FREQ_VIEWS } from "./tool-frequency/widget";
 import { FileHotspots } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
-import { Latency } from "./latency/widget";
+import { Latency, LATENCY_VIEWS } from "./latency/widget";
 import { ErrorRate } from "./error-rate/widget";
 import { ModelDonut, MODEL_DONUT_VIEWS } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
@@ -123,7 +123,7 @@ export const widgets: Widget[] = [
   { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", settings: [viewSetting(TOOL_FREQ_VIEWS)], component: ToolFrequency },
   { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
   { id: "session-timeline", title: "Session-Timeline", titleKey: "timeline.title", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
-  { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", component: Latency },
+  { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", settings: [viewSetting(LATENCY_VIEWS)], component: Latency },
   { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", component: ErrorRate },
   { id: "model-donut", title: "Modelle", titleKey: "donut.title", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", settings: [viewSetting(MODEL_DONUT_VIEWS)], component: ModelDonut },
   { id: "sankey-flow", title: "Fluss", titleKey: "sankey.title", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
