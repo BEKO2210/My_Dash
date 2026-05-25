@@ -10,6 +10,9 @@
   },
   "homepage": "https://github.com/BEKO2210/My_Dash",
   "main": "electron/main.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
     "plugins:scan": "node scripts/scan-plugins.mjs",
@@ -19,6 +22,7 @@
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "seed": "node scripts/seed-demo.mjs",
@@ -64,6 +68,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3.2.4",
     "electron": "^39.8.5",
     "electron-builder": "^26.8.1",
     "eslint": "^9",

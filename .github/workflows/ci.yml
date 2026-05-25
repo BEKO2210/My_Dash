@@ -40,8 +40,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
+      # Unit tests with the src/lib coverage gate (thresholds in vitest.config.ts).
+      - name: Test (with coverage gate)
+        run: npm run test:coverage
 
       # Single production build, reused by the bundle-budget check and the e2e
       # server below — one build per PR (better-sqlite3 builds during npm ci; the
