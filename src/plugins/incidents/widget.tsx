@@ -7,16 +7,29 @@ import { WidgetState } from "@/components/widget-state";
 import { ToolCallInspector } from "@/components/tool-call-inspector";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
 import type { ErrorItem, ToolCallDetail } from "@/lib/errors";
 
 type Detail = ToolCallDetail | "loading" | "error";
 
+// Phase F (F14): list (default, truncated preview, expand-on-click) ↔ detailed
+// (full error text shown inline per row).
+const WIDGET_ID = "incidents";
+const VIEW_VALUES = ["list", "detailed"] as const;
+export const INCIDENTS_VIEWS: ViewOption[] = [
+  { value: "list", label: "view.list" },
+  { value: "detailed", label: "view.detailed" },
+];
+
 export function Incidents() {
   const { tick } = useLive();
   const { query } = useSearch();
   const { t, lang } = useT();
+  const view = useView(WIDGET_ID, VIEW_VALUES, "list");
+  const detailed = view === "detailed";
   const [recent, setRecent] = useState<ErrorItem[] | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
   const [details, setDetails] = useState<Record<number, Detail>>({});
@@ -55,7 +68,12 @@ export function Incidents() {
   );
 
   return (
-    <Panel title={t("incidents.title")} icon={<AlertTriangle className="h-4 w-4 text-accent" />} info={t("incidents.info")}>
+    <Panel
+      title={t("incidents.title")}
+      icon={<AlertTriangle className="h-4 w-4 text-accent" />}
+      info={t("incidents.info")}
+      right={<ViewSwitch widgetId={WIDGET_ID} options={INCIDENTS_VIEWS} value={view} t={t} />}
+    >
       {!recent ? (
         <WidgetState icon={AlertTriangle} title={t("common.loading")} loading />
       ) : recent.length === 0 ? (
@@ -90,7 +108,15 @@ export function Incidents() {
                       )}
                     </div>
                     {e.error_text && (
-                      <p className={`truncate text-[11px] text-red-400/90 ${open ? "hidden" : ""}`}>{e.error_text}</p>
+                      <p
+                        className={
+                          detailed
+                            ? "whitespace-pre-wrap break-words text-[11px] text-red-400/90"
+                            : `truncate text-[11px] text-red-400/90 ${open ? "hidden" : ""}`
+                        }
+                      >
+                        {e.error_text}
+                      </p>
                     )}
                   </div>
                   <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">

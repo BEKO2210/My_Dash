@@ -58,7 +58,7 @@ import { CalendarHeatmap } from "./calendar-heatmap/widget";
 import { Velocity, VELOCITY_VIEWS } from "./velocity/widget";
 import { SessionDuration } from "./session-duration/widget";
 import { Reliability } from "./reliability/widget";
-import { Incidents } from "./incidents/widget";
+import { Incidents, INCIDENTS_VIEWS } from "./incidents/widget";
 import { Anomaly } from "./anomaly/widget";
 import { GitCorrelation } from "./git-correlation/widget";
 import { externalWidgets } from "./external.generated";
@@ -140,7 +140,7 @@ export const widgets: Widget[] = [
   { id: "velocity", title: "Geschwindigkeits-Trend", titleKey: "velocity.title", span: "lg:col-span-3", height: H, icon: TrendingUp, category: "activity", description: "velocity.info", settings: [viewSetting(VELOCITY_VIEWS)], component: Velocity },
   { id: "session-duration", title: "Session-Dauer", titleKey: "sessionDur.title", span: "lg:col-span-3", height: H, icon: Hourglass, category: "sessions", description: "sessionDur.info", component: SessionDuration },
   { id: "reliability", title: "Zuverlässigkeit je Projekt", titleKey: "reliability.title", span: "lg:col-span-3", height: H, icon: ShieldCheck, category: "quality", description: "reliability.info", component: Reliability },
-  { id: "incidents", title: "Was lief schief", titleKey: "incidents.title", span: "lg:col-span-3", height: H, icon: AlertTriangle, category: "quality", description: "incidents.info", component: Incidents },
+  { id: "incidents", title: "Was lief schief", titleKey: "incidents.title", span: "lg:col-span-3", height: H, icon: AlertTriangle, category: "quality", description: "incidents.info", settings: [viewSetting(INCIDENTS_VIEWS)], component: Incidents },
   { id: "anomaly", title: "Anomalie-Erkennung", titleKey: "anomaly.title", span: "lg:col-span-3", height: H, icon: Activity, category: "quality", description: "anomaly.info", component: Anomaly },
   { id: "git-correlation", title: "Branches & PRs", titleKey: "gitcorr.title", span: "lg:col-span-3", height: H, icon: GitPullRequest, category: "sessions", description: "gitcorr.info", component: GitCorrelation },
   // Third-party widgets dropped into plugins.local/ (scanned at build).
