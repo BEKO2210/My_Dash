@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, Server, X } from "lucide-react";
 import { Panel } from "@/components/panel";
+import { WidgetState } from "@/components/widget-state";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useFacets } from "@/components/facets";
@@ -15,31 +17,17 @@ import type { EventRow, SessionRow, SessionStatus } from "@/lib/types";
 type SessionCard = SessionRow & { event_count: number; tool_count: number; stale?: boolean };
 
 const COLUMNS: SessionStatus[] = ["active", "waiting", "ended"];
+const EMPTY_SESSIONS: SessionCard[] = [];
 
 export function Kanban() {
-  const { tick, events } = useLive();
+  const { events } = useLive();
   const { query } = useSearch();
   const facets = useFacets();
   const { t } = useT();
-  const [sessions, setSessions] = useState<SessionCard[]>([]);
   const [selected, setSelected] = useState<SessionCard | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/sessions")
-        .then((r) => r.json())
-        .then((d: { sessions: SessionCard[] }) => {
-          if (!cancelled) setSessions(d.sessions);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 10_000); // keeps relative times + ended state fresh
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  // 10s poll keeps relative times + ended state fresh.
+  const q = usePluginQuery<{ sessions: SessionCard[] }>("/api/sessions", { pollMs: 10_000 });
+  const sessions = q.data?.sessions ?? EMPTY_SESSIONS;
 
   const filtered = useMemo(
     () =>
@@ -68,6 +56,10 @@ export function Kanban() {
       icon={<KanbanSquare className="h-4 w-4 text-accent" />}
       info={t("kanban.info")}
     >
+      {q.error && !q.data ? (
+        <WidgetState icon={KanbanSquare} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : (
+      <>
       {/* On phones the 3 columns become a horizontal swipe with readable widths;
           from sm up they're an even 3-column grid. */}
       <div className="flex h-full snap-x gap-px overflow-x-auto bg-panel-border/50 sm:grid sm:grid-cols-3 sm:overflow-x-hidden">
@@ -101,6 +93,8 @@ export function Kanban() {
       </div>
       {selectedLive && (
         <SessionDetail session={selectedLive} events={events} onClose={() => setSelected(null)} />
+      )}
+      </>
       )}
     </Panel>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { TriangleAlert, Wallet } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
+import { usePluginQuery } from "@/components/plugin-data";
 import { useT } from "@/lib/i18n";
 import { formatMoney } from "@/lib/format";
 import { gaugeTone, type BudgetProjection, type GaugeTone } from "@/lib/budget";
@@ -27,30 +27,16 @@ interface BudgetResponse {
 
 export function BudgetGauge() {
   const { t } = useT();
-  const [data, setData] = useState<BudgetResponse | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/budget")
-        .then((r) => r.json())
-        .then((d: BudgetResponse) => {
-          if (!cancelled) setData(d);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, []);
+  const q = usePluginQuery<BudgetResponse>("/api/budget", { pollMs: 30_000 });
+  const data = q.data;
 
   const hasBudget = !!(data && (data.status.daily.budgetUsd || data.status.monthly.budgetUsd));
 
   return (
     <Panel title={t("budget.title")} icon={<Wallet className="h-4 w-4 text-accent" />} info={t("budget.info")}>
-      {!data ? (
+      {q.error && !data ? (
+        <WidgetState icon={Wallet} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : !data ? (
         <WidgetState icon={Wallet} title={t("common.loading")} loading />
       ) : !hasBudget ? (
         <WidgetState
