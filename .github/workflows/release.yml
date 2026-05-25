@@ -10,11 +10,48 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Least privilege by default; only the installer job needs write (to attach to
+# the Release). The gate job runs with read-only.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  # Green gate — a tagged release must NOT ship installers that never passed the
+  # gate (lint · unit · build · e2e). Runs once on Linux before the per-OS
+  # installer matrix; if it fails, `build` is skipped, so no `dist`/release
+  # attach happens. This is the safety net for #12.
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      # Production build first so the e2e web server (`npm run start`) has something to serve.
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E (smoke + a11y + widget audits)
+        run: npm run test:e2e
+
   build:
+    needs: gate
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
