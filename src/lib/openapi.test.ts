@@ -62,6 +62,15 @@ describe("buildOpenApiSpec", () => {
     }
   });
 
+  it("documents 400 + 404 for single-resource [id] routes", () => {
+    for (const p of ["/api/events/{id}", "/api/tool-calls/{id}"]) {
+      const op = spec.paths[p].get as { responses: Record<string, unknown> };
+      expect(op.responses["200"], `${p} 200`).toBeTruthy();
+      expect(op.responses["400"], `${p} 400`).toBeTruthy();
+      expect(op.responses["404"], `${p} 404`).toBeTruthy();
+    }
+  });
+
   it("documents every real API route (no drift)", () => {
     const real = new Set(discoverRoutes(path.join(process.cwd(), "src/app/api")));
     real.delete("/api/openapi"); // self

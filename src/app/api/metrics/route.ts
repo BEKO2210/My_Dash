@@ -13,9 +13,11 @@ export async function GET() {
     return new Response(body, { headers: { "Content-Type": PROM_CONTENT_TYPE } });
   } catch (err) {
     log.error("/api/metrics failed", err);
-    return new Response("# metrics unavailable\n", {
-      status: 500,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    // Degrade to a valid 200 scrape — a non-200 makes Prometheus record the scrape
+    // as failed (and read routes never 5xx). mc_up 0 signals the degraded state.
+    return new Response("# mission control metrics temporarily unavailable\nmc_up 0\n", {
+      status: 200,
+      headers: { "Content-Type": PROM_CONTENT_TYPE },
     });
   }
 }
