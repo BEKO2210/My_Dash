@@ -62,6 +62,24 @@ describe("parseTranscriptUsage", () => {
     });
   });
 
+  it("counts a repeated assistant message id only once (dedupe, like ccusage)", () => {
+    const turn = (id: string, input: number) =>
+      JSON.stringify({
+        message: { id, role: "assistant", usage: { input_tokens: input, output_tokens: 0 } },
+      });
+    // m1 appears 3× (streaming/retry/sidechain), m2 once → only unique ids counted.
+    const jsonl = [turn("m1", 100), turn("m1", 100), turn("m1", 100), turn("m2", 50)].join("\n");
+    const s = parseTranscriptUsage(jsonl);
+    expect(s.inputTokens).toBe(150); // 100 + 50, NOT 350
+    expect(s.turns).toBe(2);
+  });
+
+  it("still counts id-less assistant turns (can't dedupe without an id)", () => {
+    const line = JSON.stringify({ message: { role: "assistant", usage: { input_tokens: 10 } } });
+    const s = parseTranscriptUsage([line, line].join("\n"));
+    expect(s.inputTokens).toBe(20); // no id → both counted
+  });
+
   it("ignores assistant turns without usage but still captures text", () => {
     const line = JSON.stringify({
       message: { role: "assistant", content: [{ type: "text", text: "no usage" }] },
