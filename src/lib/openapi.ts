@@ -130,6 +130,7 @@ const ROUTES: RouteDef[] = [
   { method: "get", path: "/api/usage/sessions", tag: "economy", summary: "Per-session usage." },
   { method: "get", path: "/api/usage/reconcile", tag: "economy", summary: "Per-session cost reconciled across sources." },
   { method: "get", path: "/api/budget", tag: "economy", summary: "Budget status + projection." },
+  { method: "get", path: "/api/rate", tag: "economy", summary: "EUR/USD rate (server source of truth) for client currency conversion." },
   { method: "get", path: "/api/token-burn", tag: "economy", summary: "Token consumption per tool.", params: ["limit"] },
 
   // Activity
