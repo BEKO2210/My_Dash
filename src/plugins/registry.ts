@@ -47,7 +47,7 @@ import { ModelDonut, MODEL_DONUT_VIEWS } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
 import { ProjectLeaderboard, PROJECT_LEADERBOARD_VIEWS } from "./project-leaderboard/widget";
 import { LiveNow } from "./live-now/widget";
-import { PromptHistory } from "./prompt-history/widget";
+import { PromptHistory, PROMPT_HISTORY_VIEWS } from "./prompt-history/widget";
 import { Streak } from "./streak/widget";
 import { SubagentTree } from "./subagent-tree/widget";
 import { McpServers } from "./mcp-servers/widget";
@@ -129,7 +129,7 @@ export const widgets: Widget[] = [
   { id: "sankey-flow", title: "Fluss", titleKey: "sankey.title", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
   { id: "project-leaderboard", title: "Projekt-Rangliste", titleKey: "leaderboard.title", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", settings: [viewSetting(PROJECT_LEADERBOARD_VIEWS)], component: ProjectLeaderboard },
   { id: "live-now", title: "Jetzt live", titleKey: "now.title", span: "lg:col-span-3", height: H, icon: Radio, category: "sessions", description: "now.info", component: LiveNow },
-  { id: "prompt-history", title: "Prompt-Verlauf", titleKey: "prompts.title", span: "lg:col-span-3", height: H, icon: MessageSquare, category: "sessions", description: "prompts.info", component: PromptHistory },
+  { id: "prompt-history", title: "Prompt-Verlauf", titleKey: "prompts.title", span: "lg:col-span-3", height: H, icon: MessageSquare, category: "sessions", description: "prompts.info", settings: [viewSetting(PROMPT_HISTORY_VIEWS)], component: PromptHistory },
   { id: "streak", title: "Streak & Produktivität", titleKey: "streak.title", span: "lg:col-span-3", height: H, icon: Flame, category: "activity", description: "streak.info", component: Streak },
   { id: "subagent-tree", title: "Subagent-Baum", titleKey: "subagents.title", span: "lg:col-span-3", height: H, icon: GitBranch, category: "sessions", description: "subagents.info", component: SubagentTree },
   { id: "mcp-servers", title: "MCP-Server", titleKey: "mcp.title", span: "lg:col-span-3", height: H, icon: Plug, category: "tools", description: "mcp.info", component: McpServers },
