@@ -12,9 +12,11 @@
 </p>
 
 <p align="center">
-  <img src="public/demo.gif" alt="Claude Mission Control — live demo" width="760">
-  <br>
-  <sub><a href="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4">▶ Watch the full-resolution video</a></sub>
+  <video src="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4"
+         poster="https://github.com/BEKO2210/My_Dash/raw/main/public/demo-poster.jpg"
+         autoplay loop muted playsinline width="800">
+    <a href="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4">▶ Watch the demo</a>
+  </video>
 </p>
 
 <p align="center">
@@ -43,6 +45,9 @@
   (<code>Hooks → /api/ingest → SQLite → UI</code>) is stable; more widgets land via the plugin registry.
 </p>
 
+---
+<video src=".../demo.mp4" poster=".../demo-poster.jpg"
+       autoplay loop muted playsinline width="800">
 ---
 
 ## Demo
