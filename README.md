@@ -138,16 +138,16 @@ Double-click installers are built by the release workflow and attached to the
 
 | OS | Installer |
 |----|------|
-| Windows | `Claude.Mission.Control.Setup.<version>.exe` (NSIS installer) |
-| macOS | `Claude.Mission.Control-<version>-arm64.dmg` (Apple Silicon) / `-x64.dmg` (Intel) |
-| Linux | `.AppImage` (portable) or `.deb` |
+| Windows | `Claude-Mission-Control-Setup-<version>.exe` (NSIS installer) |
+| macOS | `Claude-Mission-Control-<version>-arm64.dmg` (Apple Silicon) / `Claude-Mission-Control-<version>-x64.dmg` (Intel) |
+| Linux | `Claude-Mission-Control-<version>-<arch>.AppImage` (portable) or `.deb` |
 
 > **Beta note — the installers are unsigned.** This is an early public beta, so your
 > OS will warn before running it:
 > - **Windows:** SmartScreen → *More info* → **Run anyway**.
 > - **macOS:** right-click the app → **Open** (the first launch only); or
 >   *System Settings → Privacy & Security → Open Anyway*.
-> - **Linux (AppImage):** `chmod +x Claude.Mission.Control-*.AppImage` then run it.
+> - **Linux (AppImage):** `chmod +x Claude-Mission-Control-*.AppImage` then run it.
 
 The app bundles its own Node runtime (nothing to install separately). It runs in the
 background with a tray icon — click the tray → **Connect Claude Code (install hooks)**,
