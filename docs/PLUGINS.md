@@ -87,7 +87,7 @@ export const plugin: Widget = {
 | Datei-Hotspots | `file-hotspots` | 3/6 | standard | — | Most-edited files (area & color = changed lines) in the range. |
 | Fluss | `sankey-flow` | 3/6 | standard | — | Flow of project → tool → resource kind from tool calls. |
 | MCP-Server | `mcp-servers` | 3/6 | standard | — | Activity per MCP server: calls, error rate and average latency. |
-| Themen-Cloud | `tag-cloud` | 3/6 | standard | — | Frequent terms from your prompts — computed locally, no LLM. Size = frequency. |
+| Themen-Cloud | `tag-cloud` | 3/6 | standard | yes | Frequent terms from your prompts — computed locally, no LLM. Size = frequency. |
 
 ### Quality
 
