@@ -54,7 +54,7 @@ export const plugin: Widget = {
 | Live Stream | `live-stream` | 2/6 | standard | yes | Live stream of all hook events in real time (newest on top): session start/end, prompts, tool calls and stops. Fed via SSE from the Claude Code hooks. |
 | Session-Timeline | `session-timeline` | 3/6 | standard | yes | Sessions as time bars (start to end), colored by status. |
 | Jetzt live | `live-now` | 3/6 | standard | — | The active session in real time: elapsed time, key metrics and the latest actions. |
-| Prompt-Verlauf | `prompt-history` | 3/6 | standard | — | Chronological, searchable list of your prompts (secrets are stripped before storage). |
+| Prompt-Verlauf | `prompt-history` | 3/6 | standard | yes | Chronological, searchable list of your prompts (secrets are stripped before storage). |
 | Subagent-Baum | `subagent-tree` | 3/6 | standard | — | Which sessions spawned subagents via Task — expand to see the individual subagents. |
 | Session-Dauer | `session-duration` | 3/6 | standard | — | Distribution of session lengths (first to last event span), plus median and p95. |
 | Branches & PRs | `git-correlation` | 3/6 | standard | — | Sessions grouped by git branch, with links to the branch and to open a PR (derived locally from the origin remote). |
