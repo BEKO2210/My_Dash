@@ -55,7 +55,7 @@ import { CompactionTimeline } from "./compaction-timeline/widget";
 import { TagCloud, TAG_CLOUD_VIEWS } from "./tag-cloud/widget";
 import { TokenBurn, TOKEN_BURN_VIEWS } from "./token-burn/widget";
 import { CalendarHeatmap } from "./calendar-heatmap/widget";
-import { Velocity } from "./velocity/widget";
+import { Velocity, VELOCITY_VIEWS } from "./velocity/widget";
 import { SessionDuration } from "./session-duration/widget";
 import { Reliability } from "./reliability/widget";
 import { Incidents } from "./incidents/widget";
@@ -137,7 +137,7 @@ export const widgets: Widget[] = [
   { id: "tag-cloud", title: "Themen-Cloud", titleKey: "tags.title", span: "lg:col-span-3", height: H, icon: Hash, category: "tools", description: "tags.info", settings: [viewSetting(TAG_CLOUD_VIEWS)], component: TagCloud },
   { id: "token-burn", title: "Token-Verbrauch je Tool", titleKey: "burn.title", span: "lg:col-span-3", height: H, icon: Fuel, category: "economy", description: "burn.info", settings: [viewSetting(TOKEN_BURN_VIEWS)], component: TokenBurn },
   { id: "calendar-heatmap", title: "Jahres-Kalender", titleKey: "calendar.title", span: "lg:col-span-6", height: "h-auto", icon: CalendarRange, category: "activity", description: "calendar.info", component: CalendarHeatmap },
-  { id: "velocity", title: "Geschwindigkeits-Trend", titleKey: "velocity.title", span: "lg:col-span-3", height: H, icon: TrendingUp, category: "activity", description: "velocity.info", component: Velocity },
+  { id: "velocity", title: "Geschwindigkeits-Trend", titleKey: "velocity.title", span: "lg:col-span-3", height: H, icon: TrendingUp, category: "activity", description: "velocity.info", settings: [viewSetting(VELOCITY_VIEWS)], component: Velocity },
   { id: "session-duration", title: "Session-Dauer", titleKey: "sessionDur.title", span: "lg:col-span-3", height: H, icon: Hourglass, category: "sessions", description: "sessionDur.info", component: SessionDuration },
   { id: "reliability", title: "Zuverlässigkeit je Projekt", titleKey: "reliability.title", span: "lg:col-span-3", height: H, icon: ShieldCheck, category: "quality", description: "reliability.info", component: Reliability },
   { id: "incidents", title: "Was lief schief", titleKey: "incidents.title", span: "lg:col-span-3", height: H, icon: AlertTriangle, category: "quality", description: "incidents.info", component: Incidents },
