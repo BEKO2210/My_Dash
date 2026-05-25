@@ -19,13 +19,24 @@ import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
 import { useSearch, matchesQuery } from "@/components/search";
 import { usePluginConfig } from "@/components/plugin-config";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
 import { eventKind, KIND_COLOR, relativeTime, type EventKind } from "@/lib/format";
 import { windowRange } from "@/lib/virtual";
 
-// Estimated row height (icon + two truncated lines + padding). Used only for
-// windowing math; overscan absorbs small deviations.
-const ROW_H = 53;
+// Estimated row heights for the windowing math; overscan absorbs small deviations.
+// detailed = icon + two truncated lines; compact = single line.
+const ROW_H_DETAILED = 53;
+const ROW_H_COMPACT = 32;
+
+// Phase F (F13): detailed (default, today's look) ↔ compact (single-line rows).
+const WIDGET_ID = "live-stream";
+const VIEW_VALUES = ["detailed", "compact"] as const;
+export const LIVE_STREAM_VIEWS: ViewOption[] = [
+  { value: "detailed", label: "view.detailed" },
+  { value: "compact", label: "view.compact" },
+];
 
 const ICONS: Record<EventKind, LucideIcon> = {
   "session-start": Play,
@@ -45,6 +56,9 @@ export function LiveStream() {
   const { query } = useSearch();
   const { t, lang } = useT();
   const { values } = usePluginConfig("live-stream");
+  const view = useView(WIDGET_ID, VIEW_VALUES, "detailed");
+  const compact = view === "compact";
+  const rowH = compact ? ROW_H_COMPACT : ROW_H_DETAILED;
   const [, setNow] = useState(0);
 
   // Re-render periodically so relative timestamps stay fresh.
@@ -89,7 +103,7 @@ export function LiveStream() {
     });
   };
 
-  const win = windowRange({ scrollTop, viewport, rowHeight: ROW_H, count: filtered.length, overscan: 8 });
+  const win = windowRange({ scrollTop, viewport, rowHeight: rowH, count: filtered.length, overscan: 8 });
   const visible = filtered.slice(win.start, win.end);
 
   return (
@@ -98,12 +112,15 @@ export function LiveStream() {
       icon={<Activity className="h-4 w-4 text-accent" />}
       info={t("stream.info")}
       right={
-        <span className="flex items-center gap-1.5 text-xs text-muted">
-          <span
-            className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
-          />
-          {connected ? t("stream.live") : t("header.disconnected")}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 text-xs text-muted">
+            <span
+              className={`mc-live-dot h-2 w-2 rounded-full ${connected ? "bg-emerald-400" : "bg-red-500"}`}
+            />
+            <span className="hidden sm:inline">{connected ? t("stream.live") : t("header.disconnected")}</span>
+          </span>
+          <ViewSwitch widgetId={WIDGET_ID} options={LIVE_STREAM_VIEWS} value={view} t={t} />
+        </div>
       }
     >
       {events.length === 0 ? (
@@ -135,15 +152,19 @@ export function LiveStream() {
                 return (
                   <li
                     key={e.id}
-                    style={{ height: ROW_H }}
-                    className={`flex items-start gap-2.5 px-4 py-2 transition-colors hover:bg-white/[0.03] ${newest ? "mc-stream-in" : ""}`}
+                    style={{ height: rowH }}
+                    className={`flex gap-2.5 px-4 transition-colors hover:bg-white/[0.03] ${
+                      compact ? "items-center py-1.5" : "items-start py-2"
+                    } ${newest ? "mc-stream-in" : ""}`}
                   >
-                    <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${KIND_COLOR[kind]}`} />
+                    <Icon className={`${compact ? "h-3.5 w-3.5" : "mt-0.5 h-4 w-4"} shrink-0 ${KIND_COLOR[kind]}`} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-foreground">{e.summary ?? e.event_type}</p>
-                      <p className="truncate font-mono text-[11px] text-muted">
-                        {e.event_type} · {e.session_id.slice(0, 8)}
-                      </p>
+                      {!compact && (
+                        <p className="truncate font-mono text-[11px] text-muted">
+                          {e.event_type} · {e.session_id.slice(0, 8)}
+                        </p>
+                      )}
                     </div>
                     <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
                       {relativeTime(e.created_at, lang)}
