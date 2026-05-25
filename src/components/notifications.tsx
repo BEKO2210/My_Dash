@@ -4,12 +4,36 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, Bell, BellRing, Clock, Coins, MoonStar, Plug, Webhook } from "lucide-react";
 import { useLive } from "@/components/live-provider";
-import { useT } from "@/lib/i18n";
+import { useT, tFormat } from "@/lib/i18n";
 import { relativeTime } from "@/lib/format";
 import { inQuietHours, isCritical, type QuietConfig } from "@/lib/quiet";
 import type { AlertItem } from "@/lib/alerts";
 
 const DESKTOP_KEY = "mc-desktop-notif";
+
+// Localize an alert from its `type` + optional structured `params` (added by the
+// ingest side, see roadmap #30). Falls back to the server-rendered `message` when
+// params are absent or no template exists for the type — so it's safe before the
+// server change lands and shows no regression.
+type AlertParams = Record<string, string | number>;
+function alertText(t: (k: string) => string, a: AlertItem): string {
+  const raw = (a as AlertItem & { params?: AlertParams | string }).params;
+  if (raw == null) return a.message;
+  let params: AlertParams | null = null;
+  if (typeof raw === "string") {
+    try {
+      params = JSON.parse(raw) as AlertParams;
+    } catch {
+      params = null;
+    }
+  } else {
+    params = raw;
+  }
+  if (!params) return a.message;
+  const key = `alert.${a.type}`;
+  const tpl = t(key);
+  return tpl === key ? a.message : tFormat(tpl, params);
+}
 
 const TYPE_ICON: Record<string, typeof AlertTriangle> = {
   mcp_error: Plug,
@@ -24,13 +48,17 @@ export function Notifications() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<AlertItem | null>(null);
   const [desktop, setDesktop] = useState(false);
   const seenMaxId = useRef<number | null>(null);
   const desktopRef = useRef(false);
   const quietRef = useRef<QuietConfig>({ enabled: false, start: "22:00", end: "07:00" });
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  });
 
   useEffect(() => {
     fetch("/api/alerts/quiet")
@@ -83,12 +111,12 @@ export function Notifications() {
               !isCritical(newest.type) &&
               inQuietHours(q.start, q.end, new Date());
             if (newest && !newest.read && !suppressed) {
-              setToast(newest.message);
+              setToast(newest);
               setTimeout(() => setToast(null), 5000);
               // Bridge to a native (Electron/OS) notification when enabled.
               if (desktopRef.current && typeof Notification !== "undefined" && Notification.permission === "granted") {
                 try {
-                  new Notification("Claude Mission Control", { body: newest.message });
+                  new Notification("Claude Mission Control", { body: alertText(tRef.current, newest) });
                 } catch {
                   /* notifications unavailable */
                 }
@@ -231,7 +259,7 @@ export function Notifications() {
                     <span className="flex items-start gap-2 px-3 py-2">
                       <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400" />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-xs text-foreground">{a.message}</span>
+                        <span className="block text-xs text-foreground">{alertText(t, a)}</span>
                         <span className="text-[10px] text-muted">{relativeTime(a.created_at, lang)}</span>
                       </span>
                     </span>
@@ -264,7 +292,7 @@ export function Notifications() {
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
           <div>
             <p className="text-xs font-semibold text-foreground">{t("notif.new")}</p>
-            <p className="text-xs text-muted">{toast}</p>
+            <p className="text-xs text-muted">{alertText(t, toast)}</p>
           </div>
         </div>
       )}

@@ -158,6 +158,10 @@ const DE: Record<string, string> = {
   "a11y.language": "Sprache",
   "a11y.info": "Info",
   "header.menu": "Menü",
+  "alert.mcp_error": "MCP-Tool fehlgeschlagen: {tool}",
+  "alert.error_spike": "Fehlerrate {rate}% (≥ {threshold}%)",
+  "alert.session_long": "Session läuft seit {min} min (≥ {threshold})",
+  "alert.cost_session": "Session-Kosten ${cost} (≥ ${threshold})",
   "kpi.title": "Übersicht",
   "kpi.active": "Aktive Sessions",
   "kpi.events": "Events heute",
@@ -692,6 +696,10 @@ const EN: Record<string, string> = {
   "a11y.language": "Language",
   "a11y.info": "Info",
   "header.menu": "Menu",
+  "alert.mcp_error": "MCP tool failed: {tool}",
+  "alert.error_spike": "Error rate {rate}% (≥ {threshold}%)",
+  "alert.session_long": "Session running {min} min (≥ {threshold})",
+  "alert.cost_session": "Session cost ${cost} (≥ ${threshold})",
   "kpi.title": "Overview",
   "kpi.active": "Active sessions",
   "kpi.events": "Events today",
@@ -1111,6 +1119,15 @@ const T: Record<Lang, Record<string, string>> = { de: DE, en: EN };
  */
 export function translate(lang: Lang, key: string): string {
   return T[lang][key] ?? DE[key] ?? key;
+}
+
+/**
+ * Interpolate `{name}` placeholders in a (usually translated) template string.
+ * Unknown placeholders are left intact. Used for parameterized strings like
+ * alert messages, e.g. `tFormat(t("alert.error_spike"), { rate: 45, threshold: 30 })`.
+ */
+export function tFormat(template: string, params: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (m, k: string) => (k in params ? String(params[k]) : m));
 }
 
 export function useT() {
