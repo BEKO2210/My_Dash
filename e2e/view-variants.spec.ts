@@ -306,3 +306,77 @@ test.describe("view variant — latency (histogram↔table)", () => {
     }
   }
 });
+
+// ── F8 (error-rate): chart (default) ↔ table ──────────────────────────────────
+const ERRORS = {
+  stats: { toolCalls: 200, failures: 24, errorRate: 0.12 },
+  series: [
+    { date: "2026-05-18", total: 30, failures: 2 }, { date: "2026-05-19", total: 40, failures: 5 },
+    { date: "2026-05-20", total: 35, failures: 8 }, { date: "2026-05-21", total: 45, failures: 3 },
+    { date: "2026-05-22", total: 50, failures: 6 },
+  ],
+  topTools: [
+    { tool: "Bash", failures: 12, total: 60, rate: 0.2 }, { tool: "WebFetch", failures: 7, total: 20, rate: 0.35 },
+    { tool: "Edit", failures: 5, total: 80, rate: 0.0625 },
+  ],
+  recent: [],
+};
+async function stubErrorRate(page: Page, view?: "chart" | "table") {
+  await page.route("**/api/errors*", (route) => route.fulfill({ json: ERRORS }));
+  await stubPluginConfig(page, view ? { "error-rate": { view } } : {});
+}
+
+test.describe("view variant — error-rate (chart↔table)", () => {
+  const er = (page: Page) => widget(page, "error-rate");
+  const chart = (page: Page) => er(page).locator(".recharts-responsive-container");
+  test("default = chart (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubErrorRate(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = er(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(chart(page)).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Diagramm" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubErrorRate(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(er(page));
+    await expect(sw.getByRole("button", { name: "Chart" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["chart", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubErrorRate(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = er(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "chart") {
+          await expect(chart(page)).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Diagramm" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table")).toBeVisible();
+          await expect(chart(page)).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/error-rate-${view}-${mode}.png` });
+        await testInfo.attach(`error-rate-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
