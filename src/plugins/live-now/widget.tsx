@@ -18,6 +18,8 @@ import {
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import {
   eventKind,
@@ -48,27 +50,11 @@ const ICONS: Record<EventKind, LucideIcon> = {
 type SessionCard = SessionRow & { event_count: number; tool_count: number };
 
 export function LiveNow() {
-  const { events, connected, tick } = useLive();
+  const { events, connected } = useLive();
   const { t, lang } = useT();
-  const [sessions, setSessions] = useState<SessionCard[] | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/sessions")
-        .then((r) => r.json())
-        .then((d: { sessions: SessionCard[] }) => {
-          if (!cancelled) setSessions(d.sessions);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const q = usePluginQuery<{ sessions: SessionCard[] }>("/api/sessions");
+  const sessions = q.data?.sessions ?? null;
 
   // Tick the elapsed clock once a second so the live timer stays accurate.
   useEffect(() => {
@@ -81,6 +67,7 @@ export function LiveNow() {
   const live = (sessions ?? []).filter((s) => s.status !== "ended");
   const latestId = events[0]?.session_id;
   const active = live.find((s) => s.id === latestId) ?? live[0] ?? null;
+  const vs = viewState(q, () => active == null);
 
   const feed = active
     ? events.filter((e) => e.session_id === active.id).slice(0, 6)
@@ -100,7 +87,9 @@ export function LiveNow() {
         </span>
       }
     >
-      {!sessions ? (
+      {vs === "error" ? (
+        <WidgetState icon={Radio} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Radio} title={t("common.loading")} loading />
       ) : !active ? (
         <WidgetState icon={Radio} title={t("now.idle")} description={t("now.idleHint")} />

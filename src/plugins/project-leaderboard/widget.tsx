@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trophy } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { formatCompact, formatMoney } from "@/lib/format";
 import type { ProjectUsage } from "@/lib/projects";
@@ -22,28 +23,11 @@ const MEDAL = ["🥇", "🥈", "🥉"];
 
 export function ProjectLeaderboard() {
   const { t } = useT();
-  const { tick } = useLive();
-  const [projects, setProjects] = useState<ProjectUsage[] | null>(null);
   const [sort, setSort] = useState<SortKey>("costUsd");
+  const q = usePluginQuery<{ projects: ProjectUsage[] }>("/api/usage/projects");
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/usage/projects")
-        .then((r) => r.json())
-        .then((d: { projects: ProjectUsage[] }) => {
-          if (!cancelled) setProjects(d.projects);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const sorted = [...(projects ?? [])].sort((a, b) => b[sort] - a[sort]);
+  const sorted = [...(q.data?.projects ?? [])].sort((a, b) => b[sort] - a[sort]);
+  const vs = viewState(q, () => sorted.length === 0);
 
   const cell = (p: ProjectUsage, key: SortKey) =>
     key === "costUsd"
@@ -54,9 +38,11 @@ export function ProjectLeaderboard() {
 
   return (
     <Panel title={t("leaderboard.title")} icon={<Trophy className="h-4 w-4 text-accent" />} info={t("leaderboard.info")}>
-      {!projects ? (
+      {vs === "error" ? (
+        <WidgetState icon={Trophy} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={Trophy} title={t("common.loading")} loading />
-      ) : sorted.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={Trophy} title={t("leaderboard.empty")} />
       ) : (
         <div className="h-full overflow-auto">
