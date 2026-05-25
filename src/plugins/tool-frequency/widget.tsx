@@ -73,6 +73,7 @@ export function ToolFrequency() {
       info={t("tools.info")}
       right={
         <div className="flex items-center gap-1.5">
+          <ViewSwitch widgetId={WIDGET_ID} options={TOOL_FREQ_VIEWS} value={view} t={t} />
           <div className="flex rounded-md border border-panel-border text-xs">
             {RANGES.map((r) => (
               <button
@@ -85,7 +86,6 @@ export function ToolFrequency() {
               </button>
             ))}
           </div>
-          <ViewSwitch widgetId={WIDGET_ID} options={TOOL_FREQ_VIEWS} value={view} t={t} />
         </div>
       }
     >
