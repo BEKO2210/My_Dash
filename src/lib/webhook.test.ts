@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/lib/migrations";
 import { setConfig } from "@/lib/config";
-import { getWebhookConfig, invalidateWebhookCache, webhookPayload } from "@/lib/webhook";
+import { getWebhookConfig, invalidateWebhookCache, isPrivateHost, webhookPayload } from "@/lib/webhook";
 
 describe("webhookPayload", () => {
   it("uses Slack's text field by default", () => {
@@ -12,6 +12,37 @@ describe("webhookPayload", () => {
   it("uses Discord's content field for discord URLs", () => {
     expect(webhookPayload("https://discord.com/api/webhooks/x", "hi")).toEqual({ content: "hi" });
     expect(webhookPayload("https://discordapp.com/api/webhooks/x", "hi")).toEqual({ content: "hi" });
+  });
+});
+
+describe("isPrivateHost (#89)", () => {
+  it("flags loopback, link-local and private ranges", () => {
+    for (const u of [
+      "http://localhost:3000/x",
+      "http://127.0.0.1/x",
+      "https://10.0.0.5/x",
+      "http://192.168.1.20/hook",
+      "http://172.16.5.5/x",
+      "http://169.254.1.1/x",
+      "http://[::1]/x",
+    ]) {
+      expect(isPrivateHost(u), u).toBe(true);
+    }
+  });
+
+  it("allows public webhook hosts (Slack/Discord) and 172.x outside the private block", () => {
+    for (const u of [
+      "https://hooks.slack.com/services/x",
+      "https://discord.com/api/webhooks/x",
+      "https://example.com/hook",
+      "http://172.32.0.1/x", // 172.32 is public
+    ]) {
+      expect(isPrivateHost(u), u).toBe(false);
+    }
+  });
+
+  it("returns false for an unparseable URL", () => {
+    expect(isPrivateHost("not a url")).toBe(false);
   });
 });
 

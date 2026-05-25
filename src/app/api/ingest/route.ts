@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ingest } from "@/lib/ingest";
 import { parseHookPayload } from "@/lib/hook-schema";
 import { readBodyCapped } from "@/lib/body-limit";
+import { timingSafeStrEqual } from "@/lib/safe-equal";
 import { log } from "@/lib/log";
 
 export const runtime = "nodejs";
@@ -16,7 +17,7 @@ export const dynamic = "force-dynamic";
 // and reject any other local process from posting events.
 export async function POST(req: Request) {
   const requiredToken = process.env.MC_HOOK_TOKEN;
-  if (requiredToken && req.headers.get("x-hook-token") !== requiredToken) {
+  if (requiredToken && !timingSafeStrEqual(req.headers.get("x-hook-token") ?? "", requiredToken)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
