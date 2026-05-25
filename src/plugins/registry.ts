@@ -39,7 +39,7 @@ import { BudgetGauge } from "./budget-gauge/widget";
 import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
 import { ToolFrequency, TOOL_FREQ_VIEWS } from "./tool-frequency/widget";
-import { FileHotspots } from "./file-hotspots/widget";
+import { FileHotspots, FILE_HOTSPOTS_VIEWS } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
 import { Latency, LATENCY_VIEWS } from "./latency/widget";
 import { ErrorRate, ERROR_RATE_VIEWS } from "./error-rate/widget";
@@ -121,7 +121,7 @@ export const widgets: Widget[] = [
   { id: "budget-gauge", title: "Budget", titleKey: "budget.title", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },
   { id: "heatmap", title: "Aktivität", titleKey: "heatmap.title", span: "lg:col-span-4", height: H, icon: CalendarClock, category: "activity", description: "heatmap.info", component: Heatmap },
   { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", settings: [viewSetting(TOOL_FREQ_VIEWS)], component: ToolFrequency },
-  { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
+  { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", settings: [viewSetting(FILE_HOTSPOTS_VIEWS)], component: FileHotspots },
   { id: "session-timeline", title: "Session-Timeline", titleKey: "timeline.title", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
   { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", settings: [viewSetting(LATENCY_VIEWS)], component: Latency },
   { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", settings: [viewSetting(ERROR_RATE_VIEWS)], component: ErrorRate },
