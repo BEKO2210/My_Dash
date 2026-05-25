@@ -31,7 +31,7 @@ import {
   Waypoints,
   type LucideIcon,
 } from "lucide-react";
-import { LiveStream } from "./live-stream/widget";
+import { LiveStream, LIVE_STREAM_VIEWS } from "./live-stream/widget";
 import { Kanban, KANBAN_VIEWS } from "./kanban/widget";
 import { TokenChart, TOKEN_CHART_VIEWS } from "./token-chart/widget";
 import { ToolGraph } from "./tool-graph/widget";
@@ -115,7 +115,7 @@ const H_TALL = "h-[420px] min-[2560px]:h-[560px] min-[3840px]:h-[760px]";
 export const widgets: Widget[] = [
   { id: "kpi-bar", title: "Übersicht", titleKey: "kpi.title", span: "lg:col-span-6", height: "h-auto", icon: LayoutDashboard, category: "overview", description: "kpi.info", component: KpiBar },
   { id: "kanban", title: "Sessions", titleKey: "kanban.title", span: "lg:col-span-4", height: H_TALL, icon: KanbanSquare, category: "sessions", description: "kanban.info", settings: [viewSetting(KANBAN_VIEWS)], component: Kanban },
-  { id: "live-stream", title: "Live Stream", titleKey: "stream.title", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", settings: [{ key: "limit", type: "number", label: "stream.setLimit", default: 100, min: 10, max: 300 }], component: LiveStream },
+  { id: "live-stream", title: "Live Stream", titleKey: "stream.title", span: "lg:col-span-2", height: H_TALL, icon: Activity, category: "sessions", description: "stream.info", settings: [viewSetting(LIVE_STREAM_VIEWS), { key: "limit", type: "number", label: "stream.setLimit", default: 100, min: 10, max: 300 }], component: LiveStream },
   { id: "token-chart", title: "Tokens & Kosten", titleKey: "tokens.title", span: "lg:col-span-3", height: H, icon: Coins, category: "economy", description: "tokens.info", settings: [viewSetting(TOKEN_CHART_VIEWS)], component: TokenChart },
   { id: "tool-graph", title: "Tool-Graph (3D)", titleKey: "graph.title", span: "lg:col-span-3", height: H, icon: Boxes, category: "tools", description: "graph.info", component: ToolGraph },
   { id: "budget-gauge", title: "Budget", titleKey: "budget.title", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },
