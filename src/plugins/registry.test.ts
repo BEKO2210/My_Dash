@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { widgets, widgetTitle } from "@/plugins/registry";
+import { widgets, widgetTitle, viewSetting, resolveView } from "@/plugins/registry";
 import { externalWidgets } from "@/plugins/external.generated";
 import { translate } from "@/lib/i18n";
 
@@ -69,5 +69,39 @@ describe("widget display-name i18n (#11)", () => {
   it("falls back to the literal title for widgets without a titleKey", () => {
     const stub = { id: "x", title: "Reference Plugin", span: "", height: "", icon: (() => null) as never, category: "tools" as const, description: "x", component: () => null };
     expect(widgetTitle(stub, (k) => `T:${k}`)).toBe("Reference Plugin");
+  });
+});
+
+describe("view variants foundation (Phase F)", () => {
+  const opts = [
+    { value: "bars", label: "view.bars" },
+    { value: "table", label: "view.table" },
+  ];
+
+  it("viewSetting builds a `view` select whose default is the first option (today's look)", () => {
+    const s = viewSetting(opts);
+    expect(s).toMatchObject({ key: "view", type: "select", label: "view.label", default: "bars", options: opts });
+  });
+
+  it("viewSetting honours an explicit default", () => {
+    expect(viewSetting(opts, "table").default).toBe("table");
+  });
+
+  it("resolveView returns a valid stored value", () => {
+    expect(resolveView("table", ["bars", "table"], "bars")).toBe("table");
+  });
+
+  it("resolveView falls back to default for unknown / non-string / missing values", () => {
+    expect(resolveView("ghost", ["bars", "table"], "bars")).toBe("bars");
+    expect(resolveView(undefined, ["bars", "table"], "bars")).toBe("bars");
+    expect(resolveView(42, ["bars", "table"], "bars")).toBe("bars");
+  });
+
+  it("every widget that defines a `view` setting defaults to a value present in its options", () => {
+    for (const w of widgets) {
+      const v = w.settings?.find((s) => s.key === "view");
+      if (!v || v.type !== "select") continue;
+      expect(v.options.map((o) => o.value), `${w.id} view default`).toContain(v.default);
+    }
   });
 });
