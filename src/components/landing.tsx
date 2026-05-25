@@ -1,6 +1,7 @@
 "use client";
 
-import { Activity, KanbanSquare, Coins, Boxes } from "lucide-react";
+import Link from "next/link";
+import { Activity, KanbanSquare, Coins, Boxes, ArrowRight } from "lucide-react";
 import { RadarLogo } from "@/components/radar-logo";
 import { LangToggle } from "@/components/lang-toggle";
 import { DownloadSection } from "@/components/download";
@@ -63,16 +64,25 @@ export function Landing() {
 
         <div className="mt-12 grid grid-cols-1 gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => (
-            <div
+            <Link
               key={f.title}
-              className="rounded-xl border border-panel-border bg-panel/60 p-4 transition-colors hover:border-accent/30"
+              href="/features"
+              className="group rounded-xl border border-panel-border bg-panel/60 p-4 transition-colors hover:border-accent/40"
             >
-              <f.icon className="h-5 w-5 text-accent" />
+              <f.icon className="h-5 w-5 text-accent transition-transform group-hover:scale-110" />
               <h3 className="mt-2 text-sm font-semibold text-foreground">{f.title}</h3>
               <p className="mt-1 text-xs leading-relaxed text-muted">{f.desc}</p>
-            </div>
+            </Link>
           ))}
         </div>
+
+        <Link
+          href="/features"
+          className="mc-fade-in mt-6 inline-flex items-center gap-1.5 rounded-lg border border-accent/40 bg-accent/10 px-5 py-2.5 text-sm font-medium text-accent transition-colors hover:bg-accent/20"
+        >
+          {t("landing.featuresCta")}
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
 
         <p className="mx-auto mt-9 max-w-2xl text-xs leading-relaxed text-muted">{t("landing.how")}</p>
         <p className="mt-2 text-xs text-accent">{t("landing.demoNote")}</p>

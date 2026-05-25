@@ -133,6 +133,7 @@ const DE: Record<string, string> = {
   "landing.demoNote":
     "Unten läuft eine Live-Demo mit zufälligen, simulierten Claude-Tasks — komplett im Browser, ohne Server.",
   "landing.github": "Auf GitHub ansehen",
+  "landing.featuresCta": "Alle Funktionen ansehen",
   "landing.scroll": "Live-Demo ↓",
 
   "download.title": "Herunterladen",
@@ -662,6 +663,7 @@ const EN: Record<string, string> = {
   "landing.demoNote":
     "A live demo with random, simulated Claude tasks is running below — entirely in your browser, no server.",
   "landing.github": "View on GitHub",
+  "landing.featuresCta": "See all features",
   "landing.scroll": "Live demo ↓",
 
   "download.title": "Download",
