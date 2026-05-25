@@ -46,6 +46,7 @@ describe("budgetAlarmFires (pure)", () => {
     expect(fires[0].type).toBe("cost_projection");
     expect(fires[0].dedupKey).toBe("cost:daily:2026-05-25");
     expect(fires[0].message).toBe("Projected daily spend $40.00 over $10 budget");
+    expect(fires[0].params).toEqual({ period: "daily", projected: "40.00", budget: "10" });
   });
 
   it("raises both daily and monthly when both are over", () => {

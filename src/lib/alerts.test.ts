@@ -41,6 +41,20 @@ describe("evaluateRules", () => {
   it("skips disabled rules", () => {
     expect(evaluateRules(ctx({ toolSuccess: 0 }), [rule({ enabled: 0 })])).toHaveLength(0);
   });
+
+  it("attaches localization params per rule type (#30)", () => {
+    const [mcp] = evaluateRules(ctx({ toolSuccess: 0, toolName: "mcp__github__x" }), [rule({ type: "mcp_error" })]);
+    expect(mcp.params).toEqual({ tool: "mcp__github__x" });
+
+    const [spike] = evaluateRules(ctx({ recentErrorRate: 0.3 }), [rule({ type: "error_spike", threshold: 0.25 })]);
+    expect(spike.params).toEqual({ rate: 30, threshold: 25 }); // already-rounded %
+
+    const [long] = evaluateRules(ctx({ sessionDurationMin: 130 }), [rule({ type: "session_long", threshold: 120 })]);
+    expect(long.params).toEqual({ min: 130, threshold: 120 });
+
+    const [cost] = evaluateRules(ctx({ sessionCostUsd: 6 }), [rule({ type: "cost_session", threshold: 5 })]);
+    expect(cost.params).toEqual({ cost: "6.00", threshold: 5 });
+  });
 });
 
 describe("processAlerts (dedup)", () => {
@@ -58,5 +72,8 @@ describe("processAlerts (dedup)", () => {
     expect(processAlerts(db, c)).toHaveLength(0); // same session → deduped
     const alerts = recentAlerts(db, 10);
     expect(alerts.some((a) => a.type === "cost_session")).toBe(true);
+    // params round-trip through the DB (stored as JSON, parsed on read).
+    const cost = alerts.find((a) => a.type === "cost_session")!;
+    expect(cost.params).toEqual({ cost: "9.00", threshold: 5 });
   });
 });

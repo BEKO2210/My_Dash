@@ -52,6 +52,7 @@ export function budgetAlarmFires(projection: BudgetProjections, day: string): Al
         sessionId: "",
         dedupKey: `cost:${period}:${day}`,
         message: `Projected ${period} spend $${proj.projectedUsd.toFixed(2)} over $${proj.budgetUsd.toFixed(0)} budget`,
+        params: { period, projected: proj.projectedUsd.toFixed(2), budget: proj.budgetUsd.toFixed(0) },
       });
     }
   }
