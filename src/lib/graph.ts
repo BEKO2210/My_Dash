@@ -189,14 +189,20 @@ export function buildGraphData(
     }
   }
 
+  // Guarantee referential integrity for the force-graph: keep only links whose BOTH
+  // endpoints are real nodes. A link to a missing node id makes react-force-graph
+  // resolve it to `undefined` and then crash on `.x` — so the renderer can trust
+  // that every link.source/target maps to a node in `nodes`.
+  const validLinks = links.filter((l) => nodes.has(l.source) && nodes.has(l.target));
+
   // Drop isolated nodes (e.g. a session with no tools/prompts). A lone, unconnected
   // node only pushes the force layout — and the initial camera — far out.
   const linked = new Set<string>();
-  for (const l of links) {
+  for (const l of validLinks) {
     linked.add(l.source);
     linked.add(l.target);
   }
   const connected = [...nodes.values()].filter((n) => linked.has(n.id));
 
-  return { nodes: connected, links };
+  return { nodes: connected, links: validLinks };
 }

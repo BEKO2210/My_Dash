@@ -198,4 +198,30 @@ describe("buildGraphData", () => {
     const { nodes } = buildGraphData([mkSession({ id: "A" })], prompts, new Map());
     expect(nodes).toEqual([]); // session has no links -> pruned
   });
+
+  // Referential integrity: every link endpoint must resolve to a node in the output,
+  // or react-force-graph crashes on `.x` of an undefined node (GATE-D #tool-graph).
+  it("never emits a link whose endpoint is missing from nodes", () => {
+    const sessions = [mkSession({ id: "A" }), mkSession({ id: "B" })];
+    const prompts = new Map<string, PromptRow[]>([
+      ["A", [{ summary: "Prompt: hi", payload_json: '{"prompt":"do it"}', created_at: "t" }]],
+    ]);
+    const calls = new Map<string, ToolCallRow[]>([
+      [
+        "A",
+        [
+          mkCall({ session_id: "A", tool_name: "Read", target: "/x.ts" }),
+          mkCall({ session_id: "A", tool_name: "Task", target: "find the bug" }),
+          mkCall({ session_id: "A", tool_name: "Bash", target: null }),
+        ],
+      ],
+      ["B", [mkCall({ session_id: "B", tool_name: "WebFetch", target: "https://example.com/a" })]],
+    ]);
+    const { nodes, links } = buildGraphData(sessions, prompts, calls);
+    const ids = new Set(nodes.map((n) => n.id));
+    for (const l of links) {
+      expect(ids.has(l.source), `dangling source ${l.source}`).toBe(true);
+      expect(ids.has(l.target), `dangling target ${l.target}`).toBe(true);
+    }
+  });
 });
