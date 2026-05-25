@@ -92,7 +92,7 @@ jobs:
 
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           # Beta: mark every tagged release as a pre-release and auto-generate notes.
           prerelease: true
@@ -126,7 +126,7 @@ jobs:
           cat ../SHA256SUMS.txt
 
       - name: Attach checksums to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           prerelease: true
           files: SHA256SUMS.txt
