@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { GanttChartSquare } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useT } from "@/lib/i18n";
 import { STATUS_META } from "@/lib/format";
 import { timelineLayout, windowFor } from "@/lib/timeline";
@@ -29,32 +30,15 @@ function fmtDuration(ms: number, lang: string): string {
 
 export function SessionTimeline() {
   const { t, lang } = useT();
-  const { tick } = useLive();
   const [range, setRange] = useState<Range>("1");
-  const [sessions, setSessions] = useState<SessionRow[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/sessions")
-        .then((r) => r.json())
-        .then((d: { sessions: SessionRow[] }) => {
-          if (!cancelled) setSessions(d.sessions);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 10_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
+  const q = usePluginQuery<{ sessions: SessionRow[] }>("/api/sessions", { pollMs: 10_000 });
 
   // Recomputed each render (cheap); renders happen on the 10s poll, so the window
   // slides forward in time then.
   const days = Number(range);
   const { fromMs, toMs } = windowFor(days);
-  const bars = timelineLayout(sessions ?? [], fromMs, toMs);
+  const bars = timelineLayout(q.data?.sessions ?? [], fromMs, toMs);
+  const vs = viewState(q, () => bars.length === 0);
   const tickFmt = new Intl.DateTimeFormat(
     lang === "en" ? "en-GB" : "de-DE",
     days <= 1 ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "2-digit" },
@@ -83,9 +67,11 @@ export function SessionTimeline() {
         </div>
       }
     >
-      {!sessions ? (
+      {vs === "error" ? (
+        <WidgetState icon={GanttChartSquare} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={GanttChartSquare} title={t("common.loading")} loading />
-      ) : bars.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={GanttChartSquare} title={t("timeline.empty")} />
       ) : (
         <div className="flex h-full flex-col p-3">

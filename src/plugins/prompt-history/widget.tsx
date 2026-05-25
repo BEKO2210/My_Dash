@@ -1,40 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
-import { useLive } from "@/components/live-provider";
+import { usePluginQuery } from "@/components/plugin-data";
+import { viewState } from "@/components/widget-view";
 import { useSearch, matchesQuery } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import { formatCompact, relativeTime } from "@/lib/format";
 import type { PromptHistoryItem } from "@/lib/prompts";
 
 export function PromptHistory() {
-  const { tick } = useLive();
   const { query } = useSearch();
   const { t, lang } = useT();
-  const [prompts, setPrompts] = useState<PromptHistoryItem[] | null>(null);
+  const q = usePluginQuery<{ prompts: PromptHistoryItem[] }>("/api/prompts?limit=100");
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch("/api/prompts?limit=100")
-        .then((r) => r.json())
-        .then((d: { prompts: PromptHistoryItem[] }) => {
-          if (!cancelled) setPrompts(d.prompts);
-        })
-        .catch(() => {});
-    load();
-    const poll = setInterval(load, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(poll);
-    };
-  }, [tick]);
-
-  const filtered = (prompts ?? []).filter((p) => matchesQuery(query, p.text, p.project));
+  const prompts = q.data?.prompts ?? [];
+  const vs = viewState(q, () => prompts.length === 0);
+  const filtered = prompts.filter((p) => matchesQuery(query, p.text, p.project));
 
   return (
     <Panel
@@ -42,9 +26,11 @@ export function PromptHistory() {
       icon={<MessageSquare className="h-4 w-4 text-accent" />}
       info={t("prompts.info")}
     >
-      {!prompts ? (
+      {vs === "error" ? (
+        <WidgetState icon={MessageSquare} title={t("common.loadError")} onRetry={q.refetch} retryLabel={t("common.retry")} />
+      ) : vs === "loading" ? (
         <WidgetState icon={MessageSquare} title={t("common.loading")} loading />
-      ) : prompts.length === 0 ? (
+      ) : vs === "empty" ? (
         <WidgetState icon={MessageSquare} title={t("prompts.empty")} />
       ) : filtered.length === 0 ? (
         <WidgetState icon={MessageSquare} title={t("common.noResults")} />
