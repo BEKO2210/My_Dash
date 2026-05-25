@@ -112,7 +112,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Claude-Mission-Control-Setup.${ext}"
+      "artifactName": "Claude-Mission-Control-Setup-${version}.${ext}"
     },
     "mac": {
       "target": [
@@ -121,7 +121,7 @@
       "category": "public.app-category.developer-tools",
       "identity": null,
       "icon": "electron/build/icon.icns",
-      "artifactName": "Claude-Mission-Control.${ext}"
+      "artifactName": "Claude-Mission-Control-${version}-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -130,7 +130,7 @@
       ],
       "category": "Development",
       "icon": "electron/build/icon.png",
-      "artifactName": "Claude-Mission-Control.${ext}"
+      "artifactName": "Claude-Mission-Control-${version}-${arch}.${ext}"
     }
   }
 }
