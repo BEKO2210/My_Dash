@@ -7,6 +7,8 @@ import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
 import { viewState } from "@/components/widget-view";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useSearch } from "@/components/search";
 import { useT } from "@/lib/i18n";
 import type { FileHotspot } from "@/lib/files";
@@ -18,6 +20,14 @@ const RANGE_LABEL: Record<Range, string> = {
   "30": "tools.range30d",
   "0": "tools.rangeAll",
 };
+
+// Phase F (F9): treemap (default, today's look) ↔ list (ranked churn rows).
+const WIDGET_ID = "file-hotspots";
+const VIEW_VALUES = ["treemap", "list"] as const;
+export const FILE_HOTSPOTS_VIEWS: ViewOption[] = [
+  { value: "treemap", label: "view.treemap" },
+  { value: "list", label: "view.list" },
+];
 
 function clip(s: string, n: number): string {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
@@ -101,6 +111,7 @@ export function FileHotspots() {
   const { t } = useT();
   const { setQuery } = useSearch();
   const [range, setRange] = useState<Range>("30");
+  const view = useView(WIDGET_ID, VIEW_VALUES, "treemap");
   const q = usePluginQuery<{ files: FileHotspot[] }>(`/api/files?days=${range}&limit=60`, { pollMs: 30_000 });
 
   const data = useMemo(() => (q.data?.files ?? []).map((f) => ({ ...f, size: Math.max(1, f.churn) })), [q.data]);
@@ -113,17 +124,20 @@ export function FileHotspots() {
       icon={<FileCode2 className="h-4 w-4 text-accent" />}
       info={t("files.info")}
       right={
-        <div className="flex rounded-md border border-panel-border text-xs">
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setRange(r)}
-              aria-pressed={range === r}
-              className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
-            >
-              {t(RANGE_LABEL[r])}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5">
+          <div className="flex rounded-md border border-panel-border text-xs">
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                aria-pressed={range === r}
+                className={`px-2 py-1 ${range === r ? "bg-accent/20 text-accent" : "text-muted hover:text-foreground"}`}
+              >
+                {t(RANGE_LABEL[r])}
+              </button>
+            ))}
+          </div>
+          <ViewSwitch widgetId={WIDGET_ID} options={FILE_HOTSPOTS_VIEWS} value={view} t={t} />
         </div>
       }
     >
@@ -133,6 +147,8 @@ export function FileHotspots() {
         <WidgetState icon={FileCode2} title={t("common.loading")} loading />
       ) : vs === "empty" ? (
         <WidgetState icon={FileCode2} title={t("files.empty")} />
+      ) : view === "list" ? (
+        <FileList files={q.data!.files} max={max} onPick={setQuery} t={t} />
       ) : (
         <div className="h-full w-full p-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -143,5 +159,46 @@ export function FileHotspots() {
         </div>
       )}
     </Panel>
+  );
+}
+
+// List view: files ranked by churn as clickable rows (bar · path · edits · +/−);
+// click sets the search query, same as a treemap tile.
+function FileList({
+  files,
+  max,
+  onPick,
+  t,
+}: {
+  files: FileHotspot[];
+  max: number;
+  onPick: (path: string) => void;
+  t: (key: string) => string;
+}) {
+  const sorted = [...files].sort((a, b) => b.churn - a.churn);
+  return (
+    <ul tabIndex={0} className="flex h-full flex-col gap-1 overflow-auto p-3 outline-none">
+      {sorted.map((f) => (
+        <li key={f.path}>
+          <button
+            type="button"
+            onClick={() => onPick(f.path)}
+            title={`${f.path} — ${f.edits}× ${t("files.edits")}`}
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-white/[0.03]"
+          >
+            <span className="relative h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-background/70">
+              <span
+                className="absolute inset-y-0 left-0 rounded-full bg-accent/70"
+                style={{ width: `${Math.max(4, (f.churn / max) * 100)}%` }}
+              />
+            </span>
+            <span className="min-w-0 flex-1 truncate font-mono text-foreground">{f.path}</span>
+            <span className="shrink-0 tabular-nums text-muted">{f.edits}×</span>
+            <span className="shrink-0 tabular-nums text-emerald-400">+{f.added}</span>
+            <span className="shrink-0 tabular-nums text-red-400">−{f.removed}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
