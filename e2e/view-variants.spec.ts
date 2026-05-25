@@ -524,3 +524,67 @@ test.describe("view variant — session-timeline (timeline↔list)", () => {
     }
   }
 });
+
+// ── F11 (token-burn): bars (default) ↔ table ──────────────────────────────────
+const BURN = { tools: [
+  { tool: "Bash", calls: 120, tokens: 480000, share: 0.42 }, { tool: "Read", calls: 90, tokens: 300000, share: 0.26 },
+  { tool: "Edit", calls: 60, tokens: 200000, share: 0.17 }, { tool: "WebFetch", calls: 20, tokens: 120000, share: 0.1 },
+  { tool: "Grep", calls: 40, tokens: 50000, share: 0.05 },
+] };
+async function stubTokenBurn(page: Page, view?: "bars" | "table") {
+  await page.route("**/api/token-burn*", (route) => route.fulfill({ json: BURN }));
+  await stubPluginConfig(page, view ? { "token-burn": { view } } : {});
+}
+
+test.describe("view variant — token-burn (bars↔table)", () => {
+  const tb = (page: Page) => widget(page, "token-burn");
+  test("default = bars (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubTokenBurn(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = tb(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(w.locator("ul li").first()).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubTokenBurn(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(tb(page));
+    await expect(sw.getByRole("button", { name: "Bars" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["bars", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubTokenBurn(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = tb(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "bars") {
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Balken" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table")).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/token-burn-${view}-${mode}.png` });
+        await testInfo.attach(`token-burn-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
