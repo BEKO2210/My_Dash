@@ -10,6 +10,7 @@ export function LangToggle() {
       className="flex items-center overflow-hidden rounded-full border border-panel-border bg-background/40 text-[11px] font-medium"
       role="group"
       aria-label={t("a11y.language")}
+      data-testid="lang-toggle"
     >
       {(["de", "en"] as Lang[]).map((l) => (
         <button

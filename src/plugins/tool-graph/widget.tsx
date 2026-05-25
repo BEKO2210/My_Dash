@@ -10,6 +10,7 @@ import { useLive } from "@/components/live-provider";
 import { useT } from "@/lib/i18n";
 import { relativeTime, STATUS_META } from "@/lib/format";
 import { autoRotateSpeed, AUTO_ROTATE_SPEED } from "./auto-rotate";
+import { sanitizeGraph } from "./sanitize";
 
 // Wrapper preserves the imperative ref through next/dynamic (camera + bloom composer).
 const ForceGraph3D = dynamic(() => import("./force-graph"), { ssr: false });
@@ -260,6 +261,10 @@ export function ToolGraph() {
     fitted.current = false;
   }, [threeReady, maximized, nodeRadius, data.nodes.length]);
 
+  // Defensive: never hand react-force-graph a link whose endpoint node is missing
+  // (dangling link → undefined node → ".x" crash). Same-ref when already clean.
+  const safeData = useMemo(() => sanitizeGraph(data), [data]);
+
   const nodeById = useMemo(() => {
     const m = new Map<string, GraphNode>();
     for (const n of data.nodes) m.set(n.id, n);
@@ -460,7 +465,7 @@ export function ToolGraph() {
             <WidgetState icon={Boxes} title={t("graph.noWebgl")} />
           ) : !loaded ? (
             <WidgetState icon={Boxes} title={t("common.loading")} loading />
-          ) : data.nodes.length === 0 ? (
+          ) : safeData.nodes.length === 0 ? (
             <WidgetState icon={Boxes} title={t("graph.empty")} />
           ) : dims.w > 0 ? (
             <>
@@ -468,7 +473,7 @@ export function ToolGraph() {
                 innerRef={fgRef}
                 width={dims.w}
                 height={dims.h}
-                graphData={data}
+                graphData={safeData}
                 backgroundColor="#06070b"
                 controlType="orbit"
                 showNavInfo={false}
