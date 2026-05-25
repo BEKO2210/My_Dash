@@ -38,7 +38,7 @@ import { ToolGraph } from "./tool-graph/widget";
 import { BudgetGauge } from "./budget-gauge/widget";
 import { KpiBar } from "./kpi-bar/widget";
 import { Heatmap } from "./heatmap/widget";
-import { ToolFrequency } from "./tool-frequency/widget";
+import { ToolFrequency, TOOL_FREQ_VIEWS } from "./tool-frequency/widget";
 import { FileHotspots } from "./file-hotspots/widget";
 import { SessionTimeline } from "./session-timeline/widget";
 import { Latency } from "./latency/widget";
@@ -120,7 +120,7 @@ export const widgets: Widget[] = [
   { id: "tool-graph", title: "Tool-Graph (3D)", titleKey: "graph.title", span: "lg:col-span-3", height: H, icon: Boxes, category: "tools", description: "graph.info", component: ToolGraph },
   { id: "budget-gauge", title: "Budget", titleKey: "budget.title", span: "lg:col-span-2", height: H, icon: Gauge, category: "economy", description: "budget.info", component: BudgetGauge },
   { id: "heatmap", title: "Aktivität", titleKey: "heatmap.title", span: "lg:col-span-4", height: H, icon: CalendarClock, category: "activity", description: "heatmap.info", component: Heatmap },
-  { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", component: ToolFrequency },
+  { id: "tool-frequency", title: "Top-Tools", titleKey: "tools.title", span: "lg:col-span-2", height: H, icon: BarChart3, category: "tools", description: "tools.info", settings: [viewSetting(TOOL_FREQ_VIEWS)], component: ToolFrequency },
   { id: "file-hotspots", title: "Datei-Hotspots", titleKey: "files.title", span: "lg:col-span-3", height: H, icon: FileText, category: "tools", description: "files.info", component: FileHotspots },
   { id: "session-timeline", title: "Session-Timeline", titleKey: "timeline.title", span: "lg:col-span-3", height: H, icon: Clock, category: "sessions", description: "timeline.info", component: SessionTimeline },
   { id: "latency", title: "Tool-Latenz", titleKey: "latency.title", span: "lg:col-span-3", height: H, icon: Timer, category: "quality", description: "latency.info", component: Latency },
@@ -155,4 +155,32 @@ export const widgets: Widget[] = [
  */
 export function widgetTitle(w: Widget, t: (key: string) => string): string {
   return w.titleKey ? t(w.titleKey) : w.title;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase F — per-widget VIEW VARIANTS
+// A widget can offer 2–3 switchable views via a standard "view" setting (a plain
+// `select`, so it renders in the settings drawer and persists in plugin_config —
+// no new write path). The DEFAULT value MUST equal the widget's current look.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** A selectable view value (e.g. "chart", "table"). */
+export type ViewVariant = string;
+/** One view option: its value + an i18n key for its label. */
+export interface ViewOption {
+  value: ViewVariant;
+  label: string;
+}
+
+/** Build the standard `view` manifest setting. First option is the default look. */
+export function viewSetting(options: ViewOption[], def: ViewVariant = options[0]?.value ?? ""): PluginSetting {
+  return { key: "view", type: "select", label: "view.label", default: def, options };
+}
+
+/**
+ * Resolve a persisted view value to a known option, falling back to the default.
+ * Pure + defensive: an unknown/legacy/corrupt stored value can never break render.
+ */
+export function resolveView<T extends ViewVariant>(stored: unknown, options: readonly T[], def: T): T {
+  return typeof stored === "string" && (options as readonly string[]).includes(stored) ? (stored as T) : def;
 }
