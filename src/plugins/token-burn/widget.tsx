@@ -4,12 +4,23 @@ import { Flame } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
+import { useView, ViewSwitch } from "@/components/view-variant";
+import type { ViewOption } from "@/plugins/registry";
 import { useT } from "@/lib/i18n";
 import { formatCompact } from "@/lib/format";
 import type { ToolTokenBurn } from "@/lib/token-burn";
 
+// Phase F (F11): bars (default, today's look) ↔ table (tool · tokens · share · calls).
+const WIDGET_ID = "token-burn";
+const VIEW_VALUES = ["bars", "table"] as const;
+export const TOKEN_BURN_VIEWS: ViewOption[] = [
+  { value: "bars", label: "view.bars" },
+  { value: "table", label: "view.table" },
+];
+
 export function TokenBurn() {
   const { t } = useT();
+  const view = useView(WIDGET_ID, VIEW_VALUES, "bars");
   const { data } = usePluginQuery<{ tools: ToolTokenBurn[] }>("/api/token-burn?limit=8");
   const tools = data?.tools ?? null;
 
@@ -17,11 +28,18 @@ export function TokenBurn() {
   const max = (tools ?? []).reduce((m, t) => Math.max(m, t.tokens), 0) || 1;
 
   return (
-    <Panel title={t("burn.title")} icon={<Flame className="h-4 w-4 text-accent" />} info={t("burn.info")}>
+    <Panel
+      title={t("burn.title")}
+      icon={<Flame className="h-4 w-4 text-accent" />}
+      info={t("burn.info")}
+      right={<ViewSwitch widgetId={WIDGET_ID} options={TOKEN_BURN_VIEWS} value={view} t={t} />}
+    >
       {!tools ? (
         <WidgetState icon={Flame} title={t("common.loading")} loading />
       ) : empty ? (
         <WidgetState icon={Flame} title={t("burn.empty")} />
+      ) : view === "table" ? (
+        <BurnTable tools={tools} t={t} />
       ) : (
         <ul className="flex h-full flex-col justify-center gap-2.5 p-4">
           {tools.map((tool) => (
@@ -46,5 +64,35 @@ export function TokenBurn() {
         </ul>
       )}
     </Panel>
+  );
+}
+
+// Table view: same per-tool data as the bars (tool · tokens · share · calls).
+function BurnTable({ tools, t }: { tools: ToolTokenBurn[]; t: (key: string) => string }) {
+  return (
+    <div tabIndex={0} className="h-full overflow-auto outline-none">
+      <table className="w-full text-xs">
+        <thead className="sticky top-0 bg-panel/95 text-muted backdrop-blur">
+          <tr>
+            <th className="px-3 py-2 text-left font-medium">{t("tools.colTool")}</th>
+            <th className="px-2 py-2 text-right font-medium">{t("burn.colTokens")}</th>
+            <th className="px-2 py-2 text-right font-medium">{t("burn.colShare")}</th>
+            <th className="px-3 py-2 text-right font-medium">{t("tools.colCount")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tools.map((tool) => (
+            <tr key={tool.tool} className="border-t border-panel-border/50 transition-colors hover:bg-white/[0.03]">
+              <td className="max-w-[12rem] truncate px-3 py-1.5 font-mono text-foreground" title={tool.tool}>
+                {tool.tool}
+              </td>
+              <td className="px-2 py-1.5 text-right tabular-nums text-foreground">~{formatCompact(tool.tokens)}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums text-muted">{(tool.share * 100).toFixed(0)}%</td>
+              <td className="px-3 py-1.5 text-right tabular-nums text-muted">{tool.calls}×</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
