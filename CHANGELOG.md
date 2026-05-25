@@ -3,11 +3,12 @@
 All notable changes to Claude Mission Control are documented here. This project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] — Unreleased
+## [1.0.0-beta.2] — 2026-05-25
 
-> 🚧 **In progress (beta → release).** Roll-up of the 100-item release-hardening
-> roadmap (`.team/roadmap.md`); finalised at release sign-off (GATE-E). Sections
-> are filled in as items land.
+> **Still a beta.** Roll-up of the 100-item beta→release hardening roadmap
+> (`.team/roadmap.md`), validated by a full green gate (lint · 528 unit · build ·
+> 348 e2e · 0 vulns). The `1.0.0` release stays deferred — more testing and UI/UX
+> passes first.
 
 ### Fixed
 - Enforced the one-way data contract — read routes no longer write to the DB
