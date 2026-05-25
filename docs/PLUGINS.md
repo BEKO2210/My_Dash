@@ -66,7 +66,7 @@ export const plugin: Widget = {
 | Tokens & Kosten | `token-chart` | 3/6 | standard | yes | Daily token usage and cost from ccusage. Toggle on the right between tokens (input/output/cache) and cost in € (converted from USD via EUR_PER_USD). |
 | Budget | `budget-gauge` | 2/6 | standard | — | Today's & this month's spend against your budget (USD), with a projection. |
 | Modelle | `model-donut` | 3/6 | standard | yes | Share per model of tokens or cost. |
-| Projekt-Rangliste | `project-leaderboard` | 3/6 | standard | — | Projects by cost, sessions, tools and tokens. Click a column to sort. |
+| Projekt-Rangliste | `project-leaderboard` | 3/6 | standard | yes | Projects by cost, sessions, tools and tokens. Click a column to sort. |
 | Token-Verbrauch je Tool | `token-burn` | 3/6 | standard | — | Where most tokens burn — estimated from tool I/O size (chars ÷ 4). |
 
 ### Activity
