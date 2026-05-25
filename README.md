@@ -12,6 +12,14 @@
 </p>
 
 <p align="center">
+  <video src="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4"
+         poster="https://github.com/BEKO2210/My_Dash/raw/main/public/demo-poster.jpg"
+         autoplay loop muted playsinline width="800">
+    <a href="https://github.com/BEKO2210/My_Dash/raw/main/public/demo.mp4">▶ Watch the demo</a>
+  </video>
+</p>
+
+<p align="center">
   <img alt="Status: beta" src="https://img.shields.io/badge/status-beta-22c55e?style=flat-square">
   <img alt="Version 1.0.0-beta" src="https://img.shields.io/badge/version-1.0.0--beta-4f8cff?style=flat-square">
   <a href="https://github.com/BEKO2210/My_Dash/releases"><img alt="Download" src="https://img.shields.io/badge/download-Win_·_macOS_·_Linux-4f8cff?style=flat-square&logo=github&logoColor=white"></a>
