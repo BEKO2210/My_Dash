@@ -8,18 +8,20 @@ import { useT } from "@/lib/i18n";
 const REPO = "https://github.com/BEKO2210/My_Dash";
 const ALL_RELEASES = `${REPO}/releases`;
 
-// Pinned to the v1.0.0-beta release using the stable (version-less) artifactNames
-// from package.json `build`. These resolve once the `v1.0.0-beta` tag is pushed
-// and the release workflow publishes the assets. The beta is a pre-release, so it
-// won't appear under /releases/latest — `ALL_RELEASES` (the releases list) is the
-// always-working fallback shown alongside the per-OS buttons.
-const TAG = "v1.0.0-beta";
+// Direct links target the name-versioned artifacts from package.json
+// `build.artifactName` (post #13: `…-Setup-${version}.exe`, `…-${version}-${arch}.…`).
+// Windows ships a single x64 installer, so a direct versioned link works. macOS and
+// Linux now publish PER-ARCH assets (arm64/x64) and the browser can't reliably detect
+// CPU arch, so those buttons point at the releases list where the user picks the right
+// build. The beta is a pre-release (not under /releases/latest); `ALL_RELEASES` always
+// works and is also shown as the fallback link below.
+const VERSION = "1.0.0-beta.2";
+const TAG = `v${VERSION}`;
 const DL = `${REPO}/releases/download/${TAG}`;
 const URLS = {
-  windows: `${DL}/Claude-Mission-Control-Setup.exe`,
-  mac: `${DL}/Claude-Mission-Control.dmg`,
-  linuxAppImage: `${DL}/Claude-Mission-Control.AppImage`,
-  linuxDeb: `${DL}/Claude-Mission-Control.deb`,
+  windows: `${DL}/Claude-Mission-Control-Setup-${VERSION}.exe`,
+  mac: ALL_RELEASES,
+  linux: ALL_RELEASES,
 };
 
 type OS = "windows" | "mac" | "linux";
@@ -50,7 +52,7 @@ export function DownloadSection() {
   const cards = [
     { id: "windows" as const, Icon: WindowsIcon, name: "Windows", file: t("download.winFile"), primary: URLS.windows, extra: [] as { label: string; url: string }[] },
     { id: "mac" as const, Icon: AppleIcon, name: "macOS", file: t("download.macFile"), primary: URLS.mac, extra: [] },
-    { id: "linux" as const, Icon: LinuxIcon, name: "Linux", file: t("download.linuxFile"), primary: URLS.linuxAppImage, extra: [{ label: ".deb", url: URLS.linuxDeb }] },
+    { id: "linux" as const, Icon: LinuxIcon, name: "Linux", file: t("download.linuxFile"), primary: URLS.linux, extra: [] },
   ];
   const detected = cards.find((c) => c.id === os) ?? null;
 
