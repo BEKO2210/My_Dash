@@ -176,7 +176,12 @@ for (const mode of ["dark", "light"] as const) {
       await page.setViewportSize({ width: 1440, height: 900 });
       await prime(page, mode, lang);
       await gotoDashboard(page);
-      await page.waitForTimeout(1200);
+      // Web-first: wait for the widget grid to actually mount (a bare sleep can't —
+      // and networkidle is unusable here because the SSE stream never goes idle).
+      await expect
+        .poll(() => page.locator("section").count(), { timeout: 15_000 })
+        .toBeGreaterThanOrEqual(29);
+      await page.waitForTimeout(300); // brief settle for fade-in/chart-grow before the overview shot
       const shot = await page.screenshot({ path: `test-results/global-shots/${label}.png`, fullPage: false });
       await testInfo.attach(label, { body: shot, contentType: "image/png" });
       expect(errors, `console errors (${label}):\n${errors.join("\n")}`).toEqual([]);
