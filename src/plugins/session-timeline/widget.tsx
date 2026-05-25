@@ -43,9 +43,10 @@ export function SessionTimeline() {
     lang === "en" ? "en-GB" : "de-DE",
     days <= 1 ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "2-digit" },
   );
-  const ticks = Array.from({ length: TICKS }, (_, i) =>
-    tickFmt.format(new Date(fromMs + ((toMs - fromMs) * i) / (TICKS - 1))),
-  );
+  const ticks = Array.from({ length: TICKS }, (_, i) => {
+    const at = fromMs + ((toMs - fromMs) * i) / (TICKS - 1);
+    return { at, label: tickFmt.format(new Date(at)) };
+  });
 
   return (
     <Panel
@@ -80,13 +81,13 @@ export function SessionTimeline() {
             {/* h-4 gives the absolutely-positioned tick labels their own band so
                 they sit above the bars instead of overlapping the first row. */}
             <div className="relative h-4 flex-1">
-              {ticks.map((label, i) => (
+              {ticks.map((tk, i) => (
                 <span
-                  key={i}
+                  key={tk.at}
                   className="absolute top-0 -translate-x-1/2 whitespace-nowrap"
                   style={{ left: `${(i / (TICKS - 1)) * 100}%` }}
                 >
-                  {label}
+                  {tk.label}
                 </span>
               ))}
             </div>

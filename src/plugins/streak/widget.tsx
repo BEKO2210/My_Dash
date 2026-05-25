@@ -87,7 +87,7 @@ function Bars({
           const hot = i === highlight || (highlightLast && i === values.length - 1);
           return (
             <div
-              key={i}
+              key={labels[i]}
               title={`${labels[i]}: ${v}`}
               className={`flex-1 rounded-t-sm transition-[height] ${hot ? "bg-accent" : "bg-accent/30"}`}
               style={{ height: `${Math.max(v > 0 ? 8 : 2, (v / max) * 100)}%` }}
