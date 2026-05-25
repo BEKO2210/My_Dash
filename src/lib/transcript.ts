@@ -43,6 +43,10 @@ export function parseTranscriptUsage(text: string): TranscriptSummary {
   let turns = 0;
   let model: string | null = null;
   let lastAssistantText: string | null = null;
+  // Claude Code transcripts repeat an assistant message (streaming, retries,
+  // sub-agent sidechains) — its usage must be counted ONCE, like ccusage, or the
+  // cost estimate inflates several-fold. Dedupe by the API message id (when present).
+  const counted = new Set<string>();
 
   for (const line of text.split("\n")) {
     const t = line.trim();
@@ -58,11 +62,15 @@ export function parseTranscriptUsage(text: string): TranscriptSummary {
 
     const usage = msg.usage as Record<string, unknown> | undefined;
     if (usage && typeof usage === "object") {
-      inputTokens += num(usage.input_tokens);
-      outputTokens += num(usage.output_tokens);
-      cacheCreationTokens += num(usage.cache_creation_input_tokens);
-      cacheReadTokens += num(usage.cache_read_input_tokens);
-      turns++;
+      const id = typeof msg.id === "string" ? msg.id : null;
+      if (!id || !counted.has(id)) {
+        if (id) counted.add(id);
+        inputTokens += num(usage.input_tokens);
+        outputTokens += num(usage.output_tokens);
+        cacheCreationTokens += num(usage.cache_creation_input_tokens);
+        cacheReadTokens += num(usage.cache_read_input_tokens);
+        turns++;
+      }
     }
     if (typeof msg.model === "string") model = msg.model;
     const txt = textOf(msg.content);
