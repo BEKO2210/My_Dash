@@ -1,8 +1,8 @@
 name: CI
 
-# Lint, test and build on every pull request and on pushes to main.
-# This is the green gate every change must pass before it can be merged —
-# the safety net the rest of the roadmap builds on.
+# The green gate every change must pass before merge: audit · lint · test ·
+# build · bundle-budget · docs-sync · e2e. One job, one build (the build is reused
+# by the bundle-budget check and the e2e server), failing fast on the first error.
 
 on:
   push:
@@ -31,266 +31,49 @@ jobs:
 
       - run: npm ci
 
+      # Fail on known high/critical vulnerabilities in production deps. Lower-severity
+      # advisories are handled by Dependabot (.github/dependabot.yml) so a fix-less
+      # low-sev advisory can't block every PR.
+      - name: Audit (production deps)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint
         run: npm run lint
 
       - name: Test
         run: npm test
 
-      # Full production build (better-sqlite3 builds during npm ci; the DB layer
-      # uses an in-memory database during `next build`, so no data dir is needed).
+      # Single production build, reused by the bundle-budget check and the e2e
+      # server below — one build per PR (better-sqlite3 builds during npm ci; the
+      # DB layer uses an in-memory database during `next build`, so no data dir).
       - name: Build
         run: npm run build
 
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      # A stray heavy import can't silently bloat the client bundle.
+      - name: Bundle budget
+        run: npm run bundle:budget
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
+      # The generated plugin docs must match the registry (run docs:plugins locally
+      # and commit if this fails).
+      - name: Plugin docs in sync
+        run: |
+          npm run docs:plugins
+          git diff --exit-code -- docs/PLUGINS.md
 
       - name: Install Playwright (chromium)
         run: npx playwright install --with-deps chromium
 
-      - name: Build
-        run: npm run build
-
-      # Playwright boots `npm run start` (see playwright.config.ts), seeds via the
-      # ingest API and asserts the dashboard renders, connects and populates. Also
-      # runs the axe-core accessibility audit (e2e/a11y.spec.ts) and the Phase Z
-      # layout (e2e/layout.spec.ts), tool-graph (e2e/tool-graph.spec.ts),
-      # budget-gauge (e2e/budget-gauge.spec.ts), heatmap (e2e/heatmap.spec.ts),
-      # tool-frequency (e2e/tool-frequency.spec.ts), file-hotspots
-      # (e2e/file-hotspots.spec.ts), session-timeline
-      # (e2e/session-timeline.spec.ts), latency (e2e/latency.spec.ts),
-      # error-rate/incidents (e2e/error-rate.spec.ts), model-donut/token-burn
-      # (e2e/model-donut.spec.ts), sankey-flow/tag-cloud (e2e/sankey-flow.spec.ts),
-      # project-leaderboard/reliability/git-correlation
-      # (e2e/project-leaderboard.spec.ts), streak/subagent-tree
-      # (e2e/streak.spec.ts), velocity/session-duration (e2e/velocity.spec.ts),
-      # prompt-history (e2e/prompt-history.spec.ts), mcp-servers/compaction-timeline
-      # (e2e/mcp-servers.spec.ts), anomaly/calendar-heatmap (e2e/anomaly.spec.ts)
-      # and the global interactions sweep (e2e/global.spec.ts) audits as CI gates.
-      - name: Smoke + a11y + Phase Z widget E2E
+      # Boots `npm run start`, seeds via the ingest API and asserts the dashboard
+      # renders, connects and populates. Also runs the axe-core a11y audit and the
+      # per-widget visual/empty-state specs.
+      - name: E2E (smoke + a11y + widget audits)
         run: npm run test:e2e
 
-      # Always collect the layout-audit screenshots (Phase Z) for visual review.
+      # All audit/visual screenshots in one artifact (collapsed from ~30 per-widget
+      # uploads); empty if a run produced none.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: layout-screenshots
-          path: test-results/layout-shots
-          if-no-files-found: ignore
-
-      # Always collect the tool-graph audit screenshots (Phase Z, Run 107).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tool-graph-screenshots
-          path: test-results/tool-graph-shots
-          if-no-files-found: ignore
-
-      # Always collect the budget-gauge audit screenshots (Phase Z, Run 108).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: budget-gauge-screenshots
-          path: test-results/budget-gauge-shots
-          if-no-files-found: ignore
-
-      # Always collect the heatmap audit screenshots (Phase Z, Run 109).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: heatmap-screenshots
-          path: test-results/heatmap-shots
-          if-no-files-found: ignore
-
-      # Always collect the tool-frequency audit screenshots (Phase Z, Run 110).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tool-frequency-screenshots
-          path: test-results/tool-frequency-shots
-          if-no-files-found: ignore
-
-      # Always collect the file-hotspots audit screenshots (Phase Z, Run 111).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: file-hotspots-screenshots
-          path: test-results/file-hotspots-shots
-          if-no-files-found: ignore
-
-      # Always collect the session-timeline audit screenshots (Phase Z, Run 112).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: session-timeline-screenshots
-          path: test-results/session-timeline-shots
-          if-no-files-found: ignore
-
-      # Always collect the latency audit screenshots (Phase Z, Run 113).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: latency-screenshots
-          path: test-results/latency-shots
-          if-no-files-found: ignore
-
-      # Always collect the error-rate + incidents audit screenshots (Phase Z, Run 114).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: error-rate-screenshots
-          path: test-results/error-rate-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: incidents-screenshots
-          path: test-results/incidents-shots
-          if-no-files-found: ignore
-
-      # Always collect the model-donut + token-burn audit screenshots (Phase Z, Run 115).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: model-donut-screenshots
-          path: test-results/model-donut-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: token-burn-screenshots
-          path: test-results/token-burn-shots
-          if-no-files-found: ignore
-
-      # Always collect the sankey-flow + tag-cloud audit screenshots (Phase Z, Run 116).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: sankey-flow-screenshots
-          path: test-results/sankey-flow-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tag-cloud-screenshots
-          path: test-results/tag-cloud-shots
-          if-no-files-found: ignore
-
-      # Always collect the project-leaderboard / reliability / git-correlation audit
-      # screenshots (Phase Z, Run 117).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: project-leaderboard-screenshots
-          path: test-results/project-leaderboard-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: reliability-screenshots
-          path: test-results/reliability-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: git-correlation-screenshots
-          path: test-results/git-correlation-shots
-          if-no-files-found: ignore
-
-      # Always collect the streak + subagent-tree audit screenshots (Phase Z, Run 118a).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: streak-screenshots
-          path: test-results/streak-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: subagent-tree-screenshots
-          path: test-results/subagent-tree-shots
-          if-no-files-found: ignore
-
-      # Always collect the velocity + session-duration audit screenshots (Phase Z, Run 118b).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: velocity-screenshots
-          path: test-results/velocity-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: session-duration-screenshots
-          path: test-results/session-duration-shots
-          if-no-files-found: ignore
-
-      # Always collect the prompt-history audit screenshots (Phase Z, Run 118c).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: prompt-history-screenshots
-          path: test-results/prompt-history-shots
-          if-no-files-found: ignore
-
-      # Always collect the mcp-servers + compaction-timeline audit screenshots (Phase Z, Run 119a).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: mcp-servers-screenshots
-          path: test-results/mcp-servers-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: compaction-timeline-screenshots
-          path: test-results/compaction-timeline-shots
-          if-no-files-found: ignore
-
-      # Always collect the anomaly + calendar-heatmap audit screenshots (Phase Z, Run 119b).
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: anomaly-screenshots
-          path: test-results/anomaly-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: calendar-heatmap-screenshots
-          path: test-results/calendar-heatmap-shots
-          if-no-files-found: ignore
-
-      # Always collect the global interactions / full-dashboard overview screenshots
-      # (Phase Z, Run 119c — the "Abschluss-Sammlung").
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: global-screenshots
-          path: test-results/global-shots
-          if-no-files-found: ignore
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-results
+          name: e2e-results
           path: test-results
           if-no-files-found: ignore
