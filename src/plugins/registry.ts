@@ -52,7 +52,7 @@ import { Streak } from "./streak/widget";
 import { SubagentTree } from "./subagent-tree/widget";
 import { McpServers } from "./mcp-servers/widget";
 import { CompactionTimeline } from "./compaction-timeline/widget";
-import { TagCloud } from "./tag-cloud/widget";
+import { TagCloud, TAG_CLOUD_VIEWS } from "./tag-cloud/widget";
 import { TokenBurn } from "./token-burn/widget";
 import { CalendarHeatmap } from "./calendar-heatmap/widget";
 import { Velocity } from "./velocity/widget";
@@ -134,7 +134,7 @@ export const widgets: Widget[] = [
   { id: "subagent-tree", title: "Subagent-Baum", titleKey: "subagents.title", span: "lg:col-span-3", height: H, icon: GitBranch, category: "sessions", description: "subagents.info", component: SubagentTree },
   { id: "mcp-servers", title: "MCP-Server", titleKey: "mcp.title", span: "lg:col-span-3", height: H, icon: Plug, category: "tools", description: "mcp.info", component: McpServers },
   { id: "compaction-timeline", title: "Kompaktierungen", titleKey: "compaction.title", span: "lg:col-span-3", height: H, icon: Layers, category: "quality", description: "compaction.info", component: CompactionTimeline },
-  { id: "tag-cloud", title: "Themen-Cloud", titleKey: "tags.title", span: "lg:col-span-3", height: H, icon: Hash, category: "tools", description: "tags.info", component: TagCloud },
+  { id: "tag-cloud", title: "Themen-Cloud", titleKey: "tags.title", span: "lg:col-span-3", height: H, icon: Hash, category: "tools", description: "tags.info", settings: [viewSetting(TAG_CLOUD_VIEWS)], component: TagCloud },
   { id: "token-burn", title: "Token-Verbrauch je Tool", titleKey: "burn.title", span: "lg:col-span-3", height: H, icon: Fuel, category: "economy", description: "burn.info", component: TokenBurn },
   { id: "calendar-heatmap", title: "Jahres-Kalender", titleKey: "calendar.title", span: "lg:col-span-6", height: "h-auto", icon: CalendarRange, category: "activity", description: "calendar.info", component: CalendarHeatmap },
   { id: "velocity", title: "Geschwindigkeits-Trend", titleKey: "velocity.title", span: "lg:col-span-3", height: H, icon: TrendingUp, category: "activity", description: "velocity.info", component: Velocity },
