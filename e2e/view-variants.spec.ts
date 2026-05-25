@@ -588,3 +588,198 @@ test.describe("view variant — token-burn (bars↔table)", () => {
     }
   }
 });
+
+// ── F12 (velocity): sparklines (default) ↔ table ──────────────────────────────
+const VELOCITY = { days: Array.from({ length: 14 }, (_, i) => ({
+  date: `2026-05-${String(i + 1).padStart(2, "0")}`,
+  toolCalls: 20 + i * 3, events: 40 + i * 5, sessions: 1 + (i % 4), activeMinutes: 30 + i,
+})) };
+async function stubVelocity(page: Page, view?: "sparklines" | "table") {
+  await page.route("**/api/velocity*", (route) => route.fulfill({ json: VELOCITY }));
+  await stubPluginConfig(page, view ? { velocity: { view } } : {});
+}
+
+test.describe("view variant — velocity (sparklines↔table)", () => {
+  const vl = (page: Page) => widget(page, "velocity");
+  const spark = (page: Page) => vl(page).locator(".recharts-responsive-container");
+  test("default = sparklines (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubVelocity(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = vl(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(spark(page).first()).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("table")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Sparklines" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubVelocity(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(vl(page));
+    await expect(sw.getByRole("button", { name: "Sparklines" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "Table" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["sparklines", "table"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubVelocity(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = vl(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "sparklines") {
+          await expect(spark(page).first()).toBeVisible();
+          await expect(w.locator("table")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Sparklines" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("table")).toBeVisible();
+          await expect(spark(page)).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Tabelle" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/velocity-${view}-${mode}.png` });
+        await testInfo.attach(`velocity-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
+
+// Helper for the density/detail-only variants below (both render <ul><li>; the
+// variant differs in row density, so we assert rows present + the right
+// aria-pressed + a screenshot for the visual diff).
+function densityVariantSuite(opts: {
+  id: string; data: () => Promise<void> | void; route: (page: Page, view?: string) => Promise<void>;
+  def: string; alt: string; defDE: string; altDE: string; defEN: string; altEN: string;
+  rows: (page: Page) => ReturnType<Page["locator"]>;
+}) {
+  const wOf = (page: Page) => widget(page, opts.id);
+  test.describe(`view variant — ${opts.id} (${opts.def}↔${opts.alt})`, () => {
+    test(`default = ${opts.def} (today's look), ViewSwitch labelled DE`, async ({ page }) => {
+      const errors: string[] = [];
+      watchConsole(page, errors);
+      await opts.route(page);
+      await prime(page, "dark", "de");
+      await gotoDashboard(page);
+      const w = wOf(page);
+      await w.scrollIntoViewIfNeeded();
+      await expect(opts.rows(page).first()).toBeVisible({ timeout: 15_000 });
+      const sw = viewSwitchOf(w);
+      await expect(sw.getByRole("button", { name: opts.defDE })).toHaveAttribute("aria-pressed", "true");
+      await expect(sw.getByRole("button", { name: opts.altDE })).toHaveAttribute("aria-pressed", "false");
+      expect(errors, errors.join("\n")).toEqual([]);
+    });
+    test("ViewSwitch localized (EN)", async ({ page }) => {
+      await opts.route(page);
+      await prime(page, "dark", "en");
+      await gotoDashboard(page);
+      const sw = viewSwitchOf(wOf(page));
+      await expect(sw.getByRole("button", { name: opts.defEN })).toBeVisible();
+      await expect(sw.getByRole("button", { name: opts.altEN })).toBeVisible();
+    });
+    for (const mode of ["dark", "light"] as const) {
+      for (const variant of [opts.def, opts.alt]) {
+        test(`variant=${variant} renders — ${mode}`, async ({ page }, testInfo) => {
+          const errors: string[] = [];
+          watchConsole(page, errors);
+          await opts.route(page, variant);
+          await prime(page, mode, "de");
+          await gotoDashboard(page);
+          const w = wOf(page);
+          await w.scrollIntoViewIfNeeded();
+          await expect(w).toBeVisible({ timeout: 15_000 });
+          await expect(opts.rows(page).first()).toBeVisible();
+          const label = variant === opts.def ? opts.defDE : opts.altDE;
+          await expect(viewSwitchOf(w).getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true");
+          await page.waitForTimeout(250);
+          const shot = await w.screenshot({ path: `test-results/view-variants-shots/${opts.id}-${variant}-${mode}.png` });
+          await testInfo.attach(`${opts.id}-${variant}-${mode}`, { body: shot, contentType: "image/png" });
+          expect(errors, errors.join("\n")).toEqual([]);
+        });
+      }
+    }
+  });
+}
+
+// ── F13 (live-stream): detailed (default) ↔ compact ───────────────────────────
+const EVENTS = { events: [
+  { id: 9, session_id: "s-1", event_type: "PreToolUse", tool_name: "Read", summary: "Read /src/x.ts", created_at: dbTs(3 * 60_000) },
+  { id: 8, session_id: "s-1", event_type: "PostToolUse", tool_name: "Bash", summary: "npm run build", created_at: dbTs(6 * 60_000) },
+  { id: 7, session_id: "s-2", event_type: "UserPromptSubmit", tool_name: null, summary: "Fix the auth flow", created_at: dbTs(12 * 60_000) },
+  { id: 6, session_id: "s-2", event_type: "PostToolUse", tool_name: "Edit", summary: "Edit /src/auth.ts", created_at: dbTs(20 * 60_000) },
+] };
+densityVariantSuite({
+  id: "live-stream", def: "detailed", alt: "compact",
+  defDE: "Detailliert", altDE: "Kompakt", defEN: "Detailed", altEN: "Compact",
+  rows: (page) => widget(page, "live-stream").getByRole("log").locator("li"),
+  route: async (page, view) => {
+    await page.route("**/api/events*", (r) => r.fulfill({ json: EVENTS }));
+    await stubPluginConfig(page, view ? { "live-stream": { view } } : {});
+  },
+  data: () => {},
+});
+
+// ── F14 (incidents): list (default) ↔ detailed ────────────────────────────────
+const ERRORS_INC = { stats: { toolCalls: 200, failures: 24, errorRate: 0.12 }, series: [], topTools: [], recent: [
+  { id: 101, session_id: "s-1", tool_name: "Bash", target: "npm run build", error_text: "exit code 1: build failed", created_at: dbTs(5 * 60_000) },
+  { id: 102, session_id: "s-1", tool_name: "WebFetch", target: "https://example.com", error_text: "timeout after 30s", created_at: dbTs(20 * 60_000) },
+  { id: 103, session_id: "s-2", tool_name: "Edit", target: "/src/x.ts", error_text: "file not found", created_at: dbTs(60 * 60_000) },
+] };
+densityVariantSuite({
+  id: "incidents", def: "list", alt: "detailed",
+  defDE: "Liste", altDE: "Detailliert", defEN: "List", altEN: "Detailed",
+  rows: (page) => widget(page, "incidents").locator("ul li"),
+  route: async (page, view) => {
+    await page.route("**/api/errors*", (r) => r.fulfill({ json: ERRORS_INC }));
+    await stubPluginConfig(page, view ? { incidents: { view } } : {});
+  },
+  data: () => {},
+});
+
+// ── F15 (prompt-history): timeline (default) ↔ compact ────────────────────────
+const PROMPTS = { prompts: [
+  { id: 1, session_id: "s-alpha", project: "my_dash", text: "Build the dashboard and wire the hooks", token_estimate: 1200, created_at: dbTs(5 * 60_000) },
+  { id: 2, session_id: "s-beta", project: "shopify-bot", text: "Analyze recent orders for outliers", token_estimate: 800, created_at: dbTs(40 * 60_000) },
+  { id: 3, session_id: "s-alpha", project: "my_dash", text: "Refactor the auth flow", token_estimate: 0, created_at: dbTs(120 * 60_000) },
+] };
+densityVariantSuite({
+  id: "prompt-history", def: "timeline", alt: "compact",
+  defDE: "Timeline", altDE: "Kompakt", defEN: "Timeline", altEN: "Compact",
+  // timeline view renders <ol><li>, compact renders <ul><li> → match either.
+  rows: (page) => widget(page, "prompt-history").locator("li"),
+  route: async (page, view) => {
+    await page.route("**/api/prompts*", (r) => r.fulfill({ json: PROMPTS }));
+    await stubPluginConfig(page, view ? { "prompt-history": { view } } : {});
+  },
+  data: () => {},
+});
+
+// ── F16 (subagent-tree): tree (default) ↔ list ────────────────────────────────
+const SUBAGENTS = { groups: [
+  { session_id: "s1", project: "my_dash", title: "Build dashboard", count: 2, last_at: dbTs(10 * 60_000), tasks: [
+    { id: 1, label: "Explore codebase", child_session_id: "c1", tool_call_id: 1, created_at: dbTs(30 * 60_000) },
+    { id: 2, label: "Write tests", child_session_id: "c2", tool_call_id: 2, created_at: dbTs(20 * 60_000) },
+  ] },
+  { session_id: "s2", project: "shopify-bot", title: "Analyze orders", count: 1, last_at: dbTs(60 * 60_000), tasks: [
+    { id: 4, label: "Fetch order data", child_session_id: "c3", tool_call_id: 4, created_at: dbTs(60 * 60_000) },
+  ] },
+] };
+densityVariantSuite({
+  id: "subagent-tree", def: "tree", alt: "list",
+  defDE: "Baum", altDE: "Liste", defEN: "Tree", altEN: "List",
+  rows: (page) => widget(page, "subagent-tree").locator("ul li"),
+  route: async (page, view) => {
+    await page.route("**/api/subagents*", (r) => r.fulfill({ json: SUBAGENTS }));
+    await stubPluginConfig(page, view ? { "subagent-tree": { view } } : {});
+  },
+  data: () => {},
+});
