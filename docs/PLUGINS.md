@@ -55,7 +55,7 @@ export const plugin: Widget = {
 | Session-Timeline | `session-timeline` | 3/6 | standard | yes | Sessions as time bars (start to end), colored by status. |
 | Jetzt live | `live-now` | 3/6 | standard | — | The active session in real time: elapsed time, key metrics and the latest actions. |
 | Prompt-Verlauf | `prompt-history` | 3/6 | standard | yes | Chronological, searchable list of your prompts (secrets are stripped before storage). |
-| Subagent-Baum | `subagent-tree` | 3/6 | standard | — | Which sessions spawned subagents via Task — expand to see the individual subagents. |
+| Subagent-Baum | `subagent-tree` | 3/6 | standard | yes | Which sessions spawned subagents via Task — expand to see the individual subagents. |
 | Session-Dauer | `session-duration` | 3/6 | standard | — | Distribution of session lengths (first to last event span), plus median and p95. |
 | Branches & PRs | `git-correlation` | 3/6 | standard | — | Sessions grouped by git branch, with links to the branch and to open a PR (derived locally from the origin remote). |
 
