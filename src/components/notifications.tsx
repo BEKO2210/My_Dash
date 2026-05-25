@@ -174,7 +174,7 @@ export function Notifications() {
 
   return (
     <>
-      <div className="relative hidden sm:block">
+      <div className="relative">
         <button
           ref={btnRef}
           type="button"
