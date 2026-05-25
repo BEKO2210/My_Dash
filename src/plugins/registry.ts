@@ -45,7 +45,7 @@ import { Latency } from "./latency/widget";
 import { ErrorRate } from "./error-rate/widget";
 import { ModelDonut, MODEL_DONUT_VIEWS } from "./model-donut/widget";
 import { SankeyFlow } from "./sankey-flow/widget";
-import { ProjectLeaderboard } from "./project-leaderboard/widget";
+import { ProjectLeaderboard, PROJECT_LEADERBOARD_VIEWS } from "./project-leaderboard/widget";
 import { LiveNow } from "./live-now/widget";
 import { PromptHistory } from "./prompt-history/widget";
 import { Streak } from "./streak/widget";
@@ -127,7 +127,7 @@ export const widgets: Widget[] = [
   { id: "error-rate", title: "Fehlerrate", titleKey: "errors.title", span: "lg:col-span-3", height: H, icon: ShieldAlert, category: "quality", description: "errors.info", component: ErrorRate },
   { id: "model-donut", title: "Modelle", titleKey: "donut.title", span: "lg:col-span-3", height: H, icon: PieChart, category: "economy", description: "donut.info", settings: [viewSetting(MODEL_DONUT_VIEWS)], component: ModelDonut },
   { id: "sankey-flow", title: "Fluss", titleKey: "sankey.title", span: "lg:col-span-3", height: H, icon: Waypoints, category: "tools", description: "sankey.info", component: SankeyFlow },
-  { id: "project-leaderboard", title: "Projekt-Rangliste", titleKey: "leaderboard.title", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", component: ProjectLeaderboard },
+  { id: "project-leaderboard", title: "Projekt-Rangliste", titleKey: "leaderboard.title", span: "lg:col-span-3", height: H, icon: Trophy, category: "economy", description: "leaderboard.info", settings: [viewSetting(PROJECT_LEADERBOARD_VIEWS)], component: ProjectLeaderboard },
   { id: "live-now", title: "Jetzt live", titleKey: "now.title", span: "lg:col-span-3", height: H, icon: Radio, category: "sessions", description: "now.info", component: LiveNow },
   { id: "prompt-history", title: "Prompt-Verlauf", titleKey: "prompts.title", span: "lg:col-span-3", height: H, icon: MessageSquare, category: "sessions", description: "prompts.info", component: PromptHistory },
   { id: "streak", title: "Streak & Produktivität", titleKey: "streak.title", span: "lg:col-span-3", height: H, icon: Flame, category: "activity", description: "streak.info", component: Streak },
