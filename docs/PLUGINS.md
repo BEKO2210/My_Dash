@@ -50,7 +50,7 @@ export const plugin: Widget = {
 
 | Widget | id | Width | Height | Settings | Description |
 |---|---|---|---|---|---|
-| Sessions | `kanban` | 4/6 | standard | — | All Claude Code sessions by status: Active (working now), Waiting (for your input), Ended. Inactive sessions are auto-ended after 30 min. Filter by project on the right. |
+| Sessions | `kanban` | 4/6 | standard | yes | All Claude Code sessions by status: Active (working now), Waiting (for your input), Ended. Inactive sessions are auto-ended after 30 min. Filter by project on the right. |
 | Live Stream | `live-stream` | 2/6 | standard | yes | Live stream of all hook events in real time (newest on top): session start/end, prompts, tool calls and stops. Fed via SSE from the Claude Code hooks. |
 | Session-Timeline | `session-timeline` | 3/6 | standard | — | Sessions as time bars (start to end), colored by status. |
 | Jetzt live | `live-now` | 3/6 | standard | — | The active session in real time: elapsed time, key metrics and the latest actions. |
@@ -63,9 +63,9 @@ export const plugin: Widget = {
 
 | Widget | id | Width | Height | Settings | Description |
 |---|---|---|---|---|---|
-| Tokens & Kosten | `token-chart` | 3/6 | standard | — | Daily token usage and cost from ccusage. Toggle on the right between tokens (input/output/cache) and cost in € (converted from USD via EUR_PER_USD). |
+| Tokens & Kosten | `token-chart` | 3/6 | standard | yes | Daily token usage and cost from ccusage. Toggle on the right between tokens (input/output/cache) and cost in € (converted from USD via EUR_PER_USD). |
 | Budget | `budget-gauge` | 2/6 | standard | — | Today's & this month's spend against your budget (USD), with a projection. |
-| Modelle | `model-donut` | 3/6 | standard | — | Share per model of tokens or cost. |
+| Modelle | `model-donut` | 3/6 | standard | yes | Share per model of tokens or cost. |
 | Projekt-Rangliste | `project-leaderboard` | 3/6 | standard | — | Projects by cost, sessions, tools and tokens. Click a column to sort. |
 | Token-Verbrauch je Tool | `token-burn` | 3/6 | standard | — | Where most tokens burn — estimated from tool I/O size (chars ÷ 4). |
 
@@ -83,7 +83,7 @@ export const plugin: Widget = {
 | Widget | id | Width | Height | Settings | Description |
 |---|---|---|---|---|---|
 | Tool-Graph (3D) | `tool-graph` | 3/6 | standard | — | Relationships session → tool → target (file, command, URL, pattern). Equal targets across sessions share a node. Active sessions glow. Click a node for details; fullscreen top-right. |
-| Top-Tools | `tool-frequency` | 2/6 | standard | — | Most-used tools in the range. Violet = MCP, blue = built-in. ✗ = errors. |
+| Top-Tools | `tool-frequency` | 2/6 | standard | yes | Most-used tools in the range. Violet = MCP, blue = built-in. ✗ = errors. |
 | Datei-Hotspots | `file-hotspots` | 3/6 | standard | — | Most-edited files (area & color = changed lines) in the range. |
 | Fluss | `sankey-flow` | 3/6 | standard | — | Flow of project → tool → resource kind from tool calls. |
 | MCP-Server | `mcp-servers` | 3/6 | standard | — | Activity per MCP server: calls, error rate and average latency. |
