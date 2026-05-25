@@ -40,6 +40,7 @@ const TYPE_ICON: Record<string, typeof AlertTriangle> = {
   error_spike: AlertTriangle,
   session_long: Clock,
   cost_session: Coins,
+  cost_projection: Coins,
 };
 
 export function Notifications() {
