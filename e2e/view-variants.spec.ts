@@ -594,3 +594,70 @@ test.describe("view variant — error-rate (chart↔table)", () => {
     }
   }
 });
+
+// ── F9 (file-hotspots): treemap (default) ↔ list ──────────────────────────────
+const FILES = { files: [
+  { path: "src/app/page.tsx", name: "page.tsx", edits: 40, added: 600, removed: 200, churn: 800 },
+  { path: "src/lib/ingest.ts", name: "ingest.ts", edits: 30, added: 400, removed: 150, churn: 550 },
+  { path: "src/components/dashboard.tsx", name: "dashboard.tsx", edits: 25, added: 300, removed: 100, churn: 400 },
+  { path: "README.md", name: "README.md", edits: 12, added: 150, removed: 60, churn: 210 },
+  { path: "src/lib/db.ts", name: "db.ts", edits: 8, added: 90, removed: 30, churn: 120 },
+] };
+async function stubFileHotspots(page: Page, view?: "treemap" | "list") {
+  await page.route("**/api/files*", (route) => route.fulfill({ json: FILES }));
+  await stubPluginConfig(page, view ? { "file-hotspots": { view } } : {});
+}
+
+test.describe("view variant — file-hotspots (treemap↔list)", () => {
+  const fh = (page: Page) => widget(page, "file-hotspots");
+  const treemap = (page: Page) => fh(page).locator(".recharts-responsive-container");
+  test("default = treemap (today's look), ViewSwitch labelled DE", async ({ page }) => {
+    const errors: string[] = [];
+    watchConsole(page, errors);
+    await stubFileHotspots(page);
+    await prime(page, "dark", "de");
+    await gotoDashboard(page);
+    const w = fh(page);
+    await w.scrollIntoViewIfNeeded();
+    await expect(treemap(page)).toBeVisible({ timeout: 15_000 });
+    await expect(w.locator("ul")).toHaveCount(0);
+    const sw = viewSwitchOf(w);
+    await expect(sw.getByRole("button", { name: "Treemap" })).toHaveAttribute("aria-pressed", "true");
+    await expect(sw.getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "false");
+    expect(errors, errors.join("\n")).toEqual([]);
+  });
+  test("ViewSwitch localized (EN)", async ({ page }) => {
+    await stubFileHotspots(page);
+    await prime(page, "dark", "en");
+    await gotoDashboard(page);
+    const sw = viewSwitchOf(fh(page));
+    await expect(sw.getByRole("button", { name: "Treemap" })).toBeVisible();
+    await expect(sw.getByRole("button", { name: "List" })).toBeVisible();
+  });
+  for (const mode of ["dark", "light"] as const) {
+    for (const view of ["treemap", "list"] as const) {
+      test(`variant=${view} renders — ${mode}`, async ({ page }, testInfo) => {
+        const errors: string[] = [];
+        watchConsole(page, errors);
+        await stubFileHotspots(page, view);
+        await prime(page, mode, "de");
+        await gotoDashboard(page);
+        const w = fh(page);
+        await w.scrollIntoViewIfNeeded();
+        await expect(w).toBeVisible({ timeout: 15_000 });
+        if (view === "treemap") {
+          await expect(treemap(page)).toBeVisible();
+          await expect(w.locator("ul")).toHaveCount(0);
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Treemap" })).toHaveAttribute("aria-pressed", "true");
+        } else {
+          await expect(w.locator("ul li").first()).toBeVisible();
+          await expect(viewSwitchOf(w).getByRole("button", { name: "Liste" })).toHaveAttribute("aria-pressed", "true");
+        }
+        await page.waitForTimeout(250);
+        const shot = await w.screenshot({ path: `test-results/view-variants-shots/file-hotspots-${view}-${mode}.png` });
+        await testInfo.attach(`file-hotspots-${view}-${mode}`, { body: shot, contentType: "image/png" });
+        expect(errors, errors.join("\n")).toEqual([]);
+      });
+    }
+  }
+});
