@@ -72,7 +72,7 @@ jobs:
 
       # All audit/visual screenshots in one artifact (collapsed from ~30 per-widget
       # uploads); empty if a run produced none.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: e2e-results
