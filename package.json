@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
-    "ccusage": "^20.0.4",
+    "ccusage": "^20.0.5",
     "clsx": "^2.1.1",
     "d3-force-3d": "^3.0.6",
     "lucide-react": "^1.16.0",
