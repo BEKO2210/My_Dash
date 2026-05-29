@@ -258,6 +258,21 @@ describe("ingest — tool calls", () => {
     expect(link.child_session_id).toBeNull();
   });
 
+  it("records a subagent link for an Agent tool call", () => {
+    send("PostToolUse", {
+      session_id: "s1",
+      tool_name: "Agent",
+      tool_input: { subagent_type: "Explore", description: "find the bug" },
+      tool_response: { ok: true },
+    });
+    const [link] = links("s1");
+    expect(link).toBeDefined();
+    expect(link.kind).toBe("subagent");
+    expect(link.label).toBe("Explore");
+    expect(link.tool_call_id).toBe(toolCalls("s1")[0].id);
+    expect(link.child_session_id).toBeNull();
+  });
+
   it("does not record a link for a non-Task tool", () => {
     send("PostToolUse", {
       session_id: "s1",

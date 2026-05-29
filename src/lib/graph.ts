@@ -175,9 +175,9 @@ export function buildGraphData(
 
       if (!c.target) continue;
 
-      // Claude's prompts to sub-agents (Task) become prompt nodes; other targets
-      // become file/command/url/pattern resources.
-      if (c.tool_name === "Task") {
+      // Claude's prompts to sub-agents (Task/Agent) become prompt nodes; other targets
+      // become file/command/url/pattern resources. "Agent" is the current tool name.
+      if (c.tool_name === "Task" || c.tool_name === "Agent") {
         const pid = `pa:${s.id}:${c.target}`;
         addNode(pid, clip(c.target, 32), "prompt", { role: "agent", text: clip(c.target, 500) });
         addLink(tid, pid);

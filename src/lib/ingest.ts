@@ -67,6 +67,7 @@ function extractTarget(toolName: string | undefined, input: unknown): string | n
     case "WebSearch":
       return first("query");
     case "Task":
+    case "Agent":
       return first("description", "subagent_type");
     default:
       return first("file_path", "path", "url", "query", "command", "pattern");
@@ -409,8 +410,9 @@ export function ingest(headerEvent: string, payload: HookPayload): IngestResult 
         errorText !== null ? redactSecrets(errorText) : null,
       );
 
-      // A Task call spawned a subagent — record the parent→subagent link.
-      if (toolName === "Task") {
+      // A Task/Agent call spawned a subagent — record the parent→subagent link.
+      // "Task" is the legacy tool name; current Claude Code spawns subagents via "Agent".
+      if (toolName === "Task" || toolName === "Agent") {
         insertSessionLink.run(
           sessionId,
           null,
