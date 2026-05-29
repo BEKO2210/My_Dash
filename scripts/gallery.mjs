@@ -37,6 +37,16 @@ const TYPES = {
   ".txt": "text/plain", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json",
 };
 
+// Resolve a candidate path and confine it to ROOT. Returns the normalized
+// absolute path only when it stays inside the served directory, otherwise
+// null. Every filesystem access below must go through this so the value
+// reaching each `fs.*` sink has been re-validated against the root.
+function confineToRoot(candidate) {
+  const resolved = path.resolve(candidate);
+  if (resolved !== ROOT && !resolved.startsWith(ROOT + path.sep)) return null;
+  return resolved;
+}
+
 function serve() {
   return http
     .createServer((req, res) => {
@@ -50,20 +60,33 @@ function serve() {
         res.end("400");
         return;
       }
-      let fp = path.join(ROOT, decoded);
-      // Path-traversal guard: the resolved target must stay inside ROOT.
-      if (fp !== ROOT && !fp.startsWith(ROOT + path.sep)) {
+      const endsWithSep = decoded.endsWith("/");
+      let fp = confineToRoot(path.join(ROOT, decoded));
+      if (!fp) {
         res.writeHead(403);
         res.end("403");
         return;
       }
       try {
-        if (fp.endsWith("/") || fs.statSync(fp).isDirectory()) fp = path.join(fp, "index.html");
+        if (endsWithSep || fs.statSync(fp).isDirectory()) fp = confineToRoot(path.join(fp, "index.html"));
       } catch {
         /* fall through */
       }
+      if (!fp) {
+        res.writeHead(403);
+        res.end("403");
+        return;
+      }
       try {
-        if (!fs.existsSync(fp) && fs.existsSync(fp + ".html")) fp += ".html";
+        if (!fs.existsSync(fp)) {
+          const withHtml = confineToRoot(fp + ".html");
+          if (!withHtml || !fs.existsSync(withHtml)) {
+            res.writeHead(404);
+            res.end("404");
+            return;
+          }
+          fp = withHtml;
+        }
         const buf = fs.readFileSync(fp);
         res.writeHead(200, { "content-type": TYPES[path.extname(fp)] || "application/octet-stream" });
         res.end(buf);
