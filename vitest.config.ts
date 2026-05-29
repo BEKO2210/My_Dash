@@ -7,6 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts"],
     coverage: {
       // Gate the heavily unit-tested core logic (src/lib). UI (components/plugins/
@@ -16,14 +17,18 @@ export default defineConfig({
       reporter: ["text-summary", "html"],
       include: ["src/lib/**/*.ts"],
       exclude: ["src/lib/**/*.test.ts", "src/lib/types.ts"],
-      // Ratcheted just below the measured src/lib coverage (lines/statements ~83%,
-      // functions ~88%, branches ~90%) with headroom for normal v8 variance. Raise
+      // Ratcheted just below the measured src/lib coverage (lines/statements ~81-83%,
+      // functions ~82%, branches ~78%) with headroom for normal v8 variance. Raise
       // as coverage grows; never lower without a logged reason.
+      // NOTE: branches lowered 85 → 75 on the vitest 3 → 4 upgrade. coverage-v8 v4
+      // remaps branch coverage more precisely against the source AST, so the same
+      // tests now measure ~78% branches (was ~90% under v3) — a measurement change,
+      // not a real coverage regression.
       thresholds: {
         lines: 78,
         statements: 78,
         functions: 80,
-        branches: 85,
+        branches: 75,
       },
     },
   },
