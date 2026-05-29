@@ -117,7 +117,7 @@ UI. That's the wrong mental model. Real dashboards (Grafana, Datadog) are
 Claude Code CLI (your machine)
   └─ hook fires (PreToolUse, PostToolUse, Stop, SessionStart/End, …)
        └─ scripts/claude-hook.sh   (stdin JSON → curl, --max-time 1, never blocks Claude)
-            └─ POST 127.0.0.1:3000/api/ingest      ← the ONLY write path
+            └─ POST 127.0.0.1:3001/api/ingest      ← the ONLY write path
                  ├─ writes events + updates sessions/tool_calls (better-sqlite3)
                  └─ broadcasts via in-memory bus
                       └─ GET /api/stream (SSE) → widgets update live
@@ -189,7 +189,7 @@ It also drops a **“Claude Mission Control” launcher on your Desktop** — do
 ```bash
 cp .env.example .env          # optional: tweak port / EUR rate
 npm install
-npm run dev                   # http://127.0.0.1:3000   (or ./start.sh for a prod build)
+npm run dev                   # http://127.0.0.1:3001   (or ./start.sh for a prod build)
 npm run seed                  # inject demo events to see the full UI immediately
 npm run install-hooks         # wire hooks into ~/.claude/settings.json (backs it up first)
 npm run import-history        # optional: backfill past sessions from transcripts
@@ -214,7 +214,7 @@ future Obsidian knowledge-graph / semantic-search plugins.
 
 | Var | Default | Meaning |
 |-----|---------|---------|
-| `MC_PORT` | `3000` | Port (bound to `127.0.0.1` only) |
+| `MC_PORT` | `3001` | Port (bound to `127.0.0.1` only) |
 | `EUR_PER_USD` | `0.92` | USD→EUR factor for cost display (ccusage reports USD) |
 | `MC_HOOK_TOKEN` | _(empty)_ | Optional shared secret; if set, ingest requires it |
 | `CLAUDE_DIR` | `~/.claude` | Where Claude Code stores transcripts/usage |
@@ -246,7 +246,7 @@ npm run build    # production build (also type-checks)
 
 Every widget is backed by a read-only `/api/*` route; the only write path for hook
 data is `POST /api/ingest`. The full HTTP surface is described by an **OpenAPI 3.1**
-spec served at [`/api/openapi`](http://127.0.0.1:3000/api/openapi) (also reachable
+spec served at [`/api/openapi`](http://127.0.0.1:3001/api/openapi) (also reachable
 from the command palette → "Open API spec"). Bulk **export** is available at
 `/api/export` (JSON bundle or per-table JSON/CSV) and a **Prometheus** scrape
 endpoint at `/api/metrics`. See [docs/EXPORT.md](docs/EXPORT.md) for the data schema.

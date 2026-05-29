@@ -11,7 +11,7 @@ if [ -f .env ]; then
   set +a
 fi
 
-PORT="${MC_PORT:-3000}"
+PORT="${MC_PORT:-3001}"
 
 if [ ! -d node_modules ]; then
   echo "› Installing dependencies…"
