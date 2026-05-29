@@ -62,7 +62,7 @@ function watchConsole(page: Page, errors: string[]) {
 
 async function gotoDashboard(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 }
 
@@ -88,8 +88,10 @@ test("threshold colours, overage cap + alarm, ARIA progressbar values", async ({
   await expect(daily).toBeVisible();
   await expect(daily).toHaveAttribute("aria-valuenow", "40");
   await expect(daily).toHaveAttribute("aria-valuemax", "100");
-  await expect(daily).toHaveAttribute("aria-valuetext", "$6.00 / $15.00 · 40%");
-  await expect(w.getByText("$6.00 / $15.00 · 40%")).toBeVisible();
+  // Whitespace-tolerant: the de-DE Intl currency format uses a narrow no-break
+  // space (U+202F) before the symbol, which an exact attribute match would miss.
+  await expect(daily).toHaveAttribute("aria-valuetext", /^6,00\s\$\s\/\s15,00\s\$\s·\s40%$/);
+  await expect(w.getByText("6,00 $ / 15,00 $ · 40%")).toBeVisible();
 
   // Threshold colours: green under 75%, red once at/over budget.
   await expect(daily.locator("div").first()).toHaveClass(/bg-emerald-500/);

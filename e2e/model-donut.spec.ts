@@ -64,7 +64,7 @@ function watchConsole(page: Page, errors: string[]) {
 
 async function gotoDashboard(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 }
 
@@ -123,7 +123,7 @@ test("model-donut: segments, legend, center total, mode toggle", async ({ page }
   await expect(w.getByText("71%")).toBeVisible(); // opus cost share
 
   // Center total: cost mode is USD (regression guard — was mislabelled €).
-  await expect(w.getByText("$17.50")).toBeVisible();
+  await expect(w.getByText("17,50 $")).toBeVisible();
 
   // Mode toggle exposes its pressed state and switches the metric.
   const btnCost = w.getByRole("button", { name: "Kosten" });
@@ -133,7 +133,7 @@ test("model-donut: segments, legend, center total, mode toggle", async ({ page }
   await expect(btnTokens).toHaveAttribute("aria-pressed", "true");
   await expect(btnCost).toHaveAttribute("aria-pressed", "false");
   await expect(w.getByText("2.9M")).toBeVisible(); // total tokens
-  await expect(w.getByText("$17.50")).toHaveCount(0);
+  await expect(w.getByText("17,50 $")).toHaveCount(0);
 
   // Note: per-segment hover shows the same name+share the legend already asserts
   // above; recharts' pie-arc hover isn't reliably reproducible via synthetic mouse

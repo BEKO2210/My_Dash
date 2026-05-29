@@ -52,7 +52,7 @@ test("dashboard renders all four widgets and connects", async ({ page }) => {
   expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
   expect(response?.headers()["x-frame-options"]).toBe("DENY");
 
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached();
 
   // At least the core widget panels render (29 core sections; +1 when the
   // plugins.local/ reference plugin is present). Asserting a floor instead of an

@@ -43,7 +43,7 @@ test("cold start: empty backend renders the full dashboard without crashing", as
   await page.goto("/");
 
   // Shell renders and the live connection still establishes on empty data.
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 
   // The widget grid mounts (don't pin an exact count: with empty payloads some

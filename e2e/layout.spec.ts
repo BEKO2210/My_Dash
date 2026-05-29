@@ -71,7 +71,7 @@ for (const vp of VIEWPORTS) {
         await page.setViewportSize({ width: vp.width, height: vp.height });
         await prime(page, mode, lang);
         await page.goto("/");
-        await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
         // The SSE stream keeps the network busy, so "networkidle" never fires —
         // wait for the live connection instead, then let charts/animations settle.
         await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", {

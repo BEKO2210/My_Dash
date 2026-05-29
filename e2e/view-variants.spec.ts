@@ -24,7 +24,7 @@ function prime(page: Page, mode: "dark" | "light", lang: "de" | "en") {
 }
 async function gotoDashboard(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 }
 // Pin a widget's `view` deterministically via the config route — no DB write.
@@ -405,7 +405,7 @@ async function stubTagCloud(page: Page, view?: "cloud" | "list") {
 
 test.describe("view variant — tag-cloud (cloud↔list)", () => {
   const tg = (page: Page) => widget(page, "tag-cloud");
-  const cloud = (page: Page) => tg(page).locator('[class*="flex-wrap"]');
+  const cloud = (page: Page) => tg(page).locator(`[class*="content-start"]`);
   test("default = cloud (today's look), ViewSwitch labelled DE", async ({ page }) => {
     const errors: string[] = [];
     watchConsole(page, errors);

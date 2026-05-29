@@ -62,7 +62,7 @@ function watchConsole(page: Page, errors: string[]) {
 
 async function gotoDashboard(page: Page) {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 }
 

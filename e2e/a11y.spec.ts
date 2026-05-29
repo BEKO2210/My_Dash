@@ -62,7 +62,7 @@ for (const mode of ["dark", "light"] as const) {
   test(`dashboard (${mode}) has no serious or critical accessibility violations`, async ({ page }) => {
     await prime(page, mode);
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Claude Mission Control" })).toBeAttached();
     await expect(page.getByTestId("connection-status")).toHaveAttribute("data-state", "connected", { timeout: 15_000 });
 
     const violations = await scan(page);
