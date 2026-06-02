@@ -6,6 +6,7 @@ import { ShieldAlert } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { useLive } from "@/components/live-provider";
+import { ScrollShadow } from "@/components/scroll-shadow";
 import { useView, ViewSwitch } from "@/components/view-variant";
 import { useTimeRange } from "@/components/time-range";
 import { useT } from "@/lib/i18n";
@@ -45,7 +46,7 @@ function tone(rate: number): string {
 // Table view: the per-period series as rows (date · calls · failures · rate).
 function SeriesTable({ series, t }: { series: ErrorPoint[]; t: (key: string) => string }) {
   return (
-    <div className="max-h-28 w-full overflow-auto">
+    <div className="w-full">
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-panel/95 text-muted backdrop-blur">
           <tr>
@@ -135,7 +136,9 @@ export function ErrorRate() {
           </div>
 
           {view === "table" ? (
-            <SeriesTable series={data.series} t={t} />
+            <ScrollShadow className="w-full">
+              <SeriesTable series={data.series} t={t} />
+            </ScrollShadow>
           ) : (
             <div className="h-20 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -160,22 +163,24 @@ export function ErrorRate() {
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="flex min-h-0 flex-1 flex-col">
             <p className="mb-1 text-[11px] font-semibold text-muted">{t("errors.topTools")}</p>
             {data.topTools.length === 0 ? (
               <p className="text-xs text-emerald-400">{t("errors.none")}</p>
             ) : (
-              <ul className="flex flex-col gap-1.5">
-                {data.topTools.map((tl) => (
-                  <li key={tl.tool} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="truncate text-foreground">{tl.tool}</span>
-                    <span className="shrink-0 tabular-nums text-muted">
-                      <span className="text-red-400">{tl.failures}</span> ·{" "}
-                      {Math.round(tl.rate * 100)}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <ScrollShadow>
+                <ul className="flex flex-col gap-1.5">
+                  {data.topTools.map((tl) => (
+                    <li key={tl.tool} className="flex items-center justify-between gap-2 text-xs">
+                      <span className="truncate text-foreground">{tl.tool}</span>
+                      <span className="shrink-0 tabular-nums text-muted">
+                        <span className="text-red-400">{tl.failures}</span> ·{" "}
+                        {Math.round(tl.rate * 100)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollShadow>
             )}
           </div>
         </div>

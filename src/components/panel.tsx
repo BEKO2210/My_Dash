@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import { InfoHint } from "@/components/info-hint";
+import { ScrollShadow } from "@/components/scroll-shadow";
 
 export function Panel({
   title,
@@ -32,11 +33,12 @@ export function Panel({
         </div>
         {right}
       </header>
-      {/* tabIndex makes the scroll region keyboard-reachable (WCAG 2.1.1) for panels
-          whose content has no other focusable element. */}
-      <div tabIndex={0} className="min-h-0 flex-1 overflow-auto outline-none">
+      {/* ScrollShadow adds a top/bottom fade when the body overflows (a visible
+          "you can scroll" hint) and keeps the region keyboard-reachable
+          (WCAG 2.1.1, tabIndex) for panels whose content has no focusable element. */}
+      <ScrollShadow tabIndex={0} className="outline-none">
         {children}
-      </div>
+      </ScrollShadow>
     </section>
   );
 }
