@@ -20,7 +20,12 @@ export async function GET(req: Request) {
 
 function buildGraph(req: Request) {
   const url = new URL(req.url);
-  const sessionLimit = Math.min(Math.max(Math.trunc(Number(url.searchParams.get("sessions")) || 100), 1), 100);
+  // Default: every session is included so the graph reflects the full history.
+  // An explicit ?sessions=N caps it (min 1) for callers that want a lighter graph;
+  // SQLite treats LIMIT -1 as "no limit", which is the unbounded default here.
+  const raw = url.searchParams.get("sessions");
+  const n = Math.trunc(Number(raw));
+  const sessionLimit = raw !== null && Number.isFinite(n) && n > 0 ? n : -1;
 
   const sessions = db
     .prepare(`SELECT * FROM sessions ORDER BY datetime(last_seen) DESC LIMIT ?`)
