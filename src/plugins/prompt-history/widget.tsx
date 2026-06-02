@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { ArrowUpRight, MessageSquare } from "lucide-react";
 import { Panel } from "@/components/panel";
 import { WidgetState } from "@/components/widget-state";
 import { usePluginQuery } from "@/components/plugin-data";
@@ -22,7 +22,7 @@ export const PROMPT_HISTORY_VIEWS: ViewOption[] = [
 ];
 
 export function PromptHistory() {
-  const { query } = useSearch();
+  const { query, setQuery } = useSearch();
   const { t, lang } = useT();
   const view = useView(WIDGET_ID, VIEW_VALUES, "timeline");
   const q = usePluginQuery<{ prompts: PromptHistoryItem[] }>("/api/prompts?limit=100");
@@ -45,17 +45,34 @@ export function PromptHistory() {
       ) : vs === "empty" ? (
         <WidgetState icon={MessageSquare} title={t("prompts.empty")} />
       ) : filtered.length === 0 ? (
-        <WidgetState icon={MessageSquare} title={t("common.noResults")} />
+        // Prompts exist but the dashboard-wide search filter (often set by clicking a
+        // file tile / graph node, and kept in the URL ?q=) hides them all. Say so and
+        // offer a one-click clear, so an empty list never looks like missing data.
+        <WidgetState
+          icon={MessageSquare}
+          title={t("prompts.noMatch")}
+          description={<span className="font-mono">{`„${query}"`}</span>}
+          onRetry={() => setQuery("")}
+          retryLabel={t("search.clear")}
+        />
       ) : view === "compact" ? (
         <ul tabIndex={0} className="flex h-full flex-col divide-y divide-panel-border/50 overflow-auto outline-none">
           {filtered.map((p) => (
             <li key={p.id} className="mc-stream-in">
               <Link
                 href={`/session?id=${encodeURIComponent(p.session_id)}`}
-                className="flex items-baseline gap-2 px-3 py-1.5 transition-colors hover:bg-white/[0.03]"
+                title={t("prompts.openSession")}
+                className="group/row flex items-baseline gap-2 px-3 py-1.5 transition-colors hover:bg-white/[0.03]"
               >
                 <span className="min-w-0 flex-1 truncate text-xs text-foreground">{p.text}</span>
                 <span className="shrink-0 whitespace-nowrap text-[10px] text-muted">{relativeTime(p.created_at, lang)}</span>
+                {/* Click affordance: the row opens the session — a faint arrow on hover says so.
+                    Named group (group/row) so only the hovered row shows it — the widget cell
+                    itself is an unnamed `group`, which would otherwise reveal every row at once. */}
+                <ArrowUpRight
+                  className="h-3 w-3 shrink-0 self-center text-accent opacity-0 transition-opacity group-hover/row:opacity-100"
+                  aria-hidden
+                />
               </Link>
             </li>
           ))}
@@ -67,7 +84,8 @@ export function PromptHistory() {
               <span className="absolute -left-[5px] top-3.5 h-2.5 w-2.5 rounded-full border-2 border-panel bg-accent" />
               <Link
                 href={`/session?id=${encodeURIComponent(p.session_id)}`}
-                className="-mx-1 block rounded-md px-1 py-0.5 transition-colors hover:bg-white/[0.03]"
+                title={t("prompts.openSession")}
+                className="group/row -mx-1 block rounded-md px-1 py-0.5 transition-colors hover:bg-white/[0.03]"
               >
                 <p className="whitespace-pre-wrap break-words text-sm text-foreground">{p.text}</p>
                 <div className="mt-1 flex items-center gap-2 text-[11px] text-muted">
@@ -84,6 +102,12 @@ export function PromptHistory() {
                       </span>
                     </>
                   )}
+                  {/* Click affordance: the row is a link to its session. Named group
+                      (group/row) so only the hovered row reveals it. */}
+                  <span className="ml-auto flex items-center gap-0.5 whitespace-nowrap text-accent opacity-0 transition-opacity group-hover/row:opacity-100">
+                    <ArrowUpRight className="h-3 w-3" aria-hidden />
+                    {t("prompts.openSession")}
+                  </span>
                 </div>
               </Link>
             </li>

@@ -261,6 +261,8 @@ const DE: Record<string, string> = {
   "prompts.info": "Chronologische, durchsuchbare Liste deiner Prompts (Secrets werden vor dem Speichern entfernt).",
   "prompts.empty": "Noch keine Prompts.",
   "prompts.tokens": "Tokens",
+  "prompts.noMatch": "Keine Prompts passen zum aktiven Suchfilter.",
+  "prompts.openSession": "Session öffnen",
 
   "streak.title": "Streak & Produktivität",
   "streak.info": "Tages-Streak aktiver Tage, Stoßzeiten und der Sessions-pro-Tag-Trend.",
@@ -825,6 +827,8 @@ const EN: Record<string, string> = {
   "prompts.info": "Chronological, searchable list of your prompts (secrets are stripped before storage).",
   "prompts.empty": "No prompts yet.",
   "prompts.tokens": "tokens",
+  "prompts.noMatch": "No prompts match the active search filter.",
+  "prompts.openSession": "Open session",
 
   "streak.title": "Streak & productivity",
   "streak.info": "Day-streak of active days, peak hours and the sessions-per-day trend.",

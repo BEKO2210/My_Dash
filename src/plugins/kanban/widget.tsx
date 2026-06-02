@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { KanbanSquare, Coins, ExternalLink, Folder, Hammer, Radio, Server, X } from "lucide-react";
 import { Panel } from "@/components/panel";
@@ -271,7 +272,13 @@ function SessionDetail({
 
   const title = session.title || `${t("kanban.sessionFallback")} ${session.id.slice(0, 8)}`;
 
-  return (
+  // Render through a portal to <body>: the modal lives inside the Panel, whose
+  // backdrop-filter establishes a containing block for position:fixed. Without the
+  // portal, `fixed inset-0` would resolve against the small panel box (not the
+  // viewport), so the overlay only covered the widget and the dialog spilled out.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -342,7 +349,8 @@ function SessionDetail({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

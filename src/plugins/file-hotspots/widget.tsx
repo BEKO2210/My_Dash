@@ -72,13 +72,35 @@ function FileCell({
       style={clickable ? { cursor: "pointer" } : undefined}
     >
       <rect x={x} y={y} width={width} height={height} fill={fill} stroke="#0e1219" strokeWidth={1} rx={2} />
+      {/* A dark stroke painted *behind* the fill (paint-order: stroke) gives every
+          label a halo, so it stays legible on both the bright high-churn tiles and
+          the dark low-churn ones. pointer-events disabled so it never steals hover. */}
       {showLabel && (
-        <text x={x + 5} y={y + 14} fill="#e5e7eb" fontSize={11}>
+        <text
+          x={x + 5}
+          y={y + 14}
+          fill="#f3f6fb"
+          fontSize={11}
+          fontWeight={600}
+          stroke="#080b12"
+          strokeWidth={2.6}
+          paintOrder="stroke"
+          style={{ pointerEvents: "none" }}
+        >
           {clip(name, Math.max(3, Math.floor(width / 7)))}
         </text>
       )}
       {showLabel && height > 32 && (
-        <text x={x + 5} y={y + 28} fill="#aab3c5" fontSize={10}>
+        <text
+          x={x + 5}
+          y={y + 28}
+          fill="#cdd6e6"
+          fontSize={10}
+          stroke="#080b12"
+          strokeWidth={2.4}
+          paintOrder="stroke"
+          style={{ pointerEvents: "none" }}
+        >
           {value}
         </text>
       )}
@@ -97,8 +119,8 @@ function HotspotTooltip({
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md border border-panel-border bg-[#0e1219] px-2.5 py-1.5 text-xs shadow-lg">
-      <div className="max-w-xs truncate font-mono text-foreground">{d.path}</div>
+    <div className="max-w-[24rem] rounded-md border border-panel-border bg-[#0e1219] px-2.5 py-1.5 text-xs shadow-lg">
+      <div className="break-all font-mono text-foreground">{d.path}</div>
       <div className="text-muted">
         {d.edits}× {t("files.edits")} · <span className="text-emerald-400">+{d.added}</span>{" "}
         <span className="text-red-400">−{d.removed}</span>

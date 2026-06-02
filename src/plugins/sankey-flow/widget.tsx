@@ -67,6 +67,10 @@ export function SankeyFlow() {
             >
               <Tooltip
                 contentStyle={{ background: "#0e1219", border: "1px solid #1c2230", borderRadius: 8, fontSize: 12 }}
+                // Recharts defaults tooltip item/label text to black, which is invisible
+                // on the dark content box above — force a light colour so the popup reads.
+                itemStyle={{ color: "#e5e7eb" }}
+                labelStyle={{ color: "#e5e7eb" }}
               />
             </Sankey>
           </ResponsiveContainer>
