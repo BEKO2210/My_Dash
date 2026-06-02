@@ -58,7 +58,9 @@ export function TokenBurn() {
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.05]">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent/60 to-accent transition-[width]"
-                  style={{ width: `${(tool.tokens / max) * 100}%` }}
+                  // Floor the width at 2% so low-volume tools still show a visible bar
+                  // instead of an invisible sliver when one tool dominates the scale.
+                  style={{ width: `${Math.max(2, (tool.tokens / max) * 100)}%` }}
                 />
               </div>
             </li>
