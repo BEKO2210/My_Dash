@@ -27,6 +27,28 @@ export function sessionCards(db: Database.Database, limit: number): SessionCard[
     .all(limit) as SessionCard[];
 }
 
+// Single source of truth for the "stuck active/waiting session" threshold.
+// A session with no recent event whose row still says active/waiting (no
+// SessionEnd hook ever arrived) is treated as ended past this cutoff so it
+// stops piling up in the "waiting" column and stops being counted as live.
+// Every callsite that asks "is this session live?" must go through this helper —
+// otherwise stats/graph/list disagree (root cause of the 31-vs-2 KPI bug).
+// Override via MC_STALE_MINUTES (default 30).
+export function staleMinutes(): number {
+  const m = Number(process.env.MC_STALE_MINUTES);
+  return Number.isFinite(m) && m > 0 ? m : 30;
+}
+
+export function staleCutoffMs(now: number = Date.now()): number {
+  return now - staleMinutes() * 60_000;
+}
+
+// SQLite stores last_seen as UTC "YYYY-MM-DD HH:MM:SS". Same format the
+// existing rows already use → comparable directly with >= / <.
+export function staleCutoffSql(now: number = Date.now()): string {
+  return new Date(staleCutoffMs(now)).toISOString().replace("T", " ").slice(0, 19);
+}
+
 // A session that hasn't produced an event in a while but was never formally ended
 // (terminal closed, crash, no SessionEnd hook) is shown as ended so it stops
 // lingering in the "waiting" column forever. Pure → testable; last_seen is the

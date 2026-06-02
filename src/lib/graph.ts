@@ -1,4 +1,5 @@
 import type { SessionRow, ToolCallRow } from "./types";
+import { staleCutoffMs } from "./session-list";
 
 // Pure graph-assembly logic for /api/graph, kept free of the DB and Next.js so it
 // can be unit-tested in isolation. The route fetches rows and hands them here.
@@ -128,8 +129,14 @@ export function buildGraphData(
     links.push({ source, target });
   };
 
+  // Apply the shared staleness rule so the graph doesn't light up sessions whose
+  // row still says active/waiting but whose last_seen is long past the cutoff.
+  const cutoffMs = staleCutoffMs();
   for (const s of sessions) {
     const sid = `s:${s.id}`;
+    const lastSeenMs = Date.parse(s.last_seen.replace(" ", "T") + "Z");
+    const isStuck =
+      s.status !== "ended" && Number.isFinite(lastSeenMs) && lastSeenMs < cutoffMs;
     nodes.set(sid, {
       id: sid,
       label: s.title || s.project_name || s.id.slice(0, 8),
@@ -138,7 +145,7 @@ export function buildGraphData(
       meta: {
         sessionId: s.id,
         project: s.project_name,
-        status: s.status,
+        status: isStuck ? "ended" : s.status,
         lastSeen: s.last_seen,
       },
     });

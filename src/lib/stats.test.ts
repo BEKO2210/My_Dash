@@ -34,6 +34,24 @@ describe("collectStats", () => {
     expect(s.sparkline).toHaveLength(24);
   });
 
+  it("ignores stuck active/waiting sessions whose last_seen is past the staleness cutoff", () => {
+    // Regression: KPI used to show 31 "active" when only 2 were real, because
+    // /api/stats counted raw `status != 'ended'` while /api/sessions applied
+    // the 30-min last_seen cutoff. Both must now agree.
+    const db = (open = new Database(":memory:"));
+    migrate(db);
+    const ins = db.prepare("INSERT INTO sessions (id, status, last_seen) VALUES (?,?,?)");
+    // 2 genuinely live sessions (last_seen within the cutoff window).
+    ins.run("live1", "active", "2026-05-23 11:55:00");
+    ins.run("live2", "waiting", "2026-05-23 11:40:00");
+    // Stuck "active" rows whose hooks never sent SessionEnd — must not count.
+    ins.run("stuck1", "active", "2026-05-22 12:00:00");
+    ins.run("stuck2", "active", "2026-05-23 10:00:00");
+    ins.run("stuck3", "waiting", "2026-05-20 09:00:00");
+
+    expect(collectStats(db, NOW).activeSessions).toBe(2);
+  });
+
   it("builds a 24-slot sparkline from the activity rollup", () => {
     const db = (open = new Database(":memory:"));
     migrate(db);

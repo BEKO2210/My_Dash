@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import { errorStats } from "./errors";
+import { staleCutoffSql } from "./session-list";
 
 // Headline KPIs for the status strip: cheap DB aggregates plus a 24h event
 // sparkline (from the activity rollup). Cost is added by the route (ccusage).
@@ -13,8 +14,13 @@ export interface DashboardStats {
 
 export function collectStats(db: Database.Database, now: Date = new Date()): DashboardStats {
   const dayStart = `${now.toISOString().slice(0, 10)} 00:00:00`;
+  // Use the shared staleness cutoff so this count matches /api/sessions, the
+  // kanban widget, and the 3D graph. Rows whose status is still active/waiting
+  // but whose last_seen is older than the cutoff are treated as ended.
   const activeSessions = (
-    db.prepare(`SELECT COUNT(*) AS n FROM sessions WHERE status != 'ended'`).get() as { n: number }
+    db
+      .prepare(`SELECT COUNT(*) AS n FROM sessions WHERE status != 'ended' AND last_seen >= ?`)
+      .get(staleCutoffSql(now.getTime())) as { n: number }
   ).n;
   const eventsToday = (
     db.prepare(`SELECT COUNT(*) AS n FROM events WHERE created_at >= ?`).get(dayStart) as {
