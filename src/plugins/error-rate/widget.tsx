@@ -81,6 +81,10 @@ const tooltipStyle = {
   borderRadius: 8,
   fontSize: 12,
 } as const;
+// Recharts defaults tooltip item/label text to black, which is invisible on the
+// dark content box above — force a light colour so the popup reads on a failure.
+const tooltipItemStyle = { color: "#e5e7eb" } as const;
+const tooltipLabelStyle = { color: "#e5e7eb" } as const;
 
 export function ErrorRate() {
   const { t } = useT();
@@ -144,7 +148,12 @@ export function ErrorRate() {
                   </defs>
                   <XAxis dataKey="date" stroke="#8b94a7" fontSize={10} tickLine={false} minTickGap={20} />
                   <YAxis stroke="#8b94a7" fontSize={10} tickLine={false} allowDecimals={false} width={28} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(value) => [String(value), t("errors.failures")]} />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    itemStyle={tooltipItemStyle}
+                    labelStyle={tooltipLabelStyle}
+                    formatter={(value) => [String(value), t("errors.failures")]}
+                  />
                   <Area type="monotone" dataKey="failures" stroke="#f87171" fill="url(#gErr)" />
                 </AreaChart>
               </ResponsiveContainer>
