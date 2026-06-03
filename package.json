@@ -71,7 +71,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "16.2.6",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
