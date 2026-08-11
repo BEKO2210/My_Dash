@@ -79,7 +79,7 @@
     "vitest": "^4.1.7"
   },
   "overrides": {
-    "postcss": "^8.5.15"
+    "postcss": "^8.5.26"
   },
   "build": {
     "appId": "com.belkisaslani.claude-mission-control",
